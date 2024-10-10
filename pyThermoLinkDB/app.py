@@ -26,7 +26,7 @@ def des() -> str:
     return __description__
 
 
-def init() -> ThermoDBHub:
+def thermodb_hub() -> ThermoDBHub:
     '''
     Init thermolink
 
@@ -48,4 +48,4 @@ def init() -> ThermoDBHub:
 
 
 if __name__ == "__main__":
-    print(get_version())
+    print(des())

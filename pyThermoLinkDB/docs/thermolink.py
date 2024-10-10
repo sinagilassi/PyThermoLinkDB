@@ -11,18 +11,18 @@ class ThermoLink:
         # load reference
         pass
 
-    def _build_datasource(self, thermodb, thermodb_rule, components, reference, ref_key='DEPENDANT-DATA'):
+    def _set_datasource(self, thermodb: dict, thermodb_rule: dict, components: list) -> dict:
         '''
-        Builds a datasource
+        Sets a datasource
 
         Parameters
         ----------
+        thermodb : dict
+            thermodb
+        thermodb_rule : dict
+            thermodb rule
         components : list
             list of components
-        reference : dict
-            dict data of the reference
-        ref_key : str, optional
-            reference key, by default 'DEPENDANT-DATA'
 
         Returns
         -------
@@ -30,56 +30,60 @@ class ThermoLink:
             datasource
         '''
         try:
-            # check reference
-            if reference is None or reference == 'None':
-                raise Exception('Empty reference!')
-
-            # reference
-            # get all dependent data
-            dependent_data_src = reference[str(ref_key).strip()]
-            dependent_data = []
-            # check
-            if dependent_data_src is not None:
-                for item, value in dependent_data_src.items():
-                    _item_symbol = value['symbol']
-                    dependent_data.append(_item_symbol)
-
             # datasource
             datasource = {}
             for component in components:
                 if component in thermodb:
                     # set
                     datasource[component] = {}
-                    # parms
-                    for item in dependent_data:
-                        # check property src
-                        check_property_src = 'GENERAL'
-                        # check
-                        if component in thermodb_rule.keys():
-                            # property source
-                            check_property_src = thermodb_rule[component][item][0]
 
-                        # val
-                        _val = thermodb[component].check_property(
-                            check_property_src).get_property(str(item).strip())
-                        # unit conversion
+                    # component registered data/equations
+                    data = list(
+                        thermodb[component].check_properties().keys())
 
-                        datasource[component][item] = _val
+                    # check
+                    if len(data) != 0:
+                        # looping through each data source (GENERAL)
+                        for src in data:
+                            # take data
+                            df_src = thermodb[component].check_property(
+                                src).data_structure()
+                            # take all symbols
+                            symbols = df_src['SYMBOL'].tolist()
+                            # looping through item data
+                            for symbol in symbols:
+                                # check
+                                if symbol is not None and symbol != 'None':
+                                    # symbol
+                                    symbol = str(symbol).strip()
+                                    # val
+                                    _val = thermodb[component].check_property(
+                                        src).get_property(str(symbol).strip())
+
+                                    # check symbol rename is required
+                                    if symbol in thermodb_rule[component]['DATA']:
+                                        # rename
+                                        symbol = thermodb_rule[component]['DATA'][symbol]
+
+                                    # update
+                                    datasource[component][symbol] = _val
             # res
             return datasource
         except Exception as e:
             raise Exception('Building datasource failed!, ', e)
 
-    def _build_equationsource(self,  thermodb, thermodb_rule, components, reference, ref_key='DEPENDANT-EQUATIONS'):
+    def _set_equationsource(self, thermodb: dict, thermodb_rule: dict, components: list) -> dict:
         '''
-        Build datasource
+        Sets equation source
 
         Parameters
         ----------
+        thermodb : dict
+            thermodb
+        thermodb_rule : dict
+            thermodb rule
         components : list
             list of components
-        reference : dict
-            dict data of the reference
 
         Returns
         -------
@@ -87,41 +91,37 @@ class ThermoLink:
             datasource
         '''
         try:
-            # check reference
-            if reference is None or reference == 'None':
-                raise Exception('Empty reference!')
-
-            # reference
-            # get all dependent data
-            dependent_data_src = reference[str(ref_key).strip()]
-            dependent_data = []
-            # check
-            if dependent_data_src is not None and dependent_data_src != 'None':
-                for item, value in dependent_data_src.items():
-                    _item_symbol = value['symbol']
-                    dependent_data.append(_item_symbol)
-
             # datasource
             datasource = {}
             for component in components:
                 if component in thermodb:
                     # set
                     datasource[component] = {}
-                    # parms
-                    for item in dependent_data:
-                        # check property src
-                        check_property_src = None
-                        # check
-                        if component in thermodb_rule.keys():
-                            # property source
-                            check_property_src = thermodb_rule[component][item][0]
 
+                    # component registered data/equations
+                    eq_data = list(
+                        thermodb[component].check_functions().keys())
+
+                    # check
+                    if len(eq_data) != 0:
+                        # parms
+                        for eq in eq_data:
+                            # get function structure
+                            # eq_str = thermodb[component].get_function(
+                            #     eq).eq_structure(1)
+
+                            # symbol
+                            symbol = str(eq).strip()
                             # val
                             _val = thermodb[component].check_function(
-                                check_property_src)
-                            # unit conversion
+                                eq)
 
-                            datasource[component][item] = _val
+                            # check symbol rename is required
+                            if symbol in thermodb_rule[component]['EQUATIONS']:
+                                # rename
+                                symbol = thermodb_rule[component]['EQUATIONS'][symbol]
+
+                            datasource[component][symbol] = _val
             # res
             return datasource
         except Exception as e:
