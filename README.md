@@ -13,6 +13,14 @@ PyThermoLinkDB is a Python package providing a robust and efficient interface be
 
 Ideal for researchers, engineers, and developers working with thermodynamic data, PyThermoLinkDB simplifies data integration and analysis, accelerating scientific discoveries and industrial applications.
 
+## Google Colab
+
+You can run `PyThermoLinkDB` in Google Colab:
+
+| Version | Scripts |
+|---------|---------|
+| 1.0.0 | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JU1ljkHgKcBNe_CuSh2Bg7hoKwQUJti0?usp=sharing) |
+
 ## Installation
 
 Install pyThermoLinkDB with pip
