@@ -102,8 +102,12 @@ thub1.config_thermodb_rule(thermodb_config_file, name='ALL')
 pp(thub1.get_components())
 
 # build
-thub1_res = thub1.build()
-pp(thub1_res)
+datasource, equationsource = thub1.build()
+pp(datasource)
+pp(equationsource)
+
+# hub
+pp(thub1.hub)
 
 # check
 # pp(thub1.check())
@@ -113,11 +117,11 @@ pp(thub1_res)
 
 ```python
 # data
-CO2 = thub1_res['CO2']
-pp(CO2['MW']['value'])
+pp(datasource['CO2']['Pc']['value'])
 
 # equation
-pp(CO2['VaPr'].args)
+pp(equationsource['CO2']['VaPr'].args)
+pp(equationsource['CO2']['VaPr'].cal(T=298.15))
 ```
 
 ## FAQ

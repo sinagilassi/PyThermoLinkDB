@@ -26,6 +26,10 @@ class ThermoDBHub(ThermoLink):
     def thermodb_rule(self):
         return self._thermodb_rule
 
+    @property
+    def hub(self):
+        return self._hub
+
     def get_components(self):
         '''
         Gets a component list
@@ -327,8 +331,10 @@ class ThermoDBHub(ThermoLink):
 
         Returns
         -------
-        thermo_hub_data : dict
-            datasource for each component
+        datasource : dict
+            datasource
+        equationsource : dict
+            equationsource
 
         Notes
         -----
@@ -347,22 +353,15 @@ class ThermoDBHub(ThermoLink):
             # reset
             self._hub = {}
             # update hub
-            self._hub = {
-                'datasource': datasource,
-                'equationsource': equationsource
-            }
-
-            # hub
-            thermo_hub_data = {}
 
             # for each component
             for component in components:
                 _data = datasource[component]
                 _eq = equationsource[component]
                 # save
-                thermo_hub_data[component] = {**_data, **_eq}
+                self._hub[component] = {**_data, **_eq}
             # res
-            return thermo_hub_data
+            return datasource, equationsource
         except Exception as e:
             raise Exception('Building data/equation source failed!, ', e)
 
