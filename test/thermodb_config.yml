@@ -1,7 +1,9 @@
 # this rule used for setting a component data/equation names
 # component name:
-# component symbol:
-  # Pc: ['GENERAL','Pc','conversion']
+# DATA:
+#   data symbol defined in TableData: new symbol
+# EQUATIONS:
+#   equation symbol defined in TableEquations: new symbol
 
 CO2:
   DATA:
