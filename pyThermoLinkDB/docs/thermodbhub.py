@@ -1,14 +1,16 @@
 # THERMODB
 
 # import packages/modules
-import pyThermoDB
 import os
 import yaml
+from typing import Optional, Dict, Any, Literal, Tuple
+import pyThermoDB
 # local
 from .thermolink import ThermoLink
 
 
 class ThermoDBHub(ThermoLink):
+    """ThermoDBHub class used to manage thermodynamic databases."""
     # vars
     _thermodb = {}
     _thermodb_rule = {}
@@ -49,7 +51,7 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Getting components failed!, ', e)
 
-    def config_thermodb_rule(self, config_file, name="ALL", disp=False) -> bool:
+    def config_thermodb_rule(self, config_file: str, name: str = "ALL", disp: bool = False) -> bool:
         '''
         Configs thermodb rule defined for each component
 
@@ -152,7 +154,7 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Configuration failed!, ', e)
 
-    def add_thermodb_rule(self, rules):
+    def add_thermodb_rule(self, rules: dict) -> bool:
         '''
         Adds a thermodb rule dict
 
@@ -163,8 +165,8 @@ class ThermoDBHub(ThermoLink):
 
         Returns
         -------
-        True : bool
-            success
+        bool
+            True if success, False otherwise
 
         Notes
         -----
@@ -195,7 +197,7 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Adding new rule failed!, ', e)
 
-    def delete_thermodb_rule(self, name):
+    def delete_thermodb_rule(self, name: str) -> bool:
         '''
         Deletes the current thermodb rule
 
@@ -206,8 +208,8 @@ class ThermoDBHub(ThermoLink):
 
         Returns
         -------
-        True : bool
-            success
+        bool
+            True if success, False otherwise
         '''
         try:
             # check key exist
@@ -223,7 +225,7 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Deleting rule failed!, ', e)
 
-    def add_thermodb(self, name, data: pyThermoDB.docs.compbuilder.CompBuilder) -> bool:
+    def add_thermodb(self, name: str, data: pyThermoDB.CompBuilder) -> bool:
         '''
         Adds new thermodb such as: CO2_thermodb
 
@@ -231,7 +233,7 @@ class ThermoDBHub(ThermoLink):
         ----------
         name: str
             name of the record
-        data: pyThermoDB.docs.compbuilder.CompBuilder
+        data: pyThermoDB.CompBuilder
             data of the record
 
         Returns
@@ -248,7 +250,7 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Adding new record failed!, ', e)
 
-    def update_thermodb(self, name, data: pyThermoDB.docs.compbuilder.CompBuilder) -> bool:
+    def update_thermodb(self, name, data: pyThermoDB.CompBuilder) -> bool:
         '''
         Updates existing record
 
@@ -256,13 +258,13 @@ class ThermoDBHub(ThermoLink):
         ----------
         name: str
             name of the record
-        data: pyThermoDB.docs.compbuilder.CompBuilder
+        data: pyThermoDB.CompBuilder
             data of the record
 
         Returns
         -------
-        True : bool
-            success
+        bool:
+            True if success, False otherwise
         '''
         try:
             self._thermodb[name] = data
@@ -282,8 +284,8 @@ class ThermoDBHub(ThermoLink):
 
         Returns
         -------
-        True : bool
-            success
+        bool
+            True if success, False otherwise
         '''
         try:
             del self._thermodb[name]

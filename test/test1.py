@@ -1,8 +1,8 @@
 # import packages/modules
+import os
+from rich import print as pp
 import pyThermoLinkDB as ptdblink
 import pyThermoDB as ptdb
-import os
-from pprint import pprint as pp
 
 # local
 
@@ -60,7 +60,7 @@ pp(CO2_thermodb.check_property('GENERAL-2').data_structure())
 # ! THERMODB LINK CONFIGURATION
 # =======================================
 # init thermodb hub
-thub1 = ptdblink.thermodb_hub()
+thub1 = ptdblink.init()
 print(type(thub1))
 
 # add component thermodb

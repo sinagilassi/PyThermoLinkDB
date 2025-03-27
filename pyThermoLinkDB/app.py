@@ -1,34 +1,13 @@
 # import packages/modules
-import os
+
 # local
 from .config import __version__, __author__, __description__
-from .docs import ThermoDBHub, ThermoLink
+from .docs import ThermoDBHub
 
 
-def get_version() -> str:
+def init() -> ThermoDBHub:
     '''
-    Get the current version
-    '''
-    return __version__
-
-
-def get_author() -> str:
-    '''
-    Get the author
-    '''
-    return __author__
-
-
-def des() -> str:
-    '''
-    Get the description
-    '''
-    return __description__
-
-
-def thermodb_hub() -> ThermoDBHub:
-    '''
-    Init thermolink
+    Init thermolinkdb app
 
     Parameters
     ----------
@@ -36,16 +15,11 @@ def thermodb_hub() -> ThermoDBHub:
 
     Returns
     -------
-    ThermoDBHub : ThermoDBHub
-        A thermolink object
+    ThermoDBHub
+        ThermoDBHub object
     '''
     try:
         # init thermolink
-        ThermoDBHubC = ThermoDBHub()
-        return ThermoDBHubC
+        return ThermoDBHub()
     except Exception as e:
         raise Exception("Error: {}".format(e))
-
-
-if __name__ == "__main__":
-    print(des())
