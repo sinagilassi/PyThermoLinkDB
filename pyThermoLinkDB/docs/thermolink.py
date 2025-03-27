@@ -65,7 +65,7 @@ class ThermoLink:
                                     symbol = str(symbol).strip()
                                     # val
                                     _val = thermodb[component].check_property(
-                                        src).get_property(str(symbol).strip())
+                                        src).get_property(symbol)
 
                                     # check symbol rename is required
                                     if symbol in thermodb_rule[component]['DATA']:
