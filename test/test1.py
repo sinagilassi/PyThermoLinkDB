@@ -16,7 +16,7 @@ print(ptdblink.__author__)
 # ! LOAD THERMODB
 # =======================================
 
-# ! ethanol
+# SECTION ethanol
 # thermodb file name
 EtOH_thermodb_file = os.path.join(os.getcwd(), 'test', 'ethanol.pkl')
 # load
@@ -32,7 +32,7 @@ pp(EtOH_thermodb.check_properties())
 # datastrcuture
 pp(EtOH_thermodb.check_property('GENERAL').data_structure())
 
-# ! methanol
+# SECTION methanol
 # thermodb file name
 MeOH_thermodb_file = os.path.join(os.getcwd(), 'test', 'methanol.pkl')
 # load
@@ -44,7 +44,7 @@ MeOH_thermodb
 # check
 pp(MeOH_thermodb.check())
 
-# ! CO2
+# SECTION CO2
 CO2_thermodb_file = os.path.join(
     os.getcwd(), 'test', 'Carbon Dioxide-multiple.pkl')
 # load

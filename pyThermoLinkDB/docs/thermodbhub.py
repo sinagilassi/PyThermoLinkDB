@@ -71,18 +71,24 @@ class ThermoDBHub(ThermoLink):
 
         Notes
         -----
-        config_file is a yml file format as:
-        ```
+        config_file is a `yml file` format as:
+        
+        ```yaml
         EtOH:
-            Pc: ['GENERAL','Pc']
-            Tc: ['GENERAL','Tc']
-            AcFa: ['GENERAL','AcFa']
-            VaPr: ['VAPOR-PRESSURE','VaPr']
+            DATA:
+                Pc: Pc1
+                Tc: Tc2
+                AcFa: AcFa3
+            EQUATIONS:
+                VAPOR-PRESSURE: VaPr
         MeOH:
-            Pc: ['GENERAL','Pc']
-            Tc: ['GENERAL','Tc']
-            AcFa: ['GENERAL','AcFa']
-            VaPr: ['VAPOR-PRESSURE','VaPr']
+            DATA:
+                Pc: Pc
+                Tc: Tc
+                AcFa: AcFa
+            EQUATIONS:
+                VAPOR-PRESSURE: VaPr
+                HEAT-CAPACITY: Cp_IG
         ```
         '''
         try:
@@ -325,7 +331,7 @@ class ThermoDBHub(ThermoLink):
 
     def build(self):
         '''
-        Builds a datasource
+        Builds datasource and equationsource for each component in thermodb
 
         Parameters
         ----------
@@ -377,8 +383,8 @@ class ThermoDBHub(ThermoLink):
 
         Returns
         -------
-        thermodb : dict
-            thermodb
+        hub : dict
+            hub data
         '''
         try:
             return self._hub

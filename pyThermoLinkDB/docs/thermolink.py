@@ -32,22 +32,29 @@ class ThermoLink:
         try:
             # datasource
             datasource = {}
+            
+            # looping through each component
             for component in components:
+                
+                # NOTE: check if component is in thermodb
                 if component in thermodb:
-                    # set
+                    # init datasource for component
                     datasource[component] = {}
 
-                    # component registered data/equations
+                    # saved component data
                     data = list(
                         thermodb[component].check_properties().keys())
 
                     # check
                     if len(data) != 0:
-                        # looping through each data source (GENERAL)
+                        
+                        # NOTE: looping through each data source (GENERAL)
                         for src in data:
-                            # take data
+                            # get data
                             df_src = thermodb[component].check_property(
                                 src).data_structure()
+                            
+                            
                             # take all symbols
                             symbols = df_src['SYMBOL'].tolist()
                             # looping through item data
@@ -67,6 +74,10 @@ class ThermoLink:
 
                                     # update
                                     datasource[component][symbol] = _val
+                    else:
+                        # no data registered
+                        raise Exception(
+                            'No data registered in thermodb, ', component)
             # res
             return datasource
         except Exception as e:
