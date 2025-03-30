@@ -18,14 +18,13 @@ print(ptdblink.__author__)
 
 # SECTION CO2
 CO2_thermodb_file = os.path.join(
-    os.getcwd(), 'test', 'carbon Dioxide-1.pkl')
+    os.getcwd(), 'test', 'carbon dioxide-1.pkl')
 # load
 CO2_thermodb = ptdb.load_thermodb(CO2_thermodb_file)
 print(type(CO2_thermodb))
 
 # check
 pp(CO2_thermodb.check())
-
 
 # SECTION methanol
 # thermodb file name
@@ -39,8 +38,6 @@ MeOH_thermodb
 
 # check
 pp(MeOH_thermodb.check())
-
-
 
 # =======================================
 # ! THERMODB LINK CONFIGURATION

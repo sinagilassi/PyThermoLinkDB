@@ -50,10 +50,9 @@ class ThermoLink:
                         
                         # NOTE: looping through each data source (GENERAL)
                         for src in data:
-                            # get data
-                            df_src = thermodb[component].check_property(
+                            # REVIEW: get data
+                            df_src = thermodb[component].select_property(
                                 src).data_structure()
-                            
                             
                             # take all symbols
                             symbols = df_src['SYMBOL'].tolist()
@@ -61,13 +60,17 @@ class ThermoLink:
                             for symbol in symbols:
                                 # check
                                 if symbol is not None and symbol != 'None':
-                                    # symbol
+                                    # ! symbol
                                     symbol = str(symbol).strip()
-                                    # val
-                                    _val = thermodb[component].check_property(
+                                    # ! val (retrieve data from thermodb object using symbol)
+                                    # old format
+                                    _val = thermodb[component].select_property(
                                         src).get_property(symbol)
-
-                                    # check symbol rename is required
+                                    
+                                    # new format
+                                    # _val0 = (thermodb[component]).retrieve(f"{src} | {symbol}")
+                                    
+                                    # NOTE: check symbol rename is required
                                     if symbol in thermodb_rule[component]['DATA']:
                                         # rename
                                         symbol = thermodb_rule[component]['DATA'][symbol]
@@ -124,7 +127,7 @@ class ThermoLink:
                             # symbol
                             symbol = str(eq).strip()
                             # val
-                            _val = thermodb[component].check_function(
+                            _val = thermodb[component].select_function(
                                 eq)
 
                             # check symbol rename is required
