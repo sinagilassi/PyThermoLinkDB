@@ -39,6 +39,18 @@ MeOH_thermodb
 # check
 pp(MeOH_thermodb.check())
 
+# SECTION nrtl
+# thermodb file name
+nrtl_thermodb_file = os.path.join(
+    os.getcwd(), 'test', 'thermodb_nrtl_1.pkl')
+print(f"thermodb file: {nrtl_thermodb_file}")
+# load
+nrtl_thermodb = ptdb.load_thermodb(nrtl_thermodb_file)
+print(type(nrtl_thermodb))
+
+# check
+pp(nrtl_thermodb.check())
+
 # =======================================
 # ! THERMODB LINK CONFIGURATION
 # =======================================
@@ -49,6 +61,8 @@ print(type(thub1))
 # add component thermodb
 thub1.add_thermodb('MeOH', MeOH_thermodb)
 thub1.add_thermodb('CO2', CO2_thermodb)
+# matrix data
+thub1.add_thermodb('NRTL', nrtl_thermodb)
 
 # * add thermodb rule
 thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
@@ -56,6 +70,9 @@ thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
 # thub1.config_thermodb_rule(thermodb_config_file, name='EtOH')
 # all components
 thub1.config_thermodb_rule(thermodb_config_file, name='ALL')
+# selected components
+# thub1.config_thermodb_rule(thermodb_config_file, name='MeOH')
+# thub1.config_thermodb_rule(thermodb_config_file, name='CO2')
 
 # thermodb
 # pp(thub1.thermodb)
@@ -81,8 +98,24 @@ pp(thub1.hub)
 # ! TEST
 # =======================================
 # data
-pp(datasource['CO2']['Pc']['value'])
+dt1_ = datasource['CO2']['Pc']
+pp(type(dt1_))
+pp(dt1_['data']['value'])
+pp(dt1_['data']['unit'])
+pp(dt1_['source'])
+
+# matrix data
+dt2_ = datasource['NRTL']['Alpha_i_j']
+pp(type(dt2_))
+pp(dt2_['data'])
+pp(dt2_['data'])
+# pp(dt2_['source'].get_matrix_property("Alpha_i_j", ['methanol', 'ethanol']))
+pp(dt2_['source'](['methanol', 'ethanol']))
 
 # equation
 pp(equationsource['CO2']['VaPr'].args)
 pp(equationsource['CO2']['VaPr'].cal(T=298.15))
+
+# nrtl equation
+pp(equationsource['NRTL']['tau_i_j'].args)
+pp(equationsource['NRTL']['tau_i_j'].cal(T=298.15))

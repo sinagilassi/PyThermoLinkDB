@@ -1,6 +1,7 @@
 # THERMO LINK
 
 # import packages/modules
+from pyThermoDB import TableMatrixData, TableData
 
 # local
 
@@ -51,32 +52,54 @@ class ThermoLink:
                         # NOTE: looping through each data source (GENERAL)
                         for src in data:
                             # REVIEW: get data
-                            df_src = thermodb[component].select_property(
-                                src).data_structure()
-                            
-                            # take all symbols
-                            symbols = df_src['SYMBOL'].tolist()
+                            src_ = thermodb[component].select(src)
+                            # check
+                            if isinstance(src_, TableData): 
+                                # NOTE: set
+                                df_src = src_.data_structure()
+                                
+                                # take all symbols
+                                symbols = df_src['SYMBOL'].tolist()
+                            elif isinstance(src_, TableMatrixData): 
+                                # NOTE: set
+                                matrix_symbol_ = src_.matrix_symbol
+                                
+                                # take all symbols
+                                if matrix_symbol_ is None:
+                                    raise Exception(
+                                        'Matrix symbol is None, ', component)
+                                    
+                                symbols = [matrix_symbol_]
+
                             # looping through item data
                             for symbol in symbols:
                                 # check
                                 if symbol is not None and symbol != 'None':
                                     # ! symbol
                                     symbol = str(symbol).strip()
-                                    # ! val (retrieve data from thermodb object using symbol)
-                                    # old format
-                                    _val = thermodb[component].select_property(
-                                        src).get_property(symbol)
                                     
-                                    # new format
-                                    # _val0 = (thermodb[component]).retrieve(f"{src} | {symbol}")
+                                    _val = src_.get_property(symbol) if isinstance(src_, TableData) else None
+                                    
+                                    # srcect data
+                                    if isinstance(src_, TableMatrixData):
+                                        src_set = lambda x: src_.get_matrix_property(symbol, x)
                                     
                                     # NOTE: check symbol rename is required
-                                    if symbol in thermodb_rule[component]['DATA']:
-                                        # rename
-                                        symbol = thermodb_rule[component]['DATA'][symbol]
+                                    if component in thermodb_rule.keys():
+                                        # get thermodb rule
+                                        _rules = thermodb_rule[component].get('DATA', None)
+                                        # check
+                                        if _rules:
+                                            # set
+                                            if symbol in _rules.keys():
+                                                # rename
+                                                symbol = _rules[symbol]
 
                                     # update
-                                    datasource[component][symbol] = _val
+                                    datasource[component][symbol] = {
+                                        'data': _val,
+                                        'source': src_ if isinstance(src_, TableData) else src_set,
+                                    }
                     else:
                         # no data registered
                         raise Exception(
@@ -127,13 +150,27 @@ class ThermoLink:
                             # symbol
                             symbol = str(eq).strip()
                             # val
-                            _val = thermodb[component].select_function(
-                                eq)
+                            _val = thermodb[component].select(eq)
+                            
+                            # rules
+                            # check if component is in thermodb_rule
+                            if component in thermodb_rule.keys():
+                                # get thermodb rule
+                                _rules = thermodb_rule[component].get('EQUATIONS', None)
+                                # check
+                                if _rules:
+                                    # keys
+                                    keys_ = _rules.keys()
+                                    # set
+                                    if symbol in keys_:
+                                        # rename
+                                        symbol = _rules[symbol]
+                            
 
-                            # check symbol rename is required
-                            if symbol in thermodb_rule[component]['EQUATIONS']:
-                                # rename
-                                symbol = thermodb_rule[component]['EQUATIONS'][symbol]
+                            # # check symbol rename is required
+                            # if symbol in thermodb_rule[component]['EQUATIONS']:
+                            #     # rename
+                            #     symbol = thermodb_rule[component]['EQUATIONS'][symbol]
 
                             datasource[component][symbol] = _val
             # res
