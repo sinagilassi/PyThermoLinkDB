@@ -158,7 +158,6 @@ print(eq2_.cal(T=298.15))
 
 For any question, contact me on [LinkedIn](https://www.linkedin.com/in/sina-gilassi/)  
 
----
 
 ## 👨‍💻 **Authors**
 
