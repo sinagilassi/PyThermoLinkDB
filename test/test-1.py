@@ -11,7 +11,7 @@ print(ptdb.__version__)
 print(ptdblink.__author__)
 
 # =======================================
-# ! LOAD THERMODB
+# 🌍 LOAD THERMODB
 # =======================================
 
 # SECTION CO2
@@ -24,7 +24,7 @@ print(type(CO2_thermodb))
 # check
 print(CO2_thermodb.check())
 
-# SECTION methanol
+# SECTION 🧪 methanol
 # thermodb file name
 MeOH_thermodb_file = os.path.join(os.getcwd(), 'test', 'methanol-1.pkl')
 print(f"thermodb file: {MeOH_thermodb_file}")
@@ -37,7 +37,7 @@ MeOH_thermodb
 # check
 print(MeOH_thermodb.check())
 
-# SECTION nrtl
+# SECTION 🔬 nrtl
 # thermodb file name
 nrtl_thermodb_file = os.path.join(
     os.getcwd(), 'test', 'thermodb_nrtl_1.pkl')
@@ -50,7 +50,7 @@ print(type(nrtl_thermodb))
 print(nrtl_thermodb.check())
 
 # =======================================
-# ! THERMODB LINK CONFIGURATION
+# 🛠️ INIT THERMODB HUB
 # =======================================
 # init thermodb hub
 thub1 = ptdblink.init()
@@ -66,7 +66,7 @@ thub1.add_thermodb('NRTL', nrtl_thermodb)
 print(thub1.items())
 
 # =======================================
-# ! THERMODB LINK CONFIGURATION
+# ⚙️ THERMODB LINK CONFIGURATION
 # =======================================
 # add thermodb rule
 thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
@@ -78,7 +78,7 @@ res_ = thub1.config_thermodb_rule(thermodb_config_file)
 print(res_)
 
 # =======================================
-# ! BUILD
+# 🏗️ BUILD
 # =======================================
 datasource, equationsource = thub1.build()
 print(datasource)
@@ -88,7 +88,7 @@ print(equationsource)
 print(thub1.hub)
 
 # =======================================
-# ! TEST
+# ✅ TEST
 # =======================================
 # CO2 data
 dt1_ = datasource['CO2']['Pc']
