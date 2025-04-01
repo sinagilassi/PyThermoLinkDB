@@ -69,7 +69,7 @@ class ThermoLink:
                                     raise Exception(
                                         'Matrix symbol is None, ', component)
                                     
-                                symbols = [matrix_symbol_]
+                                symbols = matrix_symbol_
 
                             # looping through item data
                             for symbol in symbols:
@@ -78,11 +78,7 @@ class ThermoLink:
                                     # ! symbol
                                     symbol = str(symbol).strip()
                                     
-                                    _val = src_.get_property(symbol) if isinstance(src_, TableData) else None
-                                    
-                                    # srcect data
-                                    if isinstance(src_, TableMatrixData):
-                                        src_set = lambda x: src_.get_matrix_property(symbol, x)
+                                    _val = src_.get_property(symbol) if isinstance(src_, TableData) else src_
                                     
                                     # NOTE: check symbol rename is required
                                     if component in thermodb_rule.keys():
@@ -96,10 +92,7 @@ class ThermoLink:
                                                 symbol = _rules[symbol]
 
                                     # update
-                                    datasource[component][symbol] = {
-                                        'data': _val,
-                                        'source': src_ if isinstance(src_, TableData) else src_set,
-                                    }
+                                    datasource[component][symbol] = _val
                     else:
                         # no data registered
                         raise Exception(

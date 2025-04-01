@@ -1,10 +1,8 @@
 # import packages/modules
 import os
-from rich import print as pp
+from rich import print
 import pyThermoLinkDB as ptdblink
 import pyThermoDB as ptdb
-
-# local
 
 # check version
 print(ptdblink.__version__)
@@ -24,7 +22,7 @@ CO2_thermodb = ptdb.load_thermodb(CO2_thermodb_file)
 print(type(CO2_thermodb))
 
 # check
-pp(CO2_thermodb.check())
+print(CO2_thermodb.check())
 
 # SECTION methanol
 # thermodb file name
@@ -37,7 +35,7 @@ print(type(MeOH_thermodb))
 MeOH_thermodb
 
 # check
-pp(MeOH_thermodb.check())
+print(MeOH_thermodb.check())
 
 # SECTION nrtl
 # thermodb file name
@@ -49,7 +47,7 @@ nrtl_thermodb = ptdb.load_thermodb(nrtl_thermodb_file)
 print(type(nrtl_thermodb))
 
 # check
-pp(nrtl_thermodb.check())
+print(nrtl_thermodb.check())
 
 # =======================================
 # ! THERMODB LINK CONFIGURATION
@@ -64,58 +62,59 @@ thub1.add_thermodb('CO2', CO2_thermodb)
 # matrix data
 thub1.add_thermodb('NRTL', nrtl_thermodb)
 
-# * add thermodb rule
-thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
-# one component
-# thub1.config_thermodb_rule(thermodb_config_file, name='EtOH')
-# all components
-thub1.config_thermodb_rule(thermodb_config_file, name='ALL')
-# selected components
-# thub1.config_thermodb_rule(thermodb_config_file, name='MeOH')
-# thub1.config_thermodb_rule(thermodb_config_file, name='CO2')
-
-# thermodb
-# pp(thub1.thermodb)
-
-# thermodb rules
-# pp(thub1.thermodb_rule)
-
 # get components
-pp(thub1.get_components())
+print(thub1.items())
 
-# build
+# =======================================
+# ! THERMODB LINK CONFIGURATION
+# =======================================
+# add thermodb rule
+thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
+
+# all components
+res_ = thub1.config_thermodb_rule(thermodb_config_file)
+# selected components
+#res_ = thub1.config_thermodb_rule(thermodb_config_file, names=["MeOH", "CO2"])
+print(res_)
+
+# =======================================
+# ! BUILD
+# =======================================
 datasource, equationsource = thub1.build()
-pp(datasource)
-pp(equationsource)
+print(datasource)
+print(equationsource)
 
 # hub
-pp(thub1.hub)
-
-# check
-# pp(thub1.check())
+print(thub1.hub)
 
 # =======================================
 # ! TEST
 # =======================================
-# data
+# CO2 data
 dt1_ = datasource['CO2']['Pc']
-pp(type(dt1_))
-pp(dt1_['data']['value'])
-pp(dt1_['data']['unit'])
-pp(dt1_['source'])
+print(type(dt1_))
+print(dt1_)
 
-# matrix data
-dt2_ = datasource['NRTL']['Alpha_i_j']
-pp(type(dt2_))
-pp(dt2_['data'])
-pp(dt2_['data'])
-# pp(dt2_['source'].get_matrix_property("Alpha_i_j", ['methanol', 'ethanol']))
-pp(dt2_['source'](['methanol', 'ethanol']))
+# MeOH data
+dt2_ = datasource['MeOH']['Tc']
+print(type(dt2_))
+print(dt2_)
 
-# equation
-pp(equationsource['CO2']['VaPr'].args)
-pp(equationsource['CO2']['VaPr'].cal(T=298.15))
+# NRTL data
+dt3_ = datasource['NRTL']['alpha_i_j']
+print(type(dt3_))
+print(dt3_.ij("Alpha_methanol_ethanol"))
+
+# CO2 equation
+eq1_ = equationsource['CO2']['VaPr']
+print(type(eq1_))
+print(eq1_)
+print(eq1_.args)
+print(eq1_.cal(T=298.15))
 
 # nrtl equation
-pp(equationsource['NRTL']['tau_i_j'].args)
-pp(equationsource['NRTL']['tau_i_j'].cal(T=298.15))
+eq2_ = equationsource['NRTL']['tau_i_j']
+print(type(eq2_))
+print(eq2_)
+print(eq2_.args)
+print(eq2_.cal(T=298.15))

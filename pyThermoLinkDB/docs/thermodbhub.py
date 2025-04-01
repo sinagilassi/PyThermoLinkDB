@@ -3,7 +3,7 @@
 # import packages/modules
 import os
 import yaml
-from typing import Optional, Dict, Any, Literal, Tuple
+from typing import Optional, Dict, Any, Literal, Tuple, List, Union
 import pyThermoDB
 # local
 from .thermolink import ThermoLink
@@ -32,26 +32,21 @@ class ThermoDBHub(ThermoLink):
     def hub(self):
         return self._hub
 
-    def get_components(self):
+    def items(self):
         '''
-        Gets a component list
-
-        Parameters
-        ----------
-        None
+        Gets aall items in thermodb link
 
         Returns
         -------
-        components : list
-            list of components
+        list
+            list of items in thermodb link
         '''
         try:
-            components = list(self._thermodb.keys())
-            return components
+            return list(self._thermodb.keys())
         except Exception as e:
             raise Exception('Getting components failed!, ', e)
 
-    def config_thermodb_rule(self, config_file: str, name: str = "ALL", disp: bool = False) -> bool:
+    def config_thermodb_rule(self, config_file: str, names: Optional[List[str]] = None, disp: bool = False) -> bool:
         '''
         Configs thermodb rule defined for each component
 
@@ -59,15 +54,15 @@ class ThermoDBHub(ThermoLink):
         ----------
         config_file: str
             config file path
-        name: str
-            name of the record, optional, default value is ALL.
+        names: List[str]
+            name of the record, optional, default is None
         disp: bool
             display the config log
 
         Returns
         -------
-        True : bool
-            success
+        log_info : list
+            log info of the config
 
         Notes
         -----
@@ -92,20 +87,21 @@ class ThermoDBHub(ThermoLink):
         ```
         '''
         try:
+            # log info
+            log_info = ['Logging thermodb rule...']
+            
             # check
             if config_file:
                 # check file
                 if not os.path.exists(config_file):
                     raise Exception('Configuration file not found!')
 
-                # set name
-                name = str(name).strip()
-                # load
+                # NOTE: load config file
                 with open(config_file, 'r') as f:
                     _ref = yaml.load(f, Loader=yaml.FullLoader)
 
                     # check
-                    if name == "ALL":
+                    if names is None:
                         # check name exists
                         if _ref.keys():
                             # looping through
@@ -120,42 +116,58 @@ class ThermoDBHub(ThermoLink):
                                         record_thermodb_rule)
 
                                     # check disp
+                                    _log = f'{key} thermodb rule successfully set.'
                                     if disp:
-                                        print(
-                                            f'{key} thermodb rule successfully registered.')
+                                        print(_log)
+                                    log_info.append(_log)
                                 else:
-                                    print(
-                                        f'{key} not found, no thermodb provided!')
-                            # res
-                            return True
+                                    _log = f'{key} not found, no thermodb provided!'
+                                    # log warning
+                                    if disp:
+                                        print(_log)
+                                    log_info.append(_log)
                         else:
                             raise Exception('Record not found!')
                     else:
-                        # check name exists
-                        if name in _ref.keys():
-                            # get record
-                            record_thermodb_rule = _ref[name]
+                        # SECTION
+                        # check keys
+                        if not _ref.keys():
+                            raise Exception('Record not found!')
+                        
+                        # looping through names
+                        for name in names:
+                            # NOTE: check name exists
+                            if name in _ref.keys():
+                                # get record
+                                record_thermodb_rule = _ref[name]
 
-                            # check name exists
-                            if name in self._thermodb.keys():
-                                # looping through
-                                self._thermodb_rule[name].update(
-                                    record_thermodb_rule)
+                                # check name exists
+                                if name in self._thermodb.keys():
+                                    # looping through
+                                    self._thermodb_rule[name].update(
+                                        record_thermodb_rule)
 
-                                # check disp
-                                if disp:
-                                    print(
-                                        f'{name} thermodb rule successfully registered.')
-                                # res
-                                return True
+                                    # check disp
+                                    _log = f'{name} thermodb rule successfully registered.'
+                                    if disp:
+                                        print(_log)
+                                    log_info.append(_log)
+                                else:
+                                    _log = f'{name} not found, no thermodb provided!'
+                                    if disp:
+                                        print(_log)
+                                    log_info.append(_log)
                             else:
-                                print(
-                                    f'{name} not found, no thermodb provided!')
-                                # res
-                                return False
-                        else:
-                            print(f'{name} not found, no thermodb provided!')
-                            return False
+                                _log = f'{name} not found, no thermodb provided!'
+                                if disp:
+                                    print(_log)
+                                log_info.append(_log)
+            
+            # convert log_info to string
+            if isinstance(log_info, list):
+                log_info = '\n'.join(log_info)
+            
+            return log_info
 
         except Exception as e:
             raise Exception('Configuration failed!, ', e)
@@ -331,7 +343,7 @@ class ThermoDBHub(ThermoLink):
 
     def build(self):
         '''
-        Builds datasource and equationsource for each component in thermodb
+        Builds `datasource` and `equationsource` for each component registered in thermodb
 
         Parameters
         ----------
@@ -340,13 +352,44 @@ class ThermoDBHub(ThermoLink):
         Returns
         -------
         datasource : dict
-            datasource
+            datasource including component data such as Tc, Pc, etc.
         equationsource : dict
-            equationsource
+            equationsource including component equations such as VAPOR-PRESSURE, etc.
 
         Notes
         -----
         - A dictionary contains data and equations
+        
+        ```python
+        # CO2 data
+        dt1_ = datasource['CO2']['Pc']
+        print(type(dt1_))
+        print(dt1_)
+
+        # MeOH data
+        dt2_ = datasource['MeOH']['Tc']
+        print(type(dt2_))
+        print(dt2_)
+
+        # NRTL data
+        dt3_ = datasource['NRTL']['alpha_i_j']
+        print(type(dt3_))
+        print(dt3_.ij("Alpha_methanol_ethanol"))
+
+        # CO2 equation
+        eq1_ = equationsource['CO2']['VaPr']
+        print(type(eq1_))
+        print(eq1_)
+        print(eq1_.args)
+        print(eq1_.cal(T=298.15))
+
+        # nrtl equation
+        eq2_ = equationsource['NRTL']['tau_i_j']
+        print(type(eq2_))
+        print(eq2_)
+        print(eq2_.args)
+        print(eq2_.cal(T=298.15))
+        ```
         '''
         try:
             # components
