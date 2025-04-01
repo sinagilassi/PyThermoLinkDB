@@ -1,4 +1,4 @@
-# PyThermoDBLink
+# PyThermoLinkDB
 
 ![PyThermoLinkDB](./statics/header-1.png)
 
