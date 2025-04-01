@@ -106,7 +106,7 @@ print(type(dt3_))
 print(dt3_.ij("Alpha_methanol_ethanol"))
 
 # CO2 equation
-eq1_ = equationsource['CO2']['VaPr']
+eq1_ = equationsource['CO2']['Cp_IG']
 print(type(eq1_))
 print(eq1_)
 print(eq1_.args)
