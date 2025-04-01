@@ -70,10 +70,10 @@ print(thub1.items())
 # =======================================
 # add thermodb rule
 # define thermodb rule
-# thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
+thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
 
 # no change
-thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config_2.yml')
+# thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config_2.yml')
 
 # all components
 res_ = thub1.config_thermodb_rule(thermodb_config_file)
@@ -90,6 +90,9 @@ print(equationsource)
 
 # hub
 print(thub1.hub)
+
+# check 
+print(thub1.check())
 
 # =======================================
 # ✅ TEST

@@ -7,6 +7,7 @@ from typing import Optional, Dict, Any, Literal, Tuple, List, Union
 import pyThermoDB
 # local
 from .thermolink import ThermoLink
+from .utils import generate_summary
 
 
 class ThermoDBHub(ThermoLink):
@@ -569,6 +570,7 @@ class ThermoDBHub(ThermoLink):
             hub data
         '''
         try:
-            return self._hub
+            # check summary
+            return generate_summary(self._hub)
         except Exception as e:
             raise Exception('Checking data/equation source failed!, ', e)
