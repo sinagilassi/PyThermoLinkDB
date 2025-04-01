@@ -36,6 +36,10 @@ pip install PyThermoDB
 
 ### 🔄 **Load ThermoDB**
 
+This section demonstrates how to load thermodynamic data files from `PyThermoDB`. 
+
+Multiple thermodynamic databases are imported: one for CO2, one for methanol, and one for NRTL interaction parameters. Each database is loaded from a pickle file using the `load_thermodb` function, and then verified with the `check()` method to ensure data integrity.
+
 ```python
 # import packages/modules
 import os
@@ -81,6 +85,10 @@ print(nrtl_thermodb.check())
 
 ### 🔌 **Initialize Thermodb Hub** 
 
+This section demonstrates how to initialize a ThermoDB hub using the `init()` function, which creates a central repository for thermodynamic data. 
+
+The code shows adding different component databases (methanol, CO2) as well as interaction parameter data (NRTL) to the hub. The `items()` method is used to list all components currently stored in the hub.
+
 ```python
 # init thermodb hub
 thub1 = ptdblink.init()
@@ -98,6 +106,28 @@ print(thub1.items())
 
 ### ⚙️ **ThermoDB Link Configuration**
 
+This section shows the format of the YAML configuration file used to define thermodynamic properties and equations for different compounds. Each component has a `DATA` section for properties (like critical pressure, temperature) and an `EQUATIONS` section for thermodynamic relationships. The configuration file structure helps maintain consistent property mapping across the database.
+
+Thermodb rule format (`thermodb_config.yml`):
+
+```yml
+CO2:
+  DATA:
+    Pc: Pc
+    Tc: Tc
+    AcFa: AcFa
+  EQUATIONS:
+    vapor-pressure: VaPr
+    heat-capacity: Cp_IG
+acetylene:
+  DATA:
+    Pc: Pc
+    Tc: Tc
+    AcFa: AcFa
+  EQUATIONS:
+    vapor-pressure: VaPr
+```
+
 ```python
 # add thermodb rule
 thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
@@ -109,7 +139,40 @@ res_ = thub1.config_thermodb_rule(thermodb_config_file)
 print(res_)
 ```
 
+### 🔧 **Add/Update ThermoDB Rule**
+
+This section demonstrates how to add or update a ThermoDB rule for a specific chemical compound (e.g., CO2). The rule includes critical data properties and equations related to the compound, which are then added to the ThermoDB using the `add_thermodb_rule` method.
+
+```python
+# update thermodb rule
+thermodb_rule_CO2 = {
+    'DATA': {
+        'Pc': 'Pc1',
+        'Tc': 'Tc1',
+        'AcFa': 'AcFa1'
+    },
+    'EQUATIONS': {
+        'vapor-pressure': 'VaPr1',
+        'heat-capacity': 'Cp_IG1'
+    }
+}
+
+# add thermodb rule for CO2
+thub1.add_thermodb_rule('CO2', thermodb_rule_CO2)
+```
+
+### 🗑️ **Delete ThermoDB Rule**
+
+This section demonstrates how to delete a specific ThermoDB rule using the `delete_thermodb_rule` method. In this example, the rule associated with 'CO2' is being removed.
+
+```python
+# delete thermodb rule for CO2
+thub1.delete_thermodb_rule('CO2')
+```
+
 ### 🔨 **Build ThermoDB Hub**
+
+This section demonstrates the process of building data sources and equation sources using the `build` method, and then prints the resulting objects. Additionally, it showcases accessing and printing the `hub` attribute.
 
 ```python
 # build
@@ -121,7 +184,9 @@ print(equationsource)
 print(thub1.hub)
 ```
 
-### 📊 **Retrieve Data**
+### 📊 **Retrieve Data/Equation**
+
+This section demonstrates how to access various thermodynamic data and equations from the built ThermoDB hub. Examples include retrieving critical properties (Pc, Tc) for different components, NRTL interaction parameters, and calculating values using vapor pressure and activity coefficient equations at specified conditions.
 
 ```python
 # CO2 data

@@ -70,10 +70,10 @@ print(thub1.items())
 # =======================================
 # add thermodb rule
 # define thermodb rule
-# thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
+thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
 
 # no change
-thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config_2.yml')
+# thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config_2.yml')
 
 # all components
 res_ = thub1.config_thermodb_rule(thermodb_config_file)
@@ -81,6 +81,41 @@ res_ = thub1.config_thermodb_rule(thermodb_config_file)
 #res_ = thub1.config_thermodb_rule(thermodb_config_file, names=["MeOH", "CO2"])
 print(res_)
 
+# check
+res_ = thub1.thermodb_rule
+print(res_)
+
+# =======================================
+# ⚙️ UPDATE THERMODB LINK CONFIGURATION
+# =======================================
+
+# update thermodb rule
+thermodb_rule_CO2 = {
+    'DATA': {
+        'Pc': 'Pc1',
+        'Tc': 'Tc1',
+        'AcFa': 'AcFa1'
+    },
+    'EQUATIONS': {
+        'vapor-pressure': 'VaPr1',
+        'heat-capacity': 'Cp_IG1'
+    }
+}
+
+# add thermodb rule for CO2
+# thub1.add_thermodb_rule('CO2', thermodb_rule_CO2)
+
+# check
+res_ = thub1.thermodb_rule
+print(res_)
+
+
+# delete thermodb rule for CO2
+thub1.delete_thermodb_rule('CO2')
+
+# check
+res_ = thub1.thermodb_rule
+print(res_)
 # =======================================
 # 🏗️ BUILD
 # =======================================
@@ -110,7 +145,7 @@ print(type(dt3_))
 print(dt3_.ij("Alpha_methanol_ethanol"))
 
 # CO2 equation
-eq1_ = equationsource['CO2']['Cp_IG']
+eq1_ = equationsource['CO2']['heat-capacity']
 print(type(eq1_))
 print(eq1_)
 print(eq1_.args)

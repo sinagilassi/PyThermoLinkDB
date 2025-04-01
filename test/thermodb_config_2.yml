@@ -1,0 +1,6 @@
+# this rule used for setting a component data/equation names
+# component name:
+# DATA:
+#   data symbol defined in TableData: new symbol
+# EQUATIONS:
+#   equation symbol defined in TableEquations: new symbol
