@@ -30,7 +30,7 @@ setup(
     license='MIT',
     license_files=['LICENSE'],
     install_requires=['pandas', 'pillow', 'requests',
-                      'urllib3', 'numpy', 'PyYAML', 'PyThermoDB'],
+                      'urllib3', 'numpy', 'PyYAML', 'PyThermoDB', 'rich'],
     keywords=['python', 'chemical engineering', 'thermodynamics',
               'PyThermoDB'],
     classifiers=[
