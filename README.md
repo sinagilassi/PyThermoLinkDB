@@ -1,6 +1,6 @@
 # PyThermoLinkDB
 
-![PyThermoLinkDB](./statics/header-1.png)
+![PyThermoLinkDB](https://drive.google.com/uc?export=view&id=1uwEMQLNJv7vIJ1Frq2cDORyhrqSwNRVS)
 
 ![Downloads](https://img.shields.io/pypi/dm/PyThermoLinkDB) ![PyPI](https://img.shields.io/pypi/v/PyThermoLinkDB) ![Python Version](https://img.shields.io/pypi/pyversions/PyThermoLinkDB.svg) ![License](https://img.shields.io/pypi/l/PyThermoLinkDB)
 
@@ -28,7 +28,7 @@ You can run `PyThermoLinkDB` in Google Colab:
 Install `pyThermoLinkDB` and `PyThermoDB` with pip
 
 ```python
-pip install pyThermoLinkDB 
+pip install pyThermoLinkDB
 pip install PyThermoDB
 ```
 
@@ -36,7 +36,7 @@ pip install PyThermoDB
 
 ### 🔄 **Load ThermoDB**
 
-This section demonstrates how to load thermodynamic data files from `PyThermoDB`. 
+This section demonstrates how to load thermodynamic data files from `PyThermoDB`.
 
 Multiple thermodynamic databases are imported: one for CO2, one for methanol, and one for NRTL interaction parameters. Each database is loaded from a pickle file using the `load_thermodb` function, and then verified with the `check()` method to ensure data integrity.
 
@@ -83,9 +83,9 @@ print(type(nrtl_thermodb))
 print(nrtl_thermodb.check())
 ```
 
-### 🔌 **Initialize Thermodb Hub** 
+### 🔌 **Initialize Thermodb Hub**
 
-This section demonstrates how to initialize a ThermoDB hub using the `init()` function, which creates a central repository for thermodynamic data. 
+This section demonstrates how to initialize a ThermoDB hub using the `init()` function, which creates a central repository for thermodynamic data.
 
 The code shows adding different component databases (methanol, CO2) as well as interaction parameter data (NRTL) to the hub. The `items()` method is used to list all components currently stored in the hub.
 
@@ -221,7 +221,7 @@ print(eq2_.cal(T=298.15))
 
 ## ❓ **FAQ**
 
-For any question, contact me on [LinkedIn](https://www.linkedin.com/in/sina-gilassi/)  
+For any question, contact me on [LinkedIn](https://www.linkedin.com/in/sina-gilassi/)
 
 
 ## 👨‍💻 **Authors**

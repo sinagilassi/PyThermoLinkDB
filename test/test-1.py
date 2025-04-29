@@ -37,6 +37,15 @@ MeOH_thermodb
 # check
 print(MeOH_thermodb.check())
 
+# SECTION 🧪 toluene
+# thermodb file name
+toluene_thermodb_file = os.path.join(
+    os.getcwd(), 'test', 'toluene-1.pkl')
+print(f"thermodb file: {toluene_thermodb_file}")
+# load
+toluene_thermodb = ptdb.load_thermodb(toluene_thermodb_file)
+print(type(toluene_thermodb))
+
 # SECTION 🔬 nrtl
 # thermodb file name
 nrtl_thermodb_file = os.path.join(
@@ -59,6 +68,7 @@ print(type(thub1))
 # add component thermodb
 thub1.add_thermodb('MeOH', MeOH_thermodb)
 thub1.add_thermodb('CO2', CO2_thermodb)
+thub1.add_thermodb('toluene', toluene_thermodb)
 # matrix data
 thub1.add_thermodb('NRTL', nrtl_thermodb)
 
@@ -78,7 +88,7 @@ thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
 # all components
 res_ = thub1.config_thermodb_rule(thermodb_config_file)
 # selected components
-#res_ = thub1.config_thermodb_rule(thermodb_config_file, names=["MeOH", "CO2"])
+# res_ = thub1.config_thermodb_rule(thermodb_config_file, names=["MeOH", "CO2"])
 print(res_)
 
 # =======================================
@@ -91,7 +101,7 @@ print(equationsource)
 # hub
 print(thub1.hub)
 
-# check 
+# check
 print(thub1.check())
 
 # =======================================
@@ -125,5 +135,3 @@ print(type(eq2_))
 print(eq2_)
 print(eq2_.args)
 print(eq2_.cal(T=298.15))
-
-
