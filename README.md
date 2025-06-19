@@ -108,6 +108,8 @@ print(thub1.items())
 
 This section shows the format of the YAML configuration file used to define thermodynamic properties and equations for different compounds. Each component has a `DATA` section for properties (like critical pressure, temperature) and an `EQUATIONS` section for thermodynamic relationships. The configuration file structure helps maintain consistent property mapping across the database.
 
+You can use markdown (`.md`), YAML (`.yml`), or text (`.txt`) files to set the ThermoDB configuration. It is also possible to define a variable directly in your code and add the content of a `.yml`, `.txt`, or `.md` file as a string, as long as the format is correct and parsable.
+
 Thermodb rule format (`thermodb_config.yml`):
 
 ```yml
@@ -126,6 +128,29 @@ acetylene:
     AcFa: AcFa
   EQUATIONS:
     vapor-pressure: VaPr
+```
+
+```markdown
+## CO2
+
+    - DATA:
+        Pc: Pc
+        Tc: Tc
+        AcFa: AcFa
+    - EQUATIONS:
+        vapor-pressure: VaPr
+        heat-capacity: Cp_IG
+```
+
+```txt
+# CO2
+- DATA:
+Pc: Pc
+Tc: Tc
+AcFa: AcFa
+- EQUATIONS:
+vapor-pressure: VaPr
+heat-capacity: Cp_IG
 ```
 
 ```python
