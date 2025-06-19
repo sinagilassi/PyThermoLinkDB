@@ -147,7 +147,7 @@ toluene:
     vapor-pressure: VaPr
 """
 
-thermodb_config_content = """
+thermodb_config_content_2 = """
 # ThermoDB Config
 
 ## CO2
@@ -214,7 +214,7 @@ thermodb_config_content = """
         vapor-pressure: VaPr
 """
 
-thermodb_config_content = """
+thermodb_config_content_3 = """
 # CO2
 - DATA:
 Pc: Pc
