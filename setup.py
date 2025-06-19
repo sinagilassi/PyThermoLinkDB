@@ -10,9 +10,11 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 APP_NAME = 'PyThermoLinkDB'
 AUTHOR = 'Sina Gilassi'
 EMAIL = "<sina.gilassi@gmail.com>"
-VERSION = '1.3.0'
+VERSION = '1.3.1'
 DESCRIPTION = 'PyThermoLinkDB is a Python package providing a robust and efficient interface between `PyThermoDB` and other applications.'
 LONG_DESCRIPTION = "PyThermoLinkDB is a Python package providing a robust and efficient interface between `PyThermoDB` and other applications. It enables seamless thermodynamic data exchange, integration, and analysis. With PyThermoLinkDB, developers can easily link PyThermoDB to various tools, frameworks, and databases, streamlining thermodynamic workflows."
+HOME_PAGE = 'https://github.com/sinagilassi/PyThermoLinkDB'
+DOCUMENTATION = "https://pythermolinkdb.readthedocs.io/en/latest/"
 
 # Setting up
 setup(
@@ -21,6 +23,12 @@ setup(
     author=AUTHOR,
     author_email=EMAIL,
     description=DESCRIPTION,
+    url=HOME_PAGE,
+    project_urls={
+        'Documentation': DOCUMENTATION,
+        'Source': HOME_PAGE,
+        'Tracker': f'{HOME_PAGE}/issues',
+    },
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
