@@ -8,7 +8,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
 APP_NAME = 'PyThermoLinkDB'
-AUTHUR = 'Sina Gilassi'
+AUTHOR = 'Sina Gilassi'
 EMAIL = "<sina.gilassi@gmail.com>"
 VERSION = '1.2.0'
 DESCRIPTION = 'PyThermoLinkDB is a Python package providing a robust and efficient interface between `PyThermoDB` and other applications.'
@@ -18,7 +18,7 @@ LONG_DESCRIPTION = "PyThermoLinkDB is a Python package providing a robust and ef
 setup(
     name=APP_NAME,
     version=VERSION,
-    author=AUTHUR,
+    author=AUTHOR,
     author_email=EMAIL,
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
@@ -29,9 +29,9 @@ setup(
     package_data={'': ['config/*.yml', 'data/*.csv']},
     license='MIT',
     license_files=['LICENSE'],
-    install_requires=['pandas', 'pillow', 'requests',
-                      'urllib3', 'numpy', 'PyYAML', 'PyThermoDB', 'rich'],
-    keywords=['python', 'chemical engineering', 'thermodynamics',
+    install_requires=['PyYAML', 'PyThermoDB'],
+    keywords=['chemical engineering',
+              'thermodynamics',
               'PyThermoDB'],
     classifiers=[
         "Development Status :: 1 - Planning",

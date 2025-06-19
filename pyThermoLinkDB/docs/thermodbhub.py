@@ -1,13 +1,15 @@
-# THERMODB
-
 # import packages/modules
 import os
-import yaml
-from typing import Optional, Dict, Any, Literal, Tuple, List, Union
-import pyThermoDB
+from pathlib import Path
+from typing import Optional, List
+from pyThermoDB import CompBuilder
 # local
 from .thermolink import ThermoLink
-from .utils import generate_summary
+from .utils import (
+    generate_summary,
+    thermodb_file_loader,
+    thermodb_parser,
+)
 
 
 class ThermoDBHub(ThermoLink):
@@ -35,7 +37,7 @@ class ThermoDBHub(ThermoLink):
 
     def items(self):
         '''
-        Gets aall items in thermodb link
+        Gets all items in thermodb link
 
         Returns
         -------
@@ -47,14 +49,19 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Getting components failed!, ', e)
 
-    def config_thermodb_rule(self, config_file: str, names: Optional[List[str]] = None, disp: bool = False) -> bool:
+    def config_thermodb_rule(self,
+                             config_file: str | Path,
+                             names: Optional[List[str]] = None,
+                             disp: bool = False
+                             ) -> bool | str:
         '''
         Configs thermodb rule defined for each component
 
         Parameters
         ----------
-        config_file: str
-            config file path
+        config_file: str | Path
+            config file path or content, file can be a `yml`, `md`, or `txt` file
+            or a string content in the same format
         names: List[str]
             name of the record, optional, default is None
         disp: bool
@@ -68,7 +75,7 @@ class ThermoDBHub(ThermoLink):
         Notes
         -----
         config_file is a `yml file` format as:
-        
+
         ```yaml
         EtOH:
             DATA:
@@ -90,123 +97,152 @@ class ThermoDBHub(ThermoLink):
         try:
             # log info
             log_info = ['Logging thermodb rule...']
-            
-            # check
-            if config_file:
-                # check file
-                if not os.path.exists(config_file):
-                    raise Exception('Configuration file not found!')
 
-                # NOTE: load config file
-                with open(config_file, 'r') as f:
-                    _ref = yaml.load(f, Loader=yaml.FullLoader)
-                    
-                    # NOTE: check if _ref is None
-                    if _ref is None:
-                        _log = 'thermodb rule file is empty!'
-                        # log warning
+            # SECTION: check config_file
+            if not config_file:
+                # log warning
+                _log = 'No configuration file provided!'
+                if disp:
+                    print(_log)
+                log_info.append(_log)
+
+                # set
+                log_info = '\n'.join(log_info)
+                # return
+                return log_info
+
+            # SECTION: check file
+            # check the config_file is a file or content
+            if isinstance(config_file, str):
+                # check if config_file is a file
+                if os.path.isfile(config_file):
+                    # ! load thermodb file
+                    _ref = thermodb_file_loader(config_file)
+                else:
+                    # ! parse thermodb content
+                    _ref = thermodb_parser(config_file)
+            elif isinstance(config_file, Path):
+                # check if config_file is a file
+                if config_file.is_file():
+                    # ! load thermodb file
+                    _ref = thermodb_file_loader(config_file)
+                else:
+                    # ! parse thermodb content
+                    _ref = thermodb_parser(config_file.read_text())
+            else:
+                raise TypeError(
+                    'config_file should be a string or a file path!')
+
+            # SECTION: analyze the reference
+            # NOTE: check if _ref is None
+            if _ref is None:
+                _log = 'thermodb rule file is empty!'
+                # log warning
+                if disp:
+                    print(_log)
+                log_info.append(_log)
+
+                # set
+                log_info = '\n'.join(log_info)
+                # return
+                return log_info
+
+            # NOTE: check config mode
+            if names is None:
+                # check name exists
+                if _ref.keys():
+                    # looping through
+                    for key in _ref.keys():
+                        # get record
+                        record_thermodb_rule = _ref[key]
+
+                        # check key exists
+                        if key in self._thermodb.keys():
+                            # add
+                            self._thermodb_rule[key].update(
+                                record_thermodb_rule)
+
+                            # check disp
+                            _log = f'{key} thermodb rule successfully set.'
+                            if disp:
+                                print(_log)
+                            log_info.append(_log)
+                        else:
+                            _log = f'{key} not found, no thermodb provided!'
+                            # log warning
+                            if disp:
+                                print(_log)
+                            log_info.append(_log)
+                else:
+                    # empty thermodb rule
+                    _log = 'No thermodb rule found!'
+                    # log warning
+                    if disp:
+                        print(_log)
+                    log_info.append(_log)
+
+                    # set
+                    log_info = '\n'.join(log_info)
+
+                    # return
+                    return log_info
+            else:
+                # SECTION
+                # check keys
+                if not _ref.keys():
+                    _log = 'No thermodb rule found!'
+                    # log warning
+                    if disp:
+                        print(_log)
+                    log_info.append(_log)
+
+                    # set
+                    log_info = '\n'.join(log_info)
+                    # return
+                    return log_info
+
+                # looping through names
+                for name in names:
+                    # NOTE: check name exists
+                    if name in _ref.keys():
+                        # get record
+                        record_thermodb_rule = _ref[name]
+
+                        # check name exists
+                        if name in self._thermodb.keys():
+                            # looping through
+                            self._thermodb_rule[name].update(
+                                record_thermodb_rule)
+
+                            # check disp
+                            _log = f'{name} thermodb rule successfully registered.'
+                            if disp:
+                                print(_log)
+                            log_info.append(_log)
+                        else:
+                            _log = f'{name} not found, no thermodb provided!'
+                            if disp:
+                                print(_log)
+                            log_info.append(_log)
+                    else:
+                        _log = f'{name} not found, no thermodb provided!'
                         if disp:
                             print(_log)
                         log_info.append(_log)
-                        
-                        # set
-                        log_info = '\n'.join(log_info)
-                        # return
-                        return log_info
 
-                    # check
-                    if names is None:
-                        # check name exists
-                        if _ref.keys():
-                            # looping through
-                            for key in _ref.keys():
-                                # get record
-                                record_thermodb_rule = _ref[key]
-
-                                # check key exists
-                                if key in self._thermodb.keys():
-                                    # add
-                                    self._thermodb_rule[key].update(
-                                        record_thermodb_rule)
-
-                                    # check disp
-                                    _log = f'{key} thermodb rule successfully set.'
-                                    if disp:
-                                        print(_log)
-                                    log_info.append(_log)
-                                else:
-                                    _log = f'{key} not found, no thermodb provided!'
-                                    # log warning
-                                    if disp:
-                                        print(_log)
-                                    log_info.append(_log)
-                        else:
-                            # empty thermodb rule
-                            _log = 'No thermodb rule found!'
-                            # log warning
-                            if disp:
-                                print(_log)
-                            log_info.append(_log)
-                            
-                            # set
-                            log_info = '\n'.join(log_info)
-                            
-                            # return
-                            return log_info
-                    else:
-                        # SECTION
-                        # check keys
-                        if not _ref.keys():
-                            _log = 'No thermodb rule found!'
-                            # log warning
-                            if disp:
-                                print(_log)
-                            log_info.append(_log)
-                            
-                            # set
-                            log_info = '\n'.join(log_info)
-                            # return
-                            return log_info
-                        
-                        # looping through names
-                        for name in names:
-                            # NOTE: check name exists
-                            if name in _ref.keys():
-                                # get record
-                                record_thermodb_rule = _ref[name]
-
-                                # check name exists
-                                if name in self._thermodb.keys():
-                                    # looping through
-                                    self._thermodb_rule[name].update(
-                                        record_thermodb_rule)
-
-                                    # check disp
-                                    _log = f'{name} thermodb rule successfully registered.'
-                                    if disp:
-                                        print(_log)
-                                    log_info.append(_log)
-                                else:
-                                    _log = f'{name} not found, no thermodb provided!'
-                                    if disp:
-                                        print(_log)
-                                    log_info.append(_log)
-                            else:
-                                _log = f'{name} not found, no thermodb provided!'
-                                if disp:
-                                    print(_log)
-                                log_info.append(_log)
-            
             # NOTE: convert log_info to string
             if isinstance(log_info, list):
                 log_info = '\n'.join(log_info)
-            
+
             return log_info
 
         except Exception as e:
             raise Exception('Configuration failed!, ', e)
 
-    def add_thermodb_rule(self, item: str, rules: dict) -> bool:
+    def add_thermodb_rule(self,
+                          item: str,
+                          rules: dict
+                          ) -> bool | str:
         '''
         Adds or update a thermodb rule for a thermodb rule item.
 
@@ -239,7 +275,7 @@ class ThermoDBHub(ThermoLink):
                 'heat-capacity': 'Cp_IG1'
             }
         }
-        
+
         # add thermodb rule for CO2
         thub1.add_thermodb_rule('CO2', thermodb_rule_CO2)
         ```
@@ -247,10 +283,10 @@ class ThermoDBHub(ThermoLink):
         try:
             # logger
             log_info = ['Logging thermodb rule...']
-            
+
             # log res
-            log_res = lambda x: "\n".join(x)
-            
+            def log_res(x): return "\n".join(x)
+
             # NOTE: check item exists
             if item not in self._thermodb_rule.keys():
                 # add item
@@ -259,36 +295,36 @@ class ThermoDBHub(ThermoLink):
                 log_ = f"{item} thermodb successfully set."
                 # log warning
                 log_info.append(log_)
-            
+
             # NOTE: check rules
             if 'DATA' not in self._thermodb_rule[item].keys():
                 # add DATA
                 self._thermodb_rule[item]['DATA'] = {}
-                
+
                 # log
                 log_ = f"{item} DATA successfully set."
                 # log warning
                 log_info.append(log_)
-                
+
             if 'EQUATIONS' not in self._thermodb_rule[item].keys():
                 # add EQUATIONS
                 self._thermodb_rule[item]['EQUATIONS'] = {}
-                
+
                 # log
                 log_ = f"{item} EQUATIONS successfully set."
                 # log warning
                 log_info.append(log_)
-            
-            # NOTE: check item exist 
+
+            # NOTE: check item exist
             if item not in self._thermodb_rule.keys():
                 # log warning
                 log_ = f"{item} is not in thermodb rule!"
                 # log warning
                 log_info.append(log_)
-                
+
                 # res
                 return log_res(log_info)
-                
+
             # NOTE: add DATA
             if 'DATA' in rules.keys():
                 # data
@@ -296,26 +332,26 @@ class ThermoDBHub(ThermoLink):
                 # check data
                 if not isinstance(data_, dict):
                     raise Exception('DATA should be a dictionary!')
-                
+
                 # check data exist
                 if not data_.keys():
                     raise Exception('DATA is empty!')
-                
+
                 # looping through data
                 for k, v in data_.items():
                     # initialize
                     if k not in self._thermodb_rule[item].keys():
                         # add data (new record)
                         self._thermodb_rule[item]['DATA'][k] = {}
-                        
+
                     # add data (update record)
                     self._thermodb_rule[item]['DATA'][k] = v
-                    
+
                     # log
                     log_ = f"{item} {k} successfully set."
                     # log warning
                     log_info.append(log_)
-                    
+
             # NOTE: add EQUATIONS
             if 'EQUATIONS' in rules.keys():
                 # equations
@@ -323,39 +359,41 @@ class ThermoDBHub(ThermoLink):
                 # check equations
                 if not isinstance(equations_, dict):
                     raise Exception('EQUATIONS should be a dictionary!')
-                
+
                 # check equations exist
                 if not equations_.keys():
                     raise Exception('EQUATIONS is empty!')
-                
+
                 # looping through equations
                 for k, v in equations_.items():
                     # initialize
                     if k not in self._thermodb_rule[item].keys():
                         # add equations (new record)
                         self._thermodb_rule[item]['EQUATIONS'][k] = {}
-                        
+
                     # add equations (update record)
                     self._thermodb_rule[item]['EQUATIONS'][k] = v
                     # log
                     log_ = f"{item} {k} successfully set."
                     # log warning
                     log_info.append(log_)
-            
+
             # NOTE: check if log_info is empty
             if len(log_info) == 1:
                 # log warning
                 log_ = f"No thermodb rule found!"
                 # log warning
                 log_info.append(log_)
-            
+
             # res
             return log_res(log_info)
-            
+
         except Exception as e:
             raise Exception('Adding new rule failed!, ', e)
 
-    def delete_thermodb_rule(self, name: str) -> bool:
+    def delete_thermodb_rule(self,
+                             name: str
+                             ) -> bool:
         '''
         Deletes an item from thermodb rule
 
@@ -383,7 +421,10 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Deleting rule failed!, ', e)
 
-    def add_thermodb(self, name: str, data: pyThermoDB.CompBuilder) -> bool:
+    def add_thermodb(self,
+                     name: str,
+                     data: CompBuilder
+                     ) -> bool:
         '''
         Adds new thermodb such as: CO2_thermodb
 
@@ -391,7 +432,7 @@ class ThermoDBHub(ThermoLink):
         ----------
         name: str
             name of the record
-        data: pyThermoDB.CompBuilder
+        data: CompBuilder
             data of the record
 
         Returns
@@ -408,7 +449,10 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Adding new record failed!, ', e)
 
-    def update_thermodb(self, name, data: pyThermoDB.CompBuilder) -> bool:
+    def update_thermodb(self,
+                        name,
+                        data: CompBuilder
+                        ) -> bool:
         '''
         Updates existing record
 
@@ -471,9 +515,8 @@ class ThermoDBHub(ThermoLink):
         try:
             # check key exist
             if name not in self._thermodb.keys():
-                # log warning
-                print(f"{name} is not in thermodb!")
-                return None
+                # raise
+                raise Exception(f"{name} is not in thermodb!")
 
             # res
             res = self._thermodb[name].check()
@@ -499,7 +542,7 @@ class ThermoDBHub(ThermoLink):
         Notes
         -----
         - A dictionary contains data and equations
-        
+
         ```python
         # CO2 data
         dt1_ = datasource['CO2']['Pc']
