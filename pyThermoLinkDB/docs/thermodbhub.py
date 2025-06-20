@@ -49,11 +49,12 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Getting components failed!, ', e)
 
-    def config_thermodb_rule(self,
-                             config_file: str | Path,
-                             names: Optional[List[str]] = None,
-                             disp: bool = False
-                             ) -> bool | str:
+    def config_thermodb_rule(
+        self,
+        config_file: str | Path,
+        names: Optional[List[str]] = None,
+        disp: bool = False
+    ) -> bool | str:
         '''
         Configs thermodb rule defined for each component
 
@@ -239,10 +240,11 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Configuration failed!, ', e)
 
-    def add_thermodb_rule(self,
-                          item: str,
-                          rules: dict
-                          ) -> bool | str:
+    def add_thermodb_rule(
+        self,
+        item: str,
+        rules: dict
+    ) -> bool | str:
         '''
         Adds or update a thermodb rule for a thermodb rule item.
 
@@ -381,7 +383,7 @@ class ThermoDBHub(ThermoLink):
             # NOTE: check if log_info is empty
             if len(log_info) == 1:
                 # log warning
-                log_ = f"No thermodb rule found!"
+                log_ = "No thermodb rule found!"
                 # log warning
                 log_info.append(log_)
 
@@ -391,9 +393,10 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Adding new rule failed!, ', e)
 
-    def delete_thermodb_rule(self,
-                             name: str
-                             ) -> bool:
+    def delete_thermodb_rule(
+        self,
+        name: str
+    ) -> bool:
         '''
         Deletes an item from thermodb rule
 
@@ -421,10 +424,11 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Deleting rule failed!, ', e)
 
-    def add_thermodb(self,
-                     name: str,
-                     data: CompBuilder
-                     ) -> bool:
+    def add_thermodb(
+        self,
+        name: str,
+        data: CompBuilder
+    ) -> bool:
         '''
         Adds new thermodb such as: CO2_thermodb
 
@@ -449,10 +453,11 @@ class ThermoDBHub(ThermoLink):
         except Exception as e:
             raise Exception('Adding new record failed!, ', e)
 
-    def update_thermodb(self,
-                        name,
-                        data: CompBuilder
-                        ) -> bool:
+    def update_thermodb(
+        self,
+        name,
+        data: CompBuilder
+    ) -> bool:
         '''
         Updates existing record
 
@@ -598,6 +603,31 @@ class ThermoDBHub(ThermoLink):
             return datasource, equationsource
         except Exception as e:
             raise Exception('Building data/equation source failed!, ', e)
+
+    def clean(self):
+        '''
+        Cleans thermodb including thermodb, thermodb_rule, and hub
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        '''
+        try:
+            # reset
+            self._thermodb = {}
+            # reset
+            self._thermodb_rule = {}
+            # reset
+            self._hub = {}
+
+            # res
+            return True
+        except Exception as e:
+            raise Exception('Cleaning data/equation source failed!, ', e)
 
     def check(self):
         '''

@@ -290,6 +290,17 @@ print(thub1.hub)
 # check
 print(thub1.check())
 
+# NOTE: clean
+# thub1.clean()
+# # hub
+# print(thub1.hub)
+# # check
+# print(thub1.check())
+# # build
+# datasource, equationsource = thub1.build()
+# print(datasource)
+# print(equationsource)
+
 # =======================================
 # ✅ TEST
 # =======================================

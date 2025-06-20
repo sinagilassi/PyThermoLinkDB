@@ -1,7 +1,6 @@
 # import packages/modules
 
 # local
-from .config import __version__, __author__, __description__
 from .docs import ThermoDBHub
 
 
