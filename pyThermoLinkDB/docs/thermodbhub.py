@@ -1,7 +1,7 @@
 # import packages/modules
 import os
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Union, Dict
 from pyThermoDB import CompBuilder
 # local
 from .thermolink import ThermoLink
@@ -51,7 +51,7 @@ class ThermoDBHub(ThermoLink):
 
     def config_thermodb_rule(
         self,
-        config_file: str | Path,
+        rule: Union[str, Path, Dict[str, Dict[str, Dict[str, str]]]],
         names: Optional[List[str]] = None,
         disp: bool = False
     ) -> bool | str:
@@ -60,7 +60,7 @@ class ThermoDBHub(ThermoLink):
 
         Parameters
         ----------
-        config_file: str | Path
+        rule: str | Path | dict
             config file path or content, file can be a `yml`, `md`, or `txt` file
             or a string content in the same format
         names: List[str]
@@ -75,7 +75,7 @@ class ThermoDBHub(ThermoLink):
 
         Notes
         -----
-        config_file is a `yml file` format as:
+        rule is a `yml file` format as:
 
         ```yaml
         EtOH:
@@ -99,8 +99,8 @@ class ThermoDBHub(ThermoLink):
             # log info
             log_info = ['Logging thermodb rule...']
 
-            # SECTION: check config_file
-            if not config_file:
+            # SECTION: check rule
+            if not rule:
                 # log warning
                 _log = 'No configuration file provided!'
                 if disp:
@@ -113,26 +113,42 @@ class ThermoDBHub(ThermoLink):
                 return log_info
 
             # SECTION: check file
-            # check the config_file is a file or content
-            if isinstance(config_file, str):
-                # check if config_file is a file
-                if os.path.isfile(config_file):
+            # check the rule is a file or content
+            if isinstance(rule, str):
+                # check if rule is a file
+                if os.path.isfile(rule):
                     # ! load thermodb file
-                    _ref = thermodb_file_loader(config_file)
+                    _ref = thermodb_file_loader(rule)
                 else:
                     # ! parse thermodb content
-                    _ref = thermodb_parser(config_file)
-            elif isinstance(config_file, Path):
-                # check if config_file is a file
-                if config_file.is_file():
+                    _ref = thermodb_parser(rule)
+            elif isinstance(rule, Path):
+                # check if rule is a file
+                if rule.is_file():
                     # ! load thermodb file
-                    _ref = thermodb_file_loader(config_file)
+                    _ref = thermodb_file_loader(rule)
                 else:
                     # ! parse thermodb content
-                    _ref = thermodb_parser(config_file.read_text())
+                    _ref = thermodb_parser(rule.read_text())
+            elif isinstance(rule, dict):
+                # check if rule is a dict
+                if rule:
+                    # set _ref
+                    _ref = rule
+                else:
+                    # log warning
+                    _log = 'thermodb rule file is empty!'
+                    if disp:
+                        print(_log)
+                    log_info.append(_log)
+
+                    # set
+                    log_info = '\n'.join(log_info)
+                    # return
+                    return log_info
             else:
                 raise TypeError(
-                    'config_file should be a string or a file path!')
+                    'rule should be a string or a file path!')
 
             # SECTION: analyze the reference
             # NOTE: check if _ref is None
