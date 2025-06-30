@@ -9,11 +9,12 @@ class ThermoLink:
         # load reference
         pass
 
-    def _set_datasource(self,
-                        thermodb: dict,
-                        thermodb_rule: dict,
-                        components: list
-                        ) -> dict:
+    def _set_datasource(
+        self,
+        thermodb: dict,
+        thermodb_rule: dict,
+        components: list
+    ) -> dict:
         '''
         Sets a datasource
 
@@ -105,11 +106,12 @@ class ThermoLink:
         except Exception as e:
             raise Exception('Building datasource failed!, ', e)
 
-    def _set_equationsource(self,
-                            thermodb: dict,
-                            thermodb_rule: dict,
-                            components: list
-                            ) -> dict:
+    def _set_equationsource(
+        self,
+        thermodb: dict,
+        thermodb_rule: dict,
+        components: list
+    ) -> dict:
         '''
         Sets equation source
 
