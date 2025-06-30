@@ -36,7 +36,6 @@ setup(
     # Add both config and data files
     package_data={'': ['config/*.yml', 'data/*.csv']},
     license='MIT',
-    license_files=['LICENSE'],
     install_requires=['PyYAML', 'PyThermoDB'],
     keywords=[
         'chemical engineering',
