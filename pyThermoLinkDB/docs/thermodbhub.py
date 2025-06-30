@@ -174,7 +174,9 @@ class ThermoDBHub(ThermoLink):
                         record_thermodb_rule = _ref[key]
 
                         # check key exists
-                        if key in self._thermodb.keys():
+                        if (
+                            key in self._thermodb.keys()
+                        ):
                             # add
                             self._thermodb_rule[key].update(
                                 record_thermodb_rule)
@@ -305,7 +307,7 @@ class ThermoDBHub(ThermoLink):
             # log res
             def log_res(x): return "\n".join(x)
 
-            # NOTE: check item exists
+            # SECTION: check item exists
             if item not in self._thermodb_rule.keys():
                 # add item
                 self._thermodb_rule[item] = {}
@@ -314,7 +316,7 @@ class ThermoDBHub(ThermoLink):
                 # log warning
                 log_info.append(log_)
 
-            # NOTE: check rules
+            # SECTION: check rules
             if 'DATA' not in self._thermodb_rule[item].keys():
                 # add DATA
                 self._thermodb_rule[item]['DATA'] = {}
@@ -333,7 +335,7 @@ class ThermoDBHub(ThermoLink):
                 # log warning
                 log_info.append(log_)
 
-            # NOTE: check item exist
+            # SECTION: check item exist
             if item not in self._thermodb_rule.keys():
                 # log warning
                 log_ = f"{item} is not in thermodb rule!"
@@ -343,7 +345,7 @@ class ThermoDBHub(ThermoLink):
                 # res
                 return log_res(log_info)
 
-            # NOTE: add DATA
+            # LINK: add DATA
             if 'DATA' in rules.keys():
                 # data
                 data_ = rules['DATA']
@@ -370,7 +372,7 @@ class ThermoDBHub(ThermoLink):
                     # log warning
                     log_info.append(log_)
 
-            # NOTE: add EQUATIONS
+            # LINK: add EQUATIONS
             if 'EQUATIONS' in rules.keys():
                 # equations
                 equations_ = rules['EQUATIONS']
@@ -443,7 +445,8 @@ class ThermoDBHub(ThermoLink):
     def add_thermodb(
         self,
         name: str,
-        data: CompBuilder
+        data: CompBuilder,
+        rules: Optional[Dict[str, Dict[str, str]]] = None
     ) -> bool:
         '''
         Adds new thermodb such as: CO2_thermodb
@@ -454,6 +457,8 @@ class ThermoDBHub(ThermoLink):
             name of the record
         data: CompBuilder
             data of the record
+        rules: dict, optional
+            thermodb rule for the record, default is None
 
         Returns
         -------
@@ -464,6 +469,19 @@ class ThermoDBHub(ThermoLink):
             self._thermodb[name] = data
             # create thermodb rule
             self._thermodb_rule[name] = {}
+
+            # check rules
+            if rules is not None:
+                # check rules is a dict
+                if not isinstance(rules, dict):
+                    raise TypeError('rules should be a dictionary!')
+
+                # check rules exist
+                if not rules.keys():
+                    raise ValueError('rules is empty!')
+
+                # add thermodb rule
+                self.add_thermodb_rule(name, rules)
             # res
             return True
         except Exception as e:
