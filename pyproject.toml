@@ -36,8 +36,9 @@ Source = "https://github.com/sinagilassi/PyThermoLinkDB"
 packages = ["pyThermoLinkDB"]
 include-package-data = true
 
+# package data files
 [tool.setuptools.package-data]
-"*" = ["config/*", "data/*"]
+pyThermoLinkDB = ["data/**/*"]
 
 [tool.setuptools.exclude-package-data]
 "*" = ["tests", "*.tests", "*.tests.*"]
