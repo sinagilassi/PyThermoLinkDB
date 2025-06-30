@@ -1,0 +1,9 @@
+include pyproject.toml
+include README.md
+include LICENSE
+include requirements.txt
+
+recursive-include pyThermoLinkDB *.py
+recursive-include pyThermoLinkDB/config *.py
+recursive-include pyThermoLinkDB/docs *.py
+recursive-include pyThermoLinkDB/data *
