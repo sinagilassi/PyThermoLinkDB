@@ -22,7 +22,7 @@ theme:
     - scheme: slate
       toggle:
         icon: material/toggle-switch
-        name: Switch to light mode    
+        name: Switch to light mode
       primary: blue
       accent: yellow
 
@@ -54,7 +54,6 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
-
 
 copyright: |
   &copy; 2025 <a href="https://github.com/sinagilassi"  target="_blank" rel="noopener">Sina Gilassi</a>
