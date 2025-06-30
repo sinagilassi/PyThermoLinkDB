@@ -38,9 +38,11 @@ setup(
     license='MIT',
     license_files=['LICENSE'],
     install_requires=['PyYAML', 'PyThermoDB'],
-    keywords=['chemical engineering',
-              'thermodynamics',
-              'PyThermoDB'],
+    keywords=[
+        'chemical engineering',
+        'thermodynamics',
+        'PyThermoDB'
+    ],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Education",
