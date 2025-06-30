@@ -21,7 +21,7 @@ class ThermoDBHub(ThermoLink):
 
     def __init__(self):
         # init super class
-        ThermoLink().__init__()
+        super().__init__()
 
     @property
     def thermodb(self):
