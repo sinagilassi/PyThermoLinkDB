@@ -44,9 +44,11 @@ class ThermoLink:
                     # init datasource for component
                     datasource[component] = {}
 
-                    # saved component data
+                    # ! saved component data
+                    # check properties -> data
                     data = list(
-                        thermodb[component].check_properties().keys())
+                        thermodb[component].check_properties().keys()
+                    )
 
                     # check
                     if len(data) != 0:
@@ -60,7 +62,10 @@ class ThermoLink:
                                 # NOTE: set
                                 df_src = src_.data_structure()
 
-                                # take all symbols
+                                # ? take all columns (header)
+                                header = df_src['COLUMNS'].tolist()
+
+                                # ?take all symbols
                                 symbols = df_src['SYMBOL'].tolist()
                             elif isinstance(src_, TableMatrixData):
                                 # NOTE: set
@@ -74,29 +79,85 @@ class ThermoLink:
                                 symbols = matrix_symbol_
 
                             # looping through item data
+                            # SECTION: looking through each symbol
                             for symbol in symbols:
                                 # check
                                 if symbol is not None and symbol != 'None':
                                     # ! symbol
                                     symbol = str(symbol).strip()
 
-                                    _val = src_.get_property(symbol) if isinstance(
-                                        src_, TableData) else src_
+                                    # ? get property value
+                                    # check if TableData or TableMatrixData
+                                    _val = src_.get_property(symbol) if \
+                                        isinstance(src_, TableData) else src_
 
                                     # NOTE: check symbol rename is required
                                     if component in thermodb_rule.keys():
                                         # get thermodb rule
                                         _rules = thermodb_rule[component].get(
-                                            'DATA', None)
+                                            'DATA',
+                                            None
+                                        )
+
                                         # check
                                         if _rules:
                                             # set
                                             if symbol in _rules.keys():
-                                                # rename
+                                                # ! rename
                                                 symbol = _rules[symbol]
 
-                                    # update
+                                    # LINK: update
                                     datasource[component][symbol] = _val
+
+                            # SECTION: looking through each header
+                            for header_ in header:
+                                # check
+                                if header_ is not None and header_ != 'None':
+                                    # ! header
+                                    header_ = str(header_).strip()
+
+                                    # ! header index
+                                    header_index = df_src['COLUMNS'].tolist().\
+                                        index(header_)
+
+                                    # ? find symbol
+                                    symbol_ = df_src['SYMBOL'].tolist()[
+                                        header_index
+                                    ]
+
+                                    # ! check symbol if None and '' and 'None'
+                                    if (
+                                        symbol_ is None or
+                                        symbol_ == '' or
+                                        symbol_ == 'None'
+                                    ):
+                                        continue
+
+                                    # NOTE: check already set
+                                    # if symbol_ in datasource[component].keys():
+                                    #     # skip
+                                    #     continue
+
+                                    _val = src_.get_property(symbol_) if \
+                                        isinstance(src_, TableData) else src_
+
+                                    # NOTE: check symbol rename is required
+                                    if component in thermodb_rule.keys():
+                                        # get thermodb rule
+                                        _rules = thermodb_rule[component].get(
+                                            'DATA',
+                                            None
+                                        )
+
+                                        # check
+                                        if _rules:
+                                            # set
+                                            if header_ in _rules.keys():
+                                                # ! rename
+                                                symbol_ = _rules[header_]
+
+                                    # LINK: update
+                                    datasource[component][symbol_] = _val
                     else:
                         # no data registered
                         raise Exception(
@@ -159,7 +220,10 @@ class ThermoLink:
                             if component in thermodb_rule.keys():
                                 # get thermodb rule
                                 _rules = thermodb_rule[component].get(
-                                    'EQUATIONS', None)
+                                    'EQUATIONS',
+                                    None
+                                )
+
                                 # check
                                 if _rules:
                                     # keys

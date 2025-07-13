@@ -7,7 +7,7 @@
 
 CO2:
   DATA:
-    Pc: Pc
+    critical-pressure: Pc
     Tc: Tc
     AcFa: AcFa
   EQUATIONS:
@@ -30,7 +30,7 @@ EtOH:
 MeOH:
   DATA:
     Pc: Pc
-    Tc: Tc
+    critical-temperature: Tc
     AcFa: AcFa
   EQUATIONS:
     vapor-pressure: VaPr
