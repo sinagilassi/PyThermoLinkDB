@@ -25,14 +25,14 @@ EtOH:
     AcFa: AcFa3
   EQUATIONS:
     vapor-pressure: VaPr
-MeOH:
-  DATA:
-    Pc: Pc
-    Tc: Tc
-    AcFa: AcFa
-  EQUATIONS:
-    vapor-pressure: VaPr
-    heat-capacity: Cp_LIQ
+# MeOH:
+#   DATA:
+#     Pc: Pc
+#     Tc: Tc
+#     AcFa: AcFa
+#   EQUATIONS:
+#     vapor-pressure: VaPr
+#     heat-capacity: Cp_LIQ
 n-butane:
   DATA:
     Pc: Pc
