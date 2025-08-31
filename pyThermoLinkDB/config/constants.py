@@ -1,0 +1,4 @@
+# CONSTANTS
+
+# SECTION: default rules
+DEFAULT_RULES_KEY = "ALL"
