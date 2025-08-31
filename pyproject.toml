@@ -22,8 +22,8 @@ classifiers = [
 ]
 keywords = ["chemical engineering", "thermodynamics", "PyThermoDB"]
 dependencies = [
-    "PyYAML",
-    "PyThermoDB"
+    "PyYAML>=6.0.2",
+    "PyThermoDB>=1.11.13"
 ]
 
 [project.urls]
