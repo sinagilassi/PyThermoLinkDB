@@ -2,7 +2,7 @@
 
 ![PyThermoLinkDB](https://drive.google.com/uc?export=view&id=1uwEMQLNJv7vIJ1Frq2cDORyhrqSwNRVS)
 
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/pythermolinkdb?period=monthly&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/pythermolinkdb)
+[![PyPI Downloads](https://static.pepy.tech/badge/pythermolinkdb/month)](https://pepy.tech/projects/pythermolinkdb)
 ![PyPI](https://img.shields.io/pypi/v/PyThermoLinkDB)
 ![Python Version](https://img.shields.io/pypi/pyversions/PyThermoLinkDB.svg)
 ![License](https://img.shields.io/pypi/l/PyThermoLinkDB)
