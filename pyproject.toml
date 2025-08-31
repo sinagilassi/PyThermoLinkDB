@@ -11,6 +11,7 @@ authors = [
     {name = "Sina Gilassi", email = "sina.gilassi@gmail.com"}
 ]
 license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 1 - Planning",
@@ -23,6 +24,8 @@ classifiers = [
 keywords = ["chemical engineering", "thermodynamics", "PyThermoDB"]
 dependencies = [
     "PyYAML>=6.0.2",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
     "pythermodb>=1.11.14",
 ]
 
@@ -44,4 +47,4 @@ include = ["pyThermoLinkDB*"]
 pyThermoLinkDB = ["data/**/*"]
 
 [tool.setuptools.exclude-package-data]
-"*" = ["tests", "*.tests", "*.tests.*"]
+"*" = ["tests", "*.tests", "*.tests.*", "notebooks"]
