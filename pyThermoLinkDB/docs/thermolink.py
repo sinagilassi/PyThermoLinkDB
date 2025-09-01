@@ -1,6 +1,10 @@
 # import packages/modules
+import logging
 from pyThermoDB import TableMatrixData, TableData
 # local
+
+# NOTE: logger
+logger = logging.getLogger(__name__)
 
 
 class ThermoLink:
@@ -57,6 +61,10 @@ class ThermoLink:
                         for src in data:
                             # REVIEW: get data
                             src_ = thermodb[component].select(src)
+
+                            # init
+                            df_src = None
+
                             # check
                             if isinstance(src_, TableData):
                                 # NOTE: set
@@ -65,7 +73,7 @@ class ThermoLink:
                                 # ? take all columns (header)
                                 header = df_src['COLUMNS'].tolist()
 
-                                # ?take all symbols
+                                # ? take all symbols
                                 symbols = df_src['SYMBOL'].tolist()
                             elif isinstance(src_, TableMatrixData):
                                 # NOTE: set
@@ -74,9 +82,22 @@ class ThermoLink:
                                 # take all symbols
                                 if matrix_symbol_ is None:
                                     raise Exception(
-                                        'Matrix symbol is None, ', component)
+                                        'Matrix symbol is None, ',
+                                        component
+                                    )
 
+                                # ? get all symbols
                                 symbols = matrix_symbol_
+
+                                # ? take all columns (header)
+                                header = []
+                            else:
+                                # log
+                                logger.warning(
+                                    f'Unknown data type {type(src_)} for component {component}'
+                                )
+                                symbols = []
+                                header = []
 
                             # looping through item data
                             # SECTION: looking through each symbol
@@ -110,54 +131,56 @@ class ThermoLink:
                                     datasource[component][symbol] = _val
 
                             # SECTION: looking through each header
-                            for header_ in header:
-                                # check
-                                if header_ is not None and header_ != 'None':
-                                    # ! header
-                                    header_ = str(header_).strip()
+                            if df_src is not None:
+                                # looping through each header
+                                for header_ in header:
+                                    # check
+                                    if header_ is not None and header_ != 'None':
+                                        # ! header
+                                        header_ = str(header_).strip()
 
-                                    # ! header index
-                                    header_index = df_src['COLUMNS'].tolist().\
-                                        index(header_)
+                                        # ! header index
+                                        header_index = df_src['COLUMNS'].tolist().\
+                                            index(header_)
 
-                                    # ? find symbol
-                                    symbol_ = df_src['SYMBOL'].tolist()[
-                                        header_index
-                                    ]
+                                        # ? find symbol
+                                        symbol_ = df_src['SYMBOL'].tolist()[
+                                            header_index
+                                        ]
 
-                                    # ! check symbol if None and '' and 'None'
-                                    if (
-                                        symbol_ is None or
-                                        symbol_ == '' or
-                                        symbol_ == 'None'
-                                    ):
-                                        continue
+                                        # ! check symbol if None and '' and 'None'
+                                        if (
+                                            symbol_ is None or
+                                            symbol_ == '' or
+                                            symbol_ == 'None'
+                                        ):
+                                            continue
 
-                                    # NOTE: check already set
-                                    # if symbol_ in datasource[component].keys():
-                                    #     # skip
-                                    #     continue
+                                        # NOTE: check already set
+                                        # if symbol_ in datasource[component].keys():
+                                        #     # skip
+                                        #     continue
 
-                                    _val = src_.get_property(symbol_) if \
-                                        isinstance(src_, TableData) else src_
+                                        _val = src_.get_property(symbol_) if \
+                                            isinstance(src_, TableData) else src_
 
-                                    # NOTE: check symbol rename is required
-                                    if component in thermodb_rule.keys():
-                                        # get thermodb rule
-                                        _rules = thermodb_rule[component].get(
-                                            'DATA',
-                                            None
-                                        )
+                                        # NOTE: check symbol rename is required
+                                        if component in thermodb_rule.keys():
+                                            # get thermodb rule
+                                            _rules = thermodb_rule[component].get(
+                                                'DATA',
+                                                None
+                                            )
 
-                                        # check
-                                        if _rules:
-                                            # set
-                                            if header_ in _rules.keys():
-                                                # ! rename
-                                                symbol_ = _rules[header_]
+                                            # check
+                                            if _rules:
+                                                # set
+                                                if header_ in _rules.keys():
+                                                    # ! rename
+                                                    symbol_ = _rules[header_]
 
-                                    # LINK: update
-                                    datasource[component][symbol_] = _val
+                                        # LINK: update
+                                        datasource[component][symbol_] = _val
                     else:
                         # no data registered
                         raise Exception(
