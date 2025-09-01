@@ -11,9 +11,8 @@ recursive-include pyThermoLinkDB/utils *.py
 recursive-include pyThermoLinkDB/data *
 
 # Exclude unwanted directories
-global-exclude tests/*
+global-exclude test/*
 global-exclude examples/*
-global-exclude docs/*
 global-exclude notebooks/*
 global-exclude statics/*
 global-exclude .venv/*

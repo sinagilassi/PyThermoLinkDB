@@ -41,10 +41,17 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pyThermoLinkDB*"]
+"exclude" = [
+    "test",
+    "*.test",
+    "*.test.*",
+    "notebooks",
+    "notebooks*",
+    "docs",
+    "examples",
+    "examples*"
+    ]
 
 # package data files
 [tool.setuptools.package-data]
 pyThermoLinkDB = ["data/**/*"]
-
-[tool.setuptools.exclude-package-data]
-"*" = ["tests", "*.tests", "*.tests.*", "notebooks", "*.notebooks", "docs", "*.docs", "examples", "*.examples"]
