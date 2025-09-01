@@ -78,6 +78,11 @@ def build_component_model_source(
             str,
             Any
         ] = component_thermodb.reference_configs
+        # NOTE: reference rules
+        reference_rules: Dict[
+            str,
+            Dict[str, str]
+        ] = component_thermodb.reference_rules
         # NOTE: labels
         labels: List[str] = component_thermodb.labels if component_thermodb.labels else []
 
@@ -121,19 +126,25 @@ def build_component_model_source(
             component_rules_) if component_rules_ else []
 
         # SECTION: check labels
-        if check_labels and len(labels) > 0:
-            # iterate over labels
-            for label in labels:
-                if label not in component_rules_labels:
-                    logger.warning(
-                        f"Label '{label}' in component thermodb not found in rules for component '{name_}'."
-                    )
+        # check label results
+        label_link = True
+
+        # check labels
+        if check_labels and len(labels) > 0 and len(component_rules_labels) > 0:
+            # check if all labels in component_rules_labels are in labels
+            for label in component_rules_labels:
+                if label not in labels:
+                    # set
+                    label_link = False
+                    # log
+                    logger.error(
+                        f"Label '{label}' in rules not found in rules labels")
 
         # NOTE: add component thermodb to thermodb hub
         thermodb_hub.add_thermodb(
             name=name_,
             data=thermodb,
-            rules=component_rules_
+            rules=reference_rules
         )
 
         # SECTION: build component model source
@@ -143,7 +154,9 @@ def build_component_model_source(
         component_model_source = ComponentModelSource(
             component=component,
             data_source=datasource,
-            equation_source=equationsource
+            equation_source=equationsource,
+            check_labels=check_labels,
+            label_link=label_link,
         )
 
         return component_model_source

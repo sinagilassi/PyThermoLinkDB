@@ -618,10 +618,16 @@ class ThermoDBHub(ThermoLink):
             components = list(self._thermodb.keys())
             # datasource
             datasource = self._set_datasource(
-                self._thermodb, self._thermodb_rule, components)
+                self._thermodb,
+                self._thermodb_rule,
+                components
+            )
             # equationsource
             equationsource = self._set_equationsource(
-                self._thermodb, self._thermodb_rule, components)
+                self._thermodb,
+                self._thermodb_rule,
+                components
+            )
 
             # reset
             self._hub = {}

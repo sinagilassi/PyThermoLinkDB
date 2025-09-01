@@ -198,9 +198,11 @@ class ThermoLink:
                     # set
                     datasource[component] = {}
 
+                    # SECTION: setting based on key functions
                     # component registered data/equations
                     eq_data = list(
-                        thermodb[component].check_functions().keys())
+                        thermodb[component].check_functions().keys()
+                    )
 
                     # check
                     if len(eq_data) != 0:

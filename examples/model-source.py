@@ -222,6 +222,6 @@ component = Component(
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
     rules=RULES_YAML,
-    component_key="Formula-State",
+    component_key="Name-State",
 )
 print(f"model_source: {model_source}")

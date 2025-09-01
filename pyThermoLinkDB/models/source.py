@@ -22,10 +22,16 @@ class ComponentModelSource(BaseModel):
         Data source dictionary
     equation_source: Dict[str, Any]
         Equation source dictionary
+    check_labels: bool
+        Whether to check labels in the component thermodb based on the provided rules
+    label_link: bool
+        Whether all labels in the rules are found in the component thermodb
     '''
     component: Component
     data_source: Dict[str, DataSource]
     equation_source: Dict[str, EquationSource]
+    check_labels: bool = True
+    label_link: bool = True
 
     class Config:
         arbitrary_types_allowed = True
