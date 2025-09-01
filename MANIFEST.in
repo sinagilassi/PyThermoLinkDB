@@ -6,4 +6,17 @@ include requirements.txt
 recursive-include pyThermoLinkDB *.py
 recursive-include pyThermoLinkDB/config *.py
 recursive-include pyThermoLinkDB/docs *.py
+recursive-include pyThermoLinkDB/models *.py
+recursive-include pyThermoLinkDB/utils *.py
 recursive-include pyThermoLinkDB/data *
+
+# Exclude unwanted directories
+global-exclude tests/*
+global-exclude examples/*
+global-exclude docs/*
+global-exclude notebooks/*
+global-exclude statics/*
+global-exclude .venv/*
+global-exclude *.egg-info/*
+global-exclude __pycache__/*
+global-exclude .pytest_cache/*
