@@ -1,6 +1,6 @@
 # import packages/modules
 import logging
-from typing import Dict, Any, List, Literal
+from typing import Dict, Any, List, Literal, Optional
 from pyThermoDB import ComponentThermoDB, CompBuilder
 from pyThermoDB.models import Component
 # local
@@ -35,13 +35,14 @@ def init() -> ThermoDBHub:
 
 def build_component_model_source(
     component_thermodb: ComponentThermoDB,
-    rules: Dict[str, ComponentThermoDBRules] | str,
     component_key:  Literal[
         "Name-State",
         "Formula-State",
         "Name-Formula-State"
     ],
-    check_labels: bool = True
+    rules: Optional[
+        Dict[str, ComponentThermoDBRules] | str
+    ] = None,
 ) -> ComponentModelSource:
     '''
     Build component model source from component thermodb and rules
@@ -50,10 +51,10 @@ def build_component_model_source(
     ----------
     component_thermodb: ComponentThermoDB
         ComponentThermoDB object containing pythermodb data (`TableData`, `TableEquation`, etc.)
-    rules: Dict[str, ComponentThermoDBRules] | str
-        Rules for selecting data and equations. It can be a dictionary or a file path to a YAML file.
-    check_labels: bool, optional
-        Whether to check labels in the component thermodb, by default True
+    component_key: Literal["Name-State", "Formula-State", "Name-Formula-State"]
+        Component key to identify the component in the thermodb hub
+    rules: Optional[Dict[str, ComponentThermoDBRules] | str], optional
+        Rules to map data/equations in the thermodb to the model source.
 
     Returns
     -------
@@ -86,60 +87,70 @@ def build_component_model_source(
         # NOTE: labels
         labels: List[str] = component_thermodb.labels if component_thermodb.labels else []
 
-        # SECTION: check rules
-        if isinstance(rules, str):
-            try:
-                rules = create_rules_from_str(rules)
-            except Exception as e:
-                logger.error(f"Error in load rules from file: {e}")
-                raise Exception(f"Error in load rules from file: {e}")
-        elif not isinstance(rules, dict):
-            logger.error(
-                "Rules must be a dictionary or a file path to a YAML file.")
-            raise ValueError(
-                "Rules must be a dictionary or a file path to a YAML file.")
-
-        # SECTION: add component thermodb to thermodb hub
-        # set name
+        # NOTE: set name
         name_ = set_component_key(
             component,
             component_key=component_key
         )
 
-        # NOTE: check for component rules if exists
-        # rules
-        rules_keys = list(rules.keys())
+        # SECTION: check rules
+        if rules:
+            # set
+            check_labels = True
 
-        # check rules records
-        if name_ in rules_keys:
-            component_rules_ = rules[name_]
-        elif DEFAULT_RULES_KEY in rules_keys:
-            component_rules_ = rules[DEFAULT_RULES_KEY]
+            # NOTE: load rules
+            if isinstance(rules, str):
+                try:
+                    rules = create_rules_from_str(rules)
+                except Exception as e:
+                    logger.error(f"Error in load rules from file: {e}")
+                    raise Exception(f"Error in load rules from file: {e}")
+            elif not isinstance(rules, dict):
+                logger.error(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+                raise ValueError(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+
+            # NOTE: check for component rules if exists
+            # rules
+            rules_keys = list(rules.keys())
+
+            # check rules records
+            if name_ in rules_keys:
+                component_rules_ = rules[name_]
+            elif DEFAULT_RULES_KEY in rules_keys:
+                component_rules_ = rules[DEFAULT_RULES_KEY]
+            else:
+                component_rules_ = None
+                logger.warning(
+                    f"No specific rules found for component '{name_}'. Using empty rules."
+                )
+
+            # NOTE: extract labels
+            component_rules_labels = extract_labels_from_rules(
+                component_rules_
+            ) if component_rules_ else []
+
+            # SECTION: check labels
+            # check label results
+            label_link = True
+
+            # check labels
+            if check_labels and len(labels) > 0 and len(component_rules_labels) > 0:
+                # check if all labels in component_rules_labels are in labels
+                for label in component_rules_labels:
+                    if label not in labels:
+                        # set
+                        label_link = False
+                        # log
+                        logger.error(
+                            f"Label '{label}' in rules not found in rules labels")
         else:
-            component_rules_ = None
-            logger.warning(
-                f"No specific rules found for component '{name_}'. Using empty rules."
-            )
+            # set
+            check_labels = False
+            label_link = False
 
-        # NOTE: extract labels
-        component_rules_labels = extract_labels_from_rules(
-            component_rules_) if component_rules_ else []
-
-        # SECTION: check labels
-        # check label results
-        label_link = True
-
-        # check labels
-        if check_labels and len(labels) > 0 and len(component_rules_labels) > 0:
-            # check if all labels in component_rules_labels are in labels
-            for label in component_rules_labels:
-                if label not in labels:
-                    # set
-                    label_link = False
-                    # log
-                    logger.error(
-                        f"Label '{label}' in rules not found in rules labels")
-
+        # SECTION: add component thermodb to thermodb hub
         # NOTE: add component thermodb to thermodb hub
         thermodb_hub.add_thermodb(
             name=name_,
