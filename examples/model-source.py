@@ -211,6 +211,22 @@ ALL:
     enthalpy-of-sublimation: EnSub
 """
 
+RULES_YAML_2 = """
+ALL:
+  DATA:
+    molecular-weight: MW
+    critical-pressure: Pc
+    critical-temperature: Tc
+    critical-molar-volume: Vc
+    critical-compressibility-factor: Zc
+    acentric-factor: AcFa
+    enthalpy-of-formation-ideal-gas: EnFo
+    gibbs-energy-of-formation-ideal-gas: GiEnFo
+  EQUATIONS:
+    vapor-pressure: VaPr
+    ideal-gas-heat-capacity: Cp_IG
+"""
+
 # NOTE: component
 component = Component(
     name=component_name,
@@ -221,7 +237,22 @@ component = Component(
 # NOTE: build model source
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
+    component_key="Name-State",
     rules=RULES_YAML,
+)
+print(f"model_source: {model_source}")
+
+# ! build model source (with matched rules)
+model_source: ComponentModelSource = build_component_model_source(
+    component_thermodb=thermodb_component_,
+    component_key="Name-State",
+    rules=RULES_YAML_2,
+)
+print(f"model_source: {model_source}")
+
+# NOTE: build model source (without rules)
+model_source: ComponentModelSource = build_component_model_source(
+    component_thermodb=thermodb_component_,
     component_key="Name-State",
 )
 print(f"model_source: {model_source}")
