@@ -26,7 +26,7 @@ dependencies = [
     "PyYAML>=6.0.2",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
-    "pythermodb>=1.11.14",
+    "pythermodb>=1.11.17",
 ]
 
 [project.urls]
