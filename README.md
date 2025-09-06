@@ -1,6 +1,6 @@
 # PyThermoLinkDB
 
-![PyThermoLinkDB](https://drive.google.com/uc?export=view&id=1uwEMQLNJv7vIJ1Frq2cDORyhrqSwNRVS)
+![PyThermoLinkDB](https://drive.google.com/uc?export=view&id=1YYQ8gIfLOS1Od6mw9-2xvv6ZYC_28rnt)
 
 [![PyPI Downloads](https://static.pepy.tech/badge/pythermolinkdb/month)](https://pepy.tech/projects/pythermolinkdb)
 ![PyPI](https://img.shields.io/pypi/v/PyThermoLinkDB)
