@@ -1,26 +1,33 @@
 # import libs
-from pydantic import BaseModel
-from typing import Dict, Any
-from pyThermoDB import TableData, TableEquation, TableMatrixData, TableMatrixEquation
-from pyThermoDB.models import Component
+from pydantic import BaseModel, ConfigDict
+from typing import Dict, Any, Optional
+from pyThermoDB import (
+    TableData,
+    TableEquation,
+    TableMatrixData,
+    TableMatrixEquation
+    )
+from pythermodb_settings.models import Component
 # local
 
 
 # NOTE: data source
-DataSource = Dict[str, Any]
+PropertyData = Dict[str, str | float | int | bool | None]
+DataSource = Dict[str, PropertyData]
 # NOTE: equation source
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
 
 
+# NOTE: component model source
 class ComponentModelSource(BaseModel):
     '''
     Component model source containing data source and equation source
 
     Attributes
     ----------
-    data_source: Dict[str, Any]
+    data_source: Dict[str, DataSource]
         Data source dictionary
-    equation_source: Dict[str, Any]
+    equation_source: Dict[str, EquationSource]
         Equation source dictionary
     check_labels: bool
         Whether to check labels in the component thermodb based on the provided rules
@@ -30,16 +37,16 @@ class ComponentModelSource(BaseModel):
     component: Component
     data_source: Dict[str, DataSource]
     equation_source: Dict[str, EquationSource]
-    check_labels: bool = True
-    label_link: bool = True
+    check_labels: Optional[bool] = None
+    label_link: Optional[bool] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="allow"
+        )
 
 
-ComponentThermoDBRules = Dict[str, Dict[str, str]]
-
-
+# NOTE: model source
 class ModelSource(BaseModel):
     '''
     Model source containing data source and equation source for multiple components
@@ -60,5 +67,7 @@ class ModelSource(BaseModel):
     all_check_labels: Dict[str, bool]
     all_label_link: Dict[str, bool]
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="allow"
+        )

@@ -1,11 +1,12 @@
 # import libs
 import os
+from typing import List
 from rich import print
 import pyThermoLinkDB as ptldb
 from pyThermoLinkDB import build_components_model_source
 from pyThermoLinkDB.models import ComponentModelSource, ModelSource
 import pyThermoDB as ptdb
-from pyThermoDB.models import Component
+from pythermodb_settings.models import Component
 from pyThermoDB import ComponentThermoDB
 from pyThermoDB import build_component_thermodb_from_reference
 
@@ -253,8 +254,7 @@ ALL:
 components: list[Component] = [CO2, C2H6O]
 
 # NOTE: build model source
-model_source: ModelSource = build_components_model_source(
+model_source: List[ComponentModelSource] = build_components_model_source(
     components_thermodb=[thermodb_CO2, thermodb_ethanol],
-    component_key="Name-State",
 )
 print(f"model_source: {model_source}")

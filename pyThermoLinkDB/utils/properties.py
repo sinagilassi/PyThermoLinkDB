@@ -1,9 +1,9 @@
 # import libs
 import logging
-from typing import Dict, Any, List, Literal
-from pyThermoDB.models import Component
+from typing import List, Dict
+from pythermodb_settings.models import Component, ComponentRule
 # local
-from ..models import ComponentThermoDBRules
+
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -51,14 +51,14 @@ def set_component_key(
 
 
 def extract_labels_from_rules(
-    rules: ComponentThermoDBRules
+    rules: Dict[str, ComponentRule]
 ) -> List[str]:
     '''
     Extract labels from rules
 
     Parameters
     ----------
-    rules: Dict[str, ComponentThermoDBRules]
+    rules: Dict[str, ComponentRule]
         Rules dictionary
 
     Returns
@@ -71,8 +71,6 @@ def extract_labels_from_rules(
     The rules dictionary is defined as:
 
     ```python
-    ComponentThermoDBRules = Dict[str, Dict[str, str]]
-
     component_rules = {
         "DATA":
             {

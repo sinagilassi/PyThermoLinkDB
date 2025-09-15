@@ -1,13 +1,13 @@
 # import libs
 import os
-from rich import print
 import pyThermoLinkDB as ptldb
 from pyThermoLinkDB import build_component_model_source
 from pyThermoLinkDB.models import ComponentModelSource
 import pyThermoDB as ptdb
-from pyThermoDB.models import Component
+from pythermodb_settings.models import Component
 from pyThermoDB import ComponentThermoDB
 from pyThermoDB import build_component_thermodb_from_reference
+from rich import print
 
 # check version
 print(ptldb.__version__)
@@ -237,7 +237,6 @@ component = Component(
 # NOTE: build model source
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
-    component_key="Name-State",
     rules=RULES_YAML,
 )
 print(f"model_source: {model_source}")
@@ -245,7 +244,6 @@ print(f"model_source: {model_source}")
 # ! build model source (with matched rules)
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
-    component_key="Name-State",
     rules=RULES_YAML_2,
 )
 print(f"model_source: {model_source}")
@@ -253,6 +251,5 @@ print(f"model_source: {model_source}")
 # NOTE: build model source (without rules)
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
-    component_key="Name-State",
 )
 print(f"model_source: {model_source}")
