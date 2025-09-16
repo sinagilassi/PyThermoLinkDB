@@ -3,10 +3,16 @@ import logging
 from typing import Dict, List, Optional
 import pyThermoDB as ptdb
 from pyThermoDB import ComponentThermoDB, CompBuilder
-from pythermodb_settings.models import Component, ComponentConfig, ComponentRule, ReferenceThermoDB
+from pythermodb_settings.models import (
+    Component,
+    ComponentConfig,
+    ComponentRule,
+    ReferenceThermoDB,
+    ComponentThermoDBSource
+)
 # local
 from .docs import ThermoDBHub
-from .models import ComponentModelSource, ModelSource, ComponentThermoDBSource
+from .models import ComponentModelSource, ModelSource
 from .utils import set_component_key, create_rules_from_str, extract_labels_from_rules, look_up_component_rules
 from .config import DEFAULT_RULES_KEY
 
