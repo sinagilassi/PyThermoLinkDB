@@ -3,12 +3,14 @@ from .source import (
     ComponentModelSource,
     DataSource,
     EquationSource,
-    ModelSource
+    ModelSource,
+    ComponentThermoDBSource
 )
 
 __all__ = [
     "ComponentModelSource",
     "DataSource",
     "EquationSource",
-    "ModelSource"
+    "ModelSource",
+    "ComponentThermoDBSource"
 ]
