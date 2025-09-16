@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import os
 from rich import print
 import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB.models import ModelSource
 import pyThermoDB as ptdb
 
 # check version
@@ -24,7 +25,8 @@ _thermodb_file = os.path.join(
     'thermodb',
     'Methane-1.pkl'
 )
-# load
+
+# NOTE: load
 _thermodb = ptdb.load_thermodb(_thermodb_file)
 print(type(_thermodb))
 
@@ -52,7 +54,11 @@ thermodb_rule_: Dict[str, Dict[str, str]] = {
     }
 }
 # add
-thub1.add_thermodb('CH4', _thermodb, rules=thermodb_rule_)
+thub1.add_thermodb(
+    'CH4',
+    _thermodb,
+    rules=thermodb_rule_
+)
 
 # get components
 print(thub1.items())
@@ -64,11 +70,16 @@ print(res_)
 # =======================================
 # 🏗️ BUILD
 # =======================================
+# ! old method
 datasource, equationsource = thub1.build()
 print(datasource)
 print(equationsource)
 
-# hub
+# ! new method
+model_source: ModelSource = thub1.build_model_source()
+print(model_source)
+
+# ! hub
 print(thub1.hub)
 
 # =======================================
