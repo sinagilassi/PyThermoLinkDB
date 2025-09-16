@@ -5,7 +5,7 @@ from pyThermoDB import ComponentThermoDB, CompBuilder
 from pythermodb_settings.models import Component, ComponentConfig, ComponentRule, ReferenceThermoDB
 # local
 from .docs import ThermoDBHub
-from .models import ComponentModelSource, ModelSource
+from .models import ComponentModelSource, ModelSource, ComponentThermoDBSource
 from .utils import set_component_key, create_rules_from_str, extract_labels_from_rules
 from .config import DEFAULT_RULES_KEY
 
@@ -313,3 +313,12 @@ def build_model_source(
     except Exception as e:
         logger.error(f"Error in build_model_source: {e}")
         raise Exception(f"Error in build_model_source: {e}")
+
+
+def load_and_build_model_source(
+        thermodb_sources: List[ComponentThermoDBSource],
+        rules: Optional[
+            Dict[str, Dict[str, ComponentRule]] | str
+        ] = None,
+):
+    pass
