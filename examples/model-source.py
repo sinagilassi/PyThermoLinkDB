@@ -227,29 +227,23 @@ ALL:
     ideal-gas-heat-capacity: Cp_IG
 """
 
-# NOTE: component
-component = Component(
-    name=component_name,
-    formula=component_formula,
-    state=component_state
+# SECTION: build model source
+# NOTE: without matched rules
+model_source: ComponentModelSource = build_component_model_source(
+    component_thermodb=thermodb_component_,
 )
+print(f"model_source: {model_source}")
 
-# NOTE: build model source
+# NOTE: with partially matched rules
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
     rules=RULES_YAML,
 )
-print(f"model_source: {model_source}")
+print(f"model_source with rules: {model_source}")
 
-# ! build model source (with matched rules)
+# NOTE: build model source (with matched rules)
 model_source: ComponentModelSource = build_component_model_source(
     component_thermodb=thermodb_component_,
     rules=RULES_YAML_2,
 )
-print(f"model_source: {model_source}")
-
-# NOTE: build model source (without rules)
-model_source: ComponentModelSource = build_component_model_source(
-    component_thermodb=thermodb_component_,
-)
-print(f"model_source: {model_source}")
+print(f"model_source with rules: {model_source}")
