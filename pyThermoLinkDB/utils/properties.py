@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict
 from pythermodb_settings.models import Component, ComponentRule
 # local
+from ..config import DEFAULT_RULES_KEY
 
 
 # NOTE: logger
@@ -109,3 +110,91 @@ def extract_labels_from_rules(
     except Exception as e:
         logger.error(f"Error in extract_labels_from_rules: {e}")
         raise Exception(f"Error in extract_labels_from_rules: {e}")
+
+
+def look_up_component_rules(
+        component: Component,
+        rules: Dict[str, Dict[str, ComponentRule]],
+        search_key: str = "Formula-State"
+) -> Dict[str, ComponentRule] | None:
+    '''
+    Look up component rules from rules dictionary based on component attributes (name, formula, state).
+
+    Parameters
+    ----------
+    component: Component
+        Component object
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary
+    search_key: Literal["Name-State", "Formula-State"], optional
+        Search key type, by default "Formula-State"
+
+    Returns
+    -------
+    Dict[str, ComponentRule] | None
+        Component rules dictionary
+
+    Notes
+    -----
+    The rules dictionary is defined as:
+
+    ```python
+    rules = {
+        "Formula-State": {
+            "DATA":
+                {
+                    "property1": "label1",
+                    "property2": "label2"
+                },
+            "EQUATION":
+                {
+                    "property3": "label3",
+                    "property4": "label4"
+                }
+            },
+        "Formula-State2": {
+            ...
+        }
+    }
+    ```
+    '''
+    try:
+        # NOTE: component attributes
+        name_state = f"{component.name}-{component.state}"
+        formula_state = f"{component.formula}-{component.state}"
+
+        # rules keys (case insensitive)
+        rules_keys_lower = {key.lower(): key for key in rules.keys()}
+
+        # reference rules
+        reference_rules = None
+
+        # NOTE: look up rules (case insensitive)
+        if search_key.lower() == "Name-State".lower():
+            # check
+            if name_state.lower() in rules_keys_lower:
+                reference_rules = rules[rules_keys_lower[name_state.lower()]]
+            else:
+                reference_rules = None
+        elif search_key.lower() == "Formula-State".lower():
+            # check
+            if formula_state.lower() in rules_keys_lower:
+                reference_rules = rules[rules_keys_lower[formula_state.lower()]]
+            else:
+                reference_rules = None
+        elif search_key.lower() == DEFAULT_RULES_KEY.lower():
+            # check
+            if DEFAULT_RULES_KEY.lower() in rules_keys_lower:
+                reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
+            else:
+                reference_rules = None
+        else:
+            logger.warning(
+                f"Invalid search_key: {search_key}. It should be 'Name-State' or 'Formula-State'.")
+            return None
+
+        # return
+        return reference_rules
+    except Exception as e:
+        logger.error(f"Error in look_up_component_rules: {e}")
+        raise Exception(f"Error in look_up_component_rules: {e}")
