@@ -6,7 +6,7 @@ from pyThermoDB import (
     TableEquation,
     TableMatrixData,
     TableMatrixEquation
-    )
+)
 from pythermodb_settings.models import Component
 # local
 
@@ -43,7 +43,7 @@ class ComponentModelSource(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         extra="allow"
-        )
+    )
 
 
 # NOTE: model source
@@ -57,17 +57,11 @@ class ModelSource(BaseModel):
         Data source dictionary for multiple components
     equation_source: Dict[str, Dict[str, EquationSource]]
         Equation source dictionary for multiple components
-    all_check_labels: Dict[str, bool]
-        Dictionary indicating whether labels were checked for each component
-    all_label_link: Dict[str, bool]
-        Dictionary indicating whether all labels in the rules were found for each component
     '''
-    data_source: Dict[str, Dict[str, DataSource]]
-    equation_source: Dict[str, Dict[str, EquationSource]]
-    all_check_labels: Dict[str, bool]
-    all_label_link: Dict[str, bool]
+    data_source: Dict[str, DataSource]
+    equation_source: Dict[str, EquationSource]
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         extra="allow"
-        )
+    )

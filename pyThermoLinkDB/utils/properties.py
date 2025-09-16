@@ -14,7 +14,7 @@ def set_component_key(
     component_key: str = "Formula-State"
 ) -> str:
     '''
-    Set component key
+    Set component key string based on component attributes (name, formula, state), this function is case-insensitive for component_key.
 
     Parameters
     ----------
@@ -29,17 +29,17 @@ def set_component_key(
         Component key string
     '''
     try:
-        if component_key == "Name-State":
+        if component_key.lower() == "Name-State".lower():
             return f"{component.name}-{component.state}"
-        elif component_key == "Formula-State":
+        elif component_key.lower() == "Formula-State".lower():
             return f"{component.formula}-{component.state}"
-        elif component_key == "Name":
+        elif component_key.lower() == "Name".lower():
             return component.name
-        elif component_key == "Formula":
+        elif component_key.lower() == "Formula".lower():
             return component.formula
-        elif component_key == "Name-Formula":
+        elif component_key.lower() == "Name-Formula".lower():
             return f"{component.name}-{component.formula}"
-        elif component_key == "Name-Formula-State":
+        elif component_key.lower() == "Name-Formula-State".lower():
             return f"{component.name}-{component.formula}-{component.state}"
         else:
             logger.warning(
