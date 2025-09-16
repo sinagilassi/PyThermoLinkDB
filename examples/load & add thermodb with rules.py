@@ -3,9 +3,9 @@ from typing import Dict, Optional
 import os
 from rich import print
 import pyThermoLinkDB as ptdblink
-from pyThermoLinkDB.models import ModelSource, ComponentThermoDBSource
+from pyThermoLinkDB.models import ModelSource
 import pyThermoDB as ptdb
-from pythermodb_settings.models import Component, ComponentRule
+from pythermodb_settings.models import Component, ComponentRule, ComponentThermoDBSource
 
 # check version
 print(ptdblink.__version__)
