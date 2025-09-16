@@ -1,6 +1,6 @@
 # import packages/modules
 import logging
-from pyThermoDB import TableMatrixData, TableData
+from pyThermoDB import TableMatrixData, TableData, TableEquation
 # local
 
 # NOTE: logger
@@ -229,18 +229,28 @@ class ThermoLink:
 
                     # check
                     if len(eq_data) != 0:
-                        # parms
+                        # looping through each equation data
                         for eq in eq_data:
-                            # get function structure
-                            # eq_str = thermodb[component].get_function(
-                            #     eq).eq_structure(1)
+                            # >> equation identifier
+                            equation_identifier = str(eq).strip()
+                            # ! initial symbol set
+                            symbol = equation_identifier
 
-                            # symbol
-                            symbol = str(eq).strip()
-                            # val
+                            # NOTE: select equation
                             _val = thermodb[component].select(eq)
+                            # check
+                            if not isinstance(_val, TableEquation):
+                                logger.warning(
+                                    f'Unknown equation type {type(_val)} for component {component}'
+                                )
+                                continue
 
-                            # rules
+                            # NOTE: get original symbol
+                            original_symbols: list[str] = list(
+                                _val.return_symbols.keys()
+                            )
+
+                            # NOTE: update equation symbol with rules
                             # check if component is in thermodb_rule
                             if component in thermodb_rule.keys():
                                 # get thermodb rule
@@ -249,20 +259,20 @@ class ThermoLink:
                                     None
                                 )
 
-                                # check
+                                # NOTE: verify _rules keys to set with equation identifier
                                 if _rules:
-                                    # keys
+                                    # ! keys (equation identifiers)
                                     keys_ = _rules.keys()
                                     # set
-                                    if symbol in keys_:
-                                        # rename
-                                        symbol = _rules[symbol]
+                                    if equation_identifier in keys_:
+                                        # rename: use the symbol from rules
+                                        symbol = _rules[equation_identifier]
+                            # else:
+                            #     # ! use original symbols
+                            #     if len(original_symbols) > 0:
+                            #         symbol = original_symbols[0]
 
-                            # # check symbol rename is required
-                            # if symbol in thermodb_rule[component]['EQUATIONS']:
-                            #     # rename
-                            #     symbol = thermodb_rule[component]['EQUATIONS'][symbol]
-
+                            # LINK: update
                             datasource[component][symbol] = _val
             # res
             return datasource
