@@ -78,7 +78,7 @@ class ComponentThermoDBSource(BaseModel):
     source: str
         Path to the thermodb file
     '''
-    components: Component
+    component: Component
     source: str
 
     model_config = ConfigDict(

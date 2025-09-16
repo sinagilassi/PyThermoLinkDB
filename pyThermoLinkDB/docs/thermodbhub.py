@@ -1,4 +1,5 @@
 # import packages/modules
+import logging
 import os
 from pathlib import Path
 from typing import Optional, List, Union, Dict
@@ -10,6 +11,10 @@ from .utils import (
     thermodb_file_loader,
     thermodb_parser,
 )
+from ..models import ModelSource
+
+# NOTE: logger
+logger = logging.getLogger(__name__)
 
 
 class ThermoDBHub(ThermoLink):
@@ -466,18 +471,27 @@ class ThermoDBHub(ThermoLink):
             success
         '''
         try:
+            # NOTE: data
+            if not isinstance(data, CompBuilder):
+                logger.error('data should be a pyThermoDB.CompBuilder object!')
+                return False
+
+            # set thermodb
             self._thermodb[name] = data
-            # create thermodb rule
+
+            # NOTE: create thermodb rule
             self._thermodb_rule[name] = {}
 
             # check rules
             if rules is not None:
                 # check rules is a dict
                 if not isinstance(rules, dict):
+                    logger.error('rules should be a dictionary!')
                     raise TypeError('rules should be a dictionary!')
 
                 # check rules exist
                 if not rules.keys():
+                    logger.error('rules is empty!')
                     raise ValueError('rules is empty!')
 
                 # add thermodb rule
@@ -485,7 +499,8 @@ class ThermoDBHub(ThermoLink):
             # res
             return True
         except Exception as e:
-            raise Exception('Adding new record failed!, ', e)
+            logger.error(f'Adding new record failed!, {e}')
+            return False
 
     def update_thermodb(
         self,
@@ -643,6 +658,34 @@ class ThermoDBHub(ThermoLink):
             return datasource, equationsource
         except Exception as e:
             raise Exception('Building data/equation source failed!, ', e)
+
+    def build_model_source(self) -> ModelSource:
+        '''
+        Builds model source containing data source and equation source for multiple components
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        ModelSource
+            ModelSource containing data source and equation source for multiple components
+
+        Notes
+        -----
+        - This function is a wrapper of `build` function and returns a `ModelSource` object
+        '''
+        try:
+            # build
+            datasource, equationsource = self.build()
+            # res
+            return ModelSource(
+                data_source=datasource,
+                equation_source=equationsource
+            )
+        except Exception as e:
+            raise Exception('Building ModelSource failed!, ', e)
 
     def clean(self):
         '''
