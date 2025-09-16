@@ -1,12 +1,13 @@
 # import packages/modules
 import logging
-from typing import Dict, Any, List, Literal, Optional
+from typing import Dict, List, Optional
+import pyThermoDB as ptdb
 from pyThermoDB import ComponentThermoDB, CompBuilder
 from pythermodb_settings.models import Component, ComponentConfig, ComponentRule, ReferenceThermoDB
 # local
 from .docs import ThermoDBHub
 from .models import ComponentModelSource, ModelSource, ComponentThermoDBSource
-from .utils import set_component_key, create_rules_from_str, extract_labels_from_rules
+from .utils import set_component_key, create_rules_from_str, extract_labels_from_rules, look_up_component_rules
 from .config import DEFAULT_RULES_KEY
 
 # NOTE: logger
@@ -125,9 +126,6 @@ def build_component_model_source(
             formula_state: reference_rules,
         }
 
-        # NOTE: component id
-        component_id = name_state
-
         # SECTION: check rules
         if rules:
             # NOTE: load rules
@@ -144,41 +142,86 @@ def build_component_model_source(
                     "Rules must be a dictionary or a file path to a YAML file.")
 
             # NOTE: check for component rules if exists
-            # rules
-            rules_keys = list(rules.keys())
-            # lowercase keys
-            rules_keys_lower = [key.lower() for key in rules_keys]
-
-            # NOTE: component rules
-            component_rules_ = None
-
-            # ! check rules records (case insensitive)
-            if name_state.lower() in rules_keys_lower:
-                component_rules_ = rules[name_state]
+            # ! >> by name-state
+            name_state_rules_ = look_up_component_rules(
+                component=component,
+                rules=rules,
+                search_key="Name-State"
+            )
+            if name_state_rules_:
                 # >> set
-                component_rules_dict[name_state] = component_rules_
+                component_rules_dict[name_state] = name_state_rules_
 
-            if formula_state.lower() in rules_keys_lower:
-                component_rules_ = rules[formula_state]
+            # ! >> by formula-state
+            formula_state_rules_ = look_up_component_rules(
+                component=component,
+                rules=rules,
+                search_key="Formula-State"
+            )
+            if formula_state_rules_:
                 # >> set
-                component_rules_dict[formula_state] = component_rules_
+                component_rules_dict[formula_state] = formula_state_rules_
 
-            if DEFAULT_RULES_KEY.lower() in rules_keys_lower:
-                component_rules_ = rules[DEFAULT_RULES_KEY]
-                # >> set
-                component_rules_dict[DEFAULT_RULES_KEY] = component_rules_
+            # NOTE: check if `component_rules_dict` is still empty, then use default rules if exists
+            if len(component_rules_dict[name_state]) == 0:
+                # !> by default rules key
+                default_rules_ = look_up_component_rules(
+                    component=component,
+                    rules=rules,
+                    search_key=DEFAULT_RULES_KEY
+                )
 
-            # NOTE: extract labels
-            component_rules_labels = extract_labels_from_rules(
-                component_rules_
-            ) if component_rules_ else []
+                if default_rules_:
+                    # >> set
+                    component_rules_dict[name_state] = default_rules_
+                else:
+                    # log
+                    logger.warning(
+                        f"No rules found for component {name_state} in the provided rules."
+                    )
+
+            if len(component_rules_dict[formula_state]) == 0:
+                # !> by default rules key
+                default_rules_ = look_up_component_rules(
+                    component=component,
+                    rules=rules,
+                    search_key=DEFAULT_RULES_KEY
+                )
+
+                if default_rules_:
+                    # >> set
+                    component_rules_dict[formula_state] = default_rules_
+                else:
+                    # log
+                    logger.warning(
+                        f"No rules found for component {formula_state} in the provided rules."
+                    )
+
+            # SECTION: extract labels
+            name_state_rules_labels = extract_labels_from_rules(
+                component_rules_dict[name_state]
+            ) if component_rules_dict[name_state] else []
+
+            formula_state_rules_labels = extract_labels_from_rules(
+                component_rules_dict[formula_state]
+            ) if component_rules_dict[formula_state] else []
+            # >> combine and unique
+            component_rules_labels = list(
+                set(
+                    name_state_rules_labels + formula_state_rules_labels
+                )
+            )
 
             # SECTION: check labels
             # check label results
             label_link = True
 
             # NOTE: check labels
-            if check_labels and len(labels) > 0 and len(component_rules_labels) > 0:
+            if (
+                check_labels and
+                len(labels) > 0 and
+                len(component_rules_labels) > 0
+            ):
                 # check if all labels in component_rules_labels are in labels
                 for label in component_rules_labels:
                     if label not in labels:
@@ -194,9 +237,12 @@ def build_component_model_source(
         # SECTION: add component thermodb to thermodb hub
         # >> set rule
         rule_ = component_rules_dict.get(name_state, None)
-        if rule_ and len(rule_) == 0:
+        if not rule_:
             rule_ = None
-        # NOTE: name state as id
+        elif len(rule_) == 0:
+            rule_ = None
+
+        # >> add
         thermodb_hub.add_thermodb(
             name=name_state,
             data=thermodb,
@@ -206,8 +252,12 @@ def build_component_model_source(
         # NOTE: formula state as id
         # >> set rule
         rule_ = component_rules_dict.get(formula_state, None)
-        if rule_ and len(rule_) == 0:
+        if not rule_:
             rule_ = None
+        elif len(rule_) == 0:
+            rule_ = None
+
+        # >> add
         thermodb_hub.add_thermodb(
             name=formula_state,
             data=thermodb,
@@ -320,5 +370,91 @@ def load_and_build_model_source(
         rules: Optional[
             Dict[str, Dict[str, ComponentRule]] | str
         ] = None,
-):
-    pass
+        check_labels: bool = True
+) -> ModelSource:
+    '''
+    Load component thermodb from thermodb sources and build model source
+
+    Parameters
+    ----------
+    thermodb_sources: List[ComponentThermoDBSource]
+        List of ComponentThermoDBSource object containing component thermodb and source file path
+    rules: Dict[str, Dict[str, ComponentRule]] | str, optional
+        Rules to map data/equations in the thermodb to the model source.
+    check_labels: bool, optional
+        Whether to check labels in the component thermodb based on the provided rules, by default True
+
+    Returns
+    -------
+    ModelSource
+        ModelSource object containing data source and equation source for multiple components
+    '''
+    try:
+        # NOTE: check inputs
+        if not isinstance(thermodb_sources, list) or len(thermodb_sources) == 0:
+            logger.error(
+                "thermodb_sources must be a non-empty list of ComponentThermoDBSource objects.")
+            raise ValueError(
+                "thermodb_sources must be a non-empty list of ComponentThermoDBSource objects.")
+
+        # iterate over thermodb sources and load thermodb
+        for thermodb_source in thermodb_sources:
+            if not isinstance(thermodb_source, ComponentThermoDBSource):
+                logger.error(
+                    "Each item in thermodb_sources must be a ComponentThermoDBSource object.")
+                raise ValueError(
+                    "Each item in thermodb_sources must be a ComponentThermoDBSource object.")
+            if not isinstance(thermodb_source.source, str) or len(thermodb_source.source) == 0:
+                logger.error(
+                    "source in ComponentThermoDBSource must be a non-empty string.")
+                raise ValueError(
+                    "source in ComponentThermoDBSource must be a non-empty string.")
+            if not isinstance(thermodb_source.component, Component):
+                logger.error(
+                    "component in ComponentThermoDBSource must be a Component object.")
+                raise ValueError(
+                    "component in ComponentThermoDBSource must be a Component object.")
+
+        # SECTION: load thermodb and create component thermodb
+        # NOTE: create list of component thermodb
+        components_thermodb: List[ComponentThermoDB] = []
+
+        # SECTION: iterate over thermodb sources
+        for thermodb_source in thermodb_sources:
+            # NOTE: load thermodb
+            try:
+                # >> file path
+                thermodb_file = thermodb_source.source
+                # >> load
+                thermodb_ = ptdb.load_thermodb(thermodb_file=thermodb_file)
+            except Exception as e:
+                logger.error(
+                    f"Error in load thermodb from {thermodb_source.source}: {e}")
+                continue
+
+            # set component
+            component_thermodb = ComponentThermoDB(
+                component=thermodb_source.component,
+                thermodb=thermodb_,
+                reference_thermodb=None
+            )
+            # append
+            components_thermodb.append(component_thermodb)
+
+        # SECTION: build components model source
+        components_model_source = build_components_model_source(
+            components_thermodb=components_thermodb,
+            rules=rules,
+            check_labels=check_labels
+        )
+
+        # SECTION: build model source
+        model_source = build_model_source(
+            components_model_source=components_model_source
+        )
+
+        # return
+        return model_source
+    except Exception as e:
+        logger.error(f"Error in load_and_build_model_source: {e}")
+        raise Exception(f"Error in load_and_build_model_source: {e}")
