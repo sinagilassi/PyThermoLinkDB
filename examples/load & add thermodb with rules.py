@@ -43,6 +43,17 @@ _component_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
 # =======================================
 # update thermodb rule
 thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
+    'ALL': {
+        'DATA': {
+            'critical-pressure': 'Pc',
+            'critical-temperature': 'Tc',
+            'acentric-factor': 'AcFa'
+        },
+        'EQUATIONS': {
+            'vapor-pressure': 'VaPr',
+            'heat-capacity': 'Cp_IG'
+        }
+    },
     'CH4-g': {
         'DATA': {
             'critical-pressure': 'Pc',
