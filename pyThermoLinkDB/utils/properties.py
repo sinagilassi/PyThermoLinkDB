@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict
 from pythermodb_settings.models import Component, ComponentRule
 # local
-from ..config import DEFAULT_RULES_KEY
+from ..config import DEFAULT_RULES_KEY, DATA_KEY, EQUATIONS_KEY
 
 
 # NOTE: logger
@@ -78,7 +78,7 @@ def extract_labels_from_rules(
                 "property1": "label1",
                 "property2": "label2"
             },
-        "EQUATION":
+        "EQUATIONS":
             {
                 "property3": "label3",
                 "property4": "label4"
@@ -91,7 +91,7 @@ def extract_labels_from_rules(
     try:
         for rule_type, rule_dict in rules.items():
             # check rule_dict
-            if rule_type not in ["DATA", "EQUATION"]:
+            if rule_type not in [DATA_KEY, EQUATIONS_KEY]:
                 logger.warning(
                     f"Invalid rule_type: {rule_type}. It should be 'DATA' or 'EQUATION'.")
                 continue
@@ -146,7 +146,7 @@ def look_up_component_rules(
                     "property1": "label1",
                     "property2": "label2"
                 },
-            "EQUATION":
+            "EQUATIONS":
                 {
                     "property3": "label3",
                     "property4": "label4"
