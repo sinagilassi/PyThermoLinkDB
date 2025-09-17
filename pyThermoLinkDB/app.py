@@ -169,7 +169,10 @@ def build_component_model_source(
                 component_rules_dict[formula_state] = formula_state_rules_
 
             # NOTE: check if `component_rules_dict` is still empty, then use default rules if exists
-            if len(component_rules_dict[name_state]) == 0:
+            if (
+                len(component_rules_dict[name_state]) == 0 and
+                len(component_rules_dict[formula_state]) == 0
+            ):
                 # !> by default rules key
                 default_rules_ = look_up_component_rules(
                     component=component,
@@ -180,27 +183,11 @@ def build_component_model_source(
                 if default_rules_:
                     # >> set
                     component_rules_dict[name_state] = default_rules_
-                else:
-                    # log
-                    logger.warning(
-                        f"No rules found for component {name_state} in the provided rules."
-                    )
-
-            if len(component_rules_dict[formula_state]) == 0:
-                # !> by default rules key
-                default_rules_ = look_up_component_rules(
-                    component=component,
-                    rules=rules,
-                    search_key=DEFAULT_RULES_KEY
-                )
-
-                if default_rules_:
-                    # >> set
                     component_rules_dict[formula_state] = default_rules_
                 else:
                     # log
                     logger.warning(
-                        f"No rules found for component {formula_state} in the provided rules."
+                        f"No rules found for component {name_state}/{formula_state} in the provided rules."
                     )
 
             # SECTION: extract labels
@@ -242,12 +229,22 @@ def build_component_model_source(
 
         # SECTION: add component thermodb to thermodb hub
         # >> set rule
-        rule_ = component_rules_dict.get(name_state, None)
+        rule_ = component_rules_dict.get(
+            name_state,
+            None
+        ) or component_rules_dict.get(
+            formula_state,
+            None
+        )
+
+        # >> check rule
         if not rule_:
             rule_ = None
-        elif len(rule_) == 0:
+        # >> if empty, set to None
+        if rule_ and len(rule_) == 0:
             rule_ = None
 
+        # NOTE: name state as id
         # >> add
         thermodb_hub.add_thermodb(
             name=name_state,
@@ -256,13 +253,6 @@ def build_component_model_source(
         )
 
         # NOTE: formula state as id
-        # >> set rule
-        rule_ = component_rules_dict.get(formula_state, None)
-        if not rule_:
-            rule_ = None
-        elif len(rule_) == 0:
-            rule_ = None
-
         # >> add
         thermodb_hub.add_thermodb(
             name=formula_state,
