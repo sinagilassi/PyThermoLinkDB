@@ -22,7 +22,7 @@ print(f"current dir: {current_dir}")
 _thermodb_file = os.path.join(
     current_dir,
     'thermodb',
-    'Methane-1.pkl'
+    'methane-g.pkl'
 )
 
 # NOTE: components
@@ -51,7 +51,7 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
         },
         'EQUATIONS': {
             'vapor-pressure': 'VaPr',
-            'heat-capacity': 'Cp_IG'
+            'ideal-gas-heat-capacity': 'Cp_IG'
         }
     },
     'CH4-g': {
@@ -61,8 +61,8 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
             'acentric-factor': 'AcFa'
         },
         'EQUATIONS': {
-            'vapor-pressure': 'VaPr',
-            'heat-capacity': 'Cp_IG'
+            'CUSTOM-REF-1::vapor-pressure': 'VaPr',
+            'CUSTOM-REF-1::ideal-gas-heat-capacity': 'Cp_IG'
         }
     },
     'Methane-g': {
@@ -72,8 +72,8 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
             'acentric-factor': 'AcFa'
         },
         'EQUATIONS': {
-            'vapor-pressure': 'VaPr',
-            'heat-capacity': 'Cp_IG'
+            'CUSTOM-REF-1::vapor-pressure': 'VaPr',
+            'CUSTOM-REF-1::ideal-gas-heat-capacity': 'Cp_IG'
         }
     }
 }
@@ -93,7 +93,7 @@ equationsource = model_source2.equation_source
 # =======================================
 # NOTE: by formula-state
 # data
-dt1_ = datasource['CH4-g']['dGf_IG']
+dt1_ = datasource['CH4-g']['EnFo']
 print(type(dt1_))
 print(dt1_)
 
@@ -106,7 +106,7 @@ print(eq1_.cal(T=298.15))
 
 # NOTE: by name-state
 # data
-dt2_ = datasource['Methane-g']['dGf_IG']
+dt2_ = datasource['Methane-g']['EnFo']
 print(type(dt2_))
 print(dt2_)
 # equation
