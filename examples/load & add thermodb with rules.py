@@ -50,8 +50,8 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
             'acentric-factor': 'AcFa'
         },
         'EQUATIONS': {
-            'vapor-pressure': 'VaPr',
-            'ideal-gas-heat-capacity': 'Cp_IG'
+            'CUSTOM-REF-1::vapor-pressure': 'VaPr',
+            'CUSTOM-REF-1::ideal-gas-heat-capacity': 'Cp_IG'
         }
     },
     'CH4-g': {
