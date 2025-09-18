@@ -11,16 +11,16 @@ CO2:
     Tc: Tc
     AcFa: AcFa
   EQUATIONS:
-    vapor-pressure: VaPr
-    heat-capacity: Cp_IG
+    CUSTOM-REF-1::vapor-pressure: VaPr
+    CUSTOM-REF-1::ideal-gas-heat-capacity: Cp_IG
 C6H6:
   DATA:
     critical-pressure: Pc
     Tc: Tc
     AcFa: AcFa
   EQUATIONS:
-    vapor-pressure: VaPr
-    heat-capacity: Cp_IG
+    CUSTOM-REF-1::vapor-pressure: VaPr
+    CUSTOM-REF-1::ideal-gas-heat-capacity: Cp_IG
 acetylene:
   DATA:
     Pc: Pc
@@ -41,8 +41,8 @@ MeOH:
     critical-temperature: Tc
     AcFa: AcFa
   EQUATIONS:
-    vapor-pressure: VaPr
-    heat-capacity: Cp_LIQ
+    CUSTOM-REF-1::vapor-pressure: VaPr
+    CUSTOM-REF-1::ideal-gas-heat-capacity: Cp_LIQ
 n-butane:
   DATA:
     Pc: Pc
