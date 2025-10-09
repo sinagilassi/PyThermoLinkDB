@@ -250,6 +250,12 @@ class ThermoLink:
                                 _val.return_symbols.keys()
                             )
 
+                            # ! set original symbol
+                            returned_symbol = None
+                            # >> only if one symbol
+                            if len(original_symbols) > 0:
+                                returned_symbol = original_symbols[0]
+
                             # NOTE: update equation symbol with rules
                             # check if component is in thermodb_rule
                             if component in thermodb_rule.keys():
@@ -262,15 +268,26 @@ class ThermoLink:
                                 # NOTE: verify _rules keys to set with equation identifier
                                 if _rules:
                                     # ! keys (equation identifiers)
-                                    keys_ = _rules.keys()
-                                    # set
+                                    keys_ = list(_rules.keys())
+                                    # ! values (symbols)
+                                    values_ = list(_rules.values())
+
+                                    # check & set
                                     if equation_identifier in keys_:
                                         # rename: use the symbol from rules
                                         symbol = _rules[equation_identifier]
-                            # else:
-                            #     # ! use original symbols
-                            #     if len(original_symbols) > 0:
-                            #         symbol = original_symbols[0]
+                                    else:
+                                        # ! check returned_symbol
+                                        if (
+                                            returned_symbol is not None and
+                                            returned_symbol in values_
+                                        ):
+                                            # find key by value
+                                            idx_ = values_.index(
+                                                returned_symbol
+                                            )
+                                            # set symbol
+                                            symbol = _rules[keys_[idx_]]
 
                             # LINK: update
                             datasource[component][symbol] = _val
