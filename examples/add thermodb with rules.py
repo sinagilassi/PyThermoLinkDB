@@ -23,7 +23,7 @@ print(f"current dir: {current_dir}")
 _thermodb_file = os.path.join(
     current_dir,
     'thermodb',
-    'Methane-1.pkl'
+    'methane-g.pkl'
 )
 
 # NOTE: load
@@ -49,13 +49,13 @@ thermodb_rule_: Dict[str, Dict[str, str]] = {
         'acentric-factor': 'AcFa'
     },
     'EQUATIONS': {
-        'vapor-pressure': 'VaPr',
-        'heat-capacity': 'Cp_IG'
+        'CUSTOM-REF-1::vapor-pressure': 'VaPr',
+        'ideal-gas-heat-capacity': 'Cp_IG'
     }
 }
 # add
 thub1.add_thermodb(
-    'CH4',
+    'CH4-g',
     _thermodb,
     rules=thermodb_rule_
 )
@@ -86,12 +86,12 @@ print(thub1.hub)
 # ✅ TEST
 # =======================================
 # data
-dt1_ = datasource['CH4']['Pc']
+dt1_ = datasource['CH4-g']['Pc']
 print(type(dt1_))
 print(dt1_)
 
 # equation
-eq1_ = equationsource['CH4']['Cp_IG']
+eq1_ = equationsource['CH4-g']['Cp_IG']
 print(type(eq1_))
 print(eq1_)
 print(eq1_.args)

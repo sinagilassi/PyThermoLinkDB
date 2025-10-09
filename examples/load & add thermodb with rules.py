@@ -3,6 +3,7 @@ from typing import Dict, Optional
 import os
 from rich import print
 import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB import load_and_build_model_source
 from pyThermoLinkDB.models import ModelSource
 import pyThermoDB as ptdb
 from pythermodb_settings.models import Component, ComponentRule, ComponentThermoDBSource
@@ -78,7 +79,7 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
     }
 }
 
-model_source2: ModelSource = ptdblink.load_and_build_model_source(
+model_source2: ModelSource = load_and_build_model_source(
     thermodb_sources=[_component_thermodb],
     rules=thermodb_rules,
 )

@@ -179,13 +179,16 @@ component_formula = 'CO2'
 component_state = 'g'
 
 # SECTION: build component thermodb
-thermodb_component_: ComponentThermoDB = build_component_thermodb_from_reference(
+thermodb_component_: ComponentThermoDB | None = build_component_thermodb_from_reference(
     component_name=component_name,
     component_formula=component_formula,
     component_state=component_state,
     reference_content=REFERENCE_CONTENT,
 )
 print(f"thermodb_component_: {thermodb_component_}")
+# >> check
+if thermodb_component_ is None:
+    raise ValueError("thermodb_component_ is None")
 
 # SECTION: build model source
 # NOTE: rules

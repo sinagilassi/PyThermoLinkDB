@@ -187,13 +187,16 @@ CO2 = Component(
 
 # SECTION: build component thermodb
 # ! CO2
-thermodb_CO2: ComponentThermoDB = build_component_thermodb_from_reference(
+thermodb_CO2: ComponentThermoDB | None = build_component_thermodb_from_reference(
     component_name=component_name,
     component_formula=component_formula,
     component_state=component_state,
     reference_content=REFERENCE_CONTENT,
 )
 print(f"thermodb_component_: {thermodb_CO2}")
+# >> check
+if thermodb_CO2 is None:
+    raise ValueError("thermodb_CO2 is None")
 
 # ! ethanol
 C2H6O = Component(
@@ -202,13 +205,16 @@ C2H6O = Component(
     state='l'
 )
 
-thermodb_ethanol: ComponentThermoDB = build_component_thermodb_from_reference(
+thermodb_ethanol: ComponentThermoDB | None = build_component_thermodb_from_reference(
     component_name='ethanol',
     component_formula='C2H6O',
     component_state='l',
     reference_content=REFERENCE_CONTENT,
 )
 print(f"thermodb_ethanol: {thermodb_ethanol}")
+# >> check
+if thermodb_ethanol is None:
+    raise ValueError("thermodb_ethanol is None")
 
 # SECTION: build model source
 # NOTE: rules
