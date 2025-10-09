@@ -2,7 +2,7 @@
 import logging
 from typing import Dict, List, Optional
 import pyThermoDB as ptdb
-from pyThermoDB import ComponentThermoDB, CompBuilder
+from pyThermoDB import ComponentThermoDB, CompBuilder, MixtureThermoDB
 from pythermodb_settings.models import (
     Component,
     ComponentConfig,
@@ -363,6 +363,321 @@ def build_components_model_source(
     except Exception as e:
         logger.error(f"Error in build_components_model_source: {e}")
         raise Exception(f"Error in build_components_model_source: {e}")
+
+
+def build_mixture_model_source(
+    mixture_thermodb: MixtureThermoDB,
+    rules: Optional[
+        Dict[str, Dict[str, ComponentRule]] | str
+    ] = None,
+    check_labels: bool = True,
+    verbose: bool = False,
+    delimiter: str = '|'
+) -> MixtureModelSource:
+    '''
+    Build mixture model source from mixture thermodb and rules (optional).
+
+    Parameters
+    ----------
+    mixture_thermodb: MixtureThermoDB
+        MixtureThermoDB object containing pythermodb data (`TableData`, `TableEquation`, etc.)
+    rules: Dict[str, Dict[str, ComponentRule]] | str, optional
+        Rules to map data/equations in the thermodb to the model source.
+    check_labels: bool, optional
+        Whether to check labels in the mixture thermodb based on the provided rules, by default True
+    verbose: bool, optional
+        Whether to print verbose output, by default False
+    delimiter: str, optional
+        Delimiter to separate multiple components in the mixture thermodb, by default '|'
+
+    Returns
+    -------
+    MixtureModelSource
+        MixtureModelSource object containing data source and equation source
+
+    Notes
+    -----
+    - If rules is not provided, the reference rules in the mixture thermodb will be used
+    - If rules is provided, it will be used to map data/equations in the thermodb to the model source
+    - If check_labels is True, the labels in the mixture thermodb will be checked based on the provided rules
+    - If verbose is True, detailed information will be printed during the process
+    - Reference thermodb is optional, if not provided, only the mixture and thermodb will be used
+    '''
+    try:
+        # SECTION: create thermodb hub
+        try:
+            thermodb_hub = init()
+        except Exception as e:
+            logger.error(f"Error in init thermodb hub: {e}")
+            raise Exception(f"Error in init thermodb hub: {e}")
+
+        # SECTION: extract mixture thermodb
+        # NOTE: mixture thermodb
+        components: List[Component] = mixture_thermodb.components
+        # NOTE: thermodb
+        thermodb: CompBuilder = mixture_thermodb.thermodb
+        # NOTE: reference thermodb
+        # ! reference thermodb is optional
+        reference_thermodb: Optional[ReferenceThermoDB] = mixture_thermodb.reference_thermodb
+
+        # check reference thermodb
+        if reference_thermodb:
+            # ! >>> reference configs
+            reference_configs: Dict[
+                str,
+                ComponentConfig
+            ] = reference_thermodb.configs
+
+            # ! >>> reference rules
+            reference_rules: Dict[
+                str,
+                ComponentRule
+            ] = reference_thermodb.rules
+
+            # ! >>>  labels
+            labels: List[str] = reference_thermodb.labels if reference_thermodb.labels else [
+            ]
+
+            # ! >>> ignore labels
+            ignore_labels: List[str] = reference_thermodb.ignore_labels if reference_thermodb.ignore_labels else [
+            ]
+
+            # ! >>> ignore props
+            ignore_props: List[str] = reference_thermodb.ignore_props if reference_thermodb.ignore_props else [
+            ]
+
+        else:
+            # ! set empty
+            reference_configs = {}
+            # >> for the case of no reference (reference_thermodb), set empty rules
+            reference_rules = {}
+            labels = []
+            ignore_labels = []
+            ignore_props = []
+
+        # SECTION: set ids
+        # >> name states
+        name_states = [
+            set_component_key(
+                component,
+                component_key='Name-State'
+            ) for component in components
+        ]
+        # >> sort alphabetically
+        name_states.sort()
+
+        # >> formula states
+        formula_states = [
+            set_component_key(
+                component,
+                component_key='Formula-State'
+            ) for component in components
+        ]
+        # >> sort alphabetically
+        formula_states.sort()
+
+        # ! mixture name
+        mixture_name = delimiter.join(name_states)
+        # ! mixture formula
+        mixture_formula = delimiter.join(formula_states)
+
+        # NOTE: component rules
+        # create dict to hold component rules both name-state and formula-state
+        component_rules_dict: Dict[str, Dict[str, ComponentRule]] = {}
+
+        # set default to reference rules
+        for name_state in name_states:
+            component_rules_dict[name_state] = reference_rules
+        for formula_state in formula_states:
+            component_rules_dict[formula_state] = reference_rules
+
+        # SECTION: check rules
+        if rules:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"Checking rules for mixture components: {''.join(name_states)} using provided rules")
+
+            # NOTE: load rules
+            if isinstance(rules, str):
+                try:
+                    rules = create_rules_from_str(rules)
+                except Exception as e:
+                    logger.error(f"Error in load rules from file: {e}")
+                    raise Exception(f"Error in load rules from file: {e}")
+            elif not isinstance(rules, dict):
+                logger.error(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+                raise ValueError(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+
+            # NOTE: check for component rules if exists
+            for component in components:
+                # ! >> by name-state
+                name_state = set_component_key(
+                    component,
+                    component_key='Name-State'
+                )
+                name_state_rules_ = look_up_component_rules(
+                    component=component,
+                    rules=rules,
+                    search_key="Name-State"
+                )
+                if name_state_rules_:
+                    # >> set
+                    component_rules_dict[name_state] = name_state_rules_
+
+                # ! >> by formula-state
+                formula_state = set_component_key(
+                    component,
+                    component_key='Formula-State'
+                )
+                formula_state_rules_ = look_up_component_rules(
+                    component=component,
+                    rules=rules,
+                    search_key="Formula-State"
+                )
+                if formula_state_rules_:
+                    # >> set
+                    component_rules_dict[formula_state] = formula_state_rules_
+
+            # NOTE: check if `component_rules_dict` is still empty, then use default rules if exists
+            all_empty = True
+            for key in component_rules_dict:
+                if len(component_rules_dict[key]) > 0:
+                    all_empty = False
+                    break
+
+            if all_empty:
+                # ! >> by default rules key
+                default_rules_ = look_up_component_rules(
+                    # just use the first component to look up default rules
+                    component=components[0],
+                    rules=rules,
+                    search_key=DEFAULT_RULES_KEY
+                )
+
+                if default_rules_:
+                    for name_state in name_states:
+                        component_rules_dict[name_state] = default_rules_
+                    for formula_state in formula_states:
+                        component_rules_dict[formula_state] = default_rules_
+                else:
+                    # log
+                    logger.warning(
+                        f"No rules found for mixture components {', '.join(name_states)}/{', '.join
+                                                                                          (formula_states)} in the provided rules."
+                    )
+
+            # SECTION: extract labels
+            component_rules_labels = []
+            for key in component_rules_dict:
+                rules_ = component_rules_dict[key]
+                if rules_ and len(rules_) > 0:
+                    labels_ = extract_labels_from_rules(rules_)
+                    component_rules_labels.extend(labels_)
+
+            # >> combine and unique
+            component_rules_labels = list(set(component_rules_labels))
+            # SECTION: check labels
+            # check label results
+            label_link = True
+            # NOTE: check labels
+            if (
+                check_labels and
+                len(labels) > 0 and
+                len(component_rules_labels) > 0
+            ):
+                # check if all labels in component_rules_labels are in labels
+                for label in component_rules_labels:
+                    if label not in labels:
+                        # set
+                        label_link = False
+                        # log
+                        logger.error(
+                            f"Label '{label}' in rules not found in rules labels"
+                        )
+
+        else:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"No rules provided, using reference rules for mixture components: {', '.join(name_states)}")
+
+            # no rules provided, use reference rules
+            # check label results
+            label_link = False
+
+        # SECTION: add mixture thermodb to thermodb hub
+        # >> set rule
+        rule_ = None
+        for name_state in name_states:
+            rule_ = component_rules_dict.get(
+                name_state,
+                None
+            ) or rule_
+        for formula_state in formula_states:
+            rule_ = component_rules_dict.get(
+                formula_state,
+                None
+            ) or rule_
+        # ! >> check rule
+        if not rule_:
+            rule_ = None
+        # >> if empty, set to None
+        if rule_ and len(rule_) == 0:
+            rule_ = None
+
+        # NOTE: name states as id
+        # >> add
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name=" + ".join(name_states),
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(
+                    f"Added thermodb for mixture components: {', '.join(name_states)}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for mixture components: {', '.join(name_states)}")
+
+        # NOTE: formula states as id
+        # >> add
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name=" + ".join(formula_states),
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(
+                    f"Added thermodb for mixture components: {', '.join(formula_states)}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for mixture components: {', '.join(formula_states)}")
+
+        # SECTION: build mixture model source
+        datasource, equationsource = thermodb_hub.build()
+
+        # NOTE: create mixture model source
+        mixture_model_source = MixtureModelSource(
+            components=components,
+            data_source=datasource,
+            equation_source=equationsource,
+            check_labels=check_labels,
+            label_link=label_link,
+        )
+
+        return mixture_model_source
+    except Exception as e:
+        logger.error(f"Error in build_mixture_model_source: {e}")
+        raise Exception(f"Error in build_mixture_model_source: {e}")
 
 
 def build_model_source(
