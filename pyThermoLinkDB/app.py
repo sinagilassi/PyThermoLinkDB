@@ -45,10 +45,11 @@ def build_component_model_source(
     rules: Optional[
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
-    check_labels: bool = True
+    check_labels: bool = True,
+    verbose: bool = False
 ) -> ComponentModelSource:
     '''
-    Build component model source from component thermodb and rules
+    Build component model source from component thermodb and rules (optional).
 
     Parameters
     ----------
@@ -58,11 +59,21 @@ def build_component_model_source(
         Rules to map data/equations in the thermodb to the model source.
     check_labels: bool, optional
         Whether to check labels in the component thermodb based on the provided rules, by default True
+    verbose: bool, optional
+        Whether to print verbose output, by default False
 
     Returns
     -------
     ComponentModelSource
         ComponentModelSource object containing data source and equation source
+
+    Notes
+    -----
+    - If rules is not provided, the reference rules in the component thermodb will be used
+    - If rules is provided, it will be used to map data/equations in the thermodb to the model source
+    - If check_labels is True, the labels in the component thermodb will be checked based on the provided rules
+    - If verbose is True, detailed information will be printed during the process
+    - Reference thermodb is optional, if not provided, only the component and thermodb will be used
     '''
     try:
         # SECTION: create thermodb hub
@@ -78,11 +89,11 @@ def build_component_model_source(
         # NOTE: thermodb
         thermodb: CompBuilder = component_thermodb.thermodb
         # NOTE: reference thermodb
+        # ! reference thermodb is optional
         reference_thermodb: Optional[ReferenceThermoDB] = component_thermodb.reference_thermodb
 
         # check reference thermodb
         if reference_thermodb:
-
             # ! >>> reference configs
             reference_configs: Dict[
                 str,
@@ -109,6 +120,7 @@ def build_component_model_source(
         else:
             # ! set empty
             reference_configs = {}
+            # >> for the case of no reference (reference_thermodb), set empty rules
             reference_rules = {}
             labels = []
             ignore_labels = []
@@ -127,6 +139,7 @@ def build_component_model_source(
         )
 
         # NOTE: component rules
+        # create dict to hold component rules both name-state and formula-state
         component_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
             name_state: reference_rules,
             formula_state: reference_rules,
@@ -134,6 +147,11 @@ def build_component_model_source(
 
         # SECTION: check rules
         if rules:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"Checking rules for component: {name_state} using provided rules")
+
             # NOTE: load rules
             if isinstance(rules, str):
                 try:
@@ -173,7 +191,7 @@ def build_component_model_source(
                 len(component_rules_dict[name_state]) == 0 and
                 len(component_rules_dict[formula_state]) == 0
             ):
-                # !> by default rules key
+                # ! >> by default rules key
                 default_rules_ = look_up_component_rules(
                     component=component,
                     rules=rules,
@@ -225,6 +243,13 @@ def build_component_model_source(
                             f"Label '{label}' in rules not found in rules labels"
                         )
         else:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"No rules provided, using reference rules for component: {name_state}")
+
+            # no rules provided, use reference rules
+            # check label results
             label_link = False
 
         # SECTION: add component thermodb to thermodb hub
@@ -237,7 +262,7 @@ def build_component_model_source(
             None
         )
 
-        # >> check rule
+        # ! >> check rule
         if not rule_:
             rule_ = None
         # >> if empty, set to None
@@ -246,19 +271,35 @@ def build_component_model_source(
 
         # NOTE: name state as id
         # >> add
-        thermodb_hub.add_thermodb(
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
             name=name_state,
             data=thermodb,
             rules=rule_,
         )
 
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(f"Added thermodb for component: {name_state}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for component: {name_state}")
+
         # NOTE: formula state as id
         # >> add
-        thermodb_hub.add_thermodb(
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
             name=formula_state,
             data=thermodb,
             rules=rule_,
         )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(f"Added thermodb for component: {formula_state}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for component: {formula_state}")
 
         # SECTION: build component model source
         datasource, equationsource = thermodb_hub.build()
@@ -308,7 +349,7 @@ def build_components_model_source(
 
         # iterate over components thermodb
         for component_thermodb in components_thermodb:
-            # build
+            # ! build
             component_model_source = build_component_model_source(
                 component_thermodb=component_thermodb,
                 rules=rules,
@@ -325,10 +366,9 @@ def build_components_model_source(
 
 
 def build_model_source(
-        components_model_source: List[ComponentModelSource]
+    components_model_source: List[ComponentModelSource]
 ) -> ModelSource:
     '''
-
     Build model source from list of component model source
 
     Parameters
@@ -351,9 +391,14 @@ def build_model_source(
         # iterate over components model source
         for component_model_source in components_model_source:
             # add to model source
-            model_source.data_source.update(component_model_source.data_source)
+            # >> data source
+            model_source.data_source.update(
+                component_model_source.data_source
+            )
+            # >> equation source
             model_source.equation_source.update(
-                component_model_source.equation_source)
+                component_model_source.equation_source
+            )
 
         return model_source
     except Exception as e:
@@ -438,14 +483,14 @@ def load_and_build_model_source(
             components_thermodb.append(component_thermodb)
 
         # SECTION: build components model source
-        components_model_source = build_components_model_source(
+        components_model_source: List[ComponentModelSource] = build_components_model_source(
             components_thermodb=components_thermodb,
             rules=rules,
             check_labels=check_labels
         )
 
         # SECTION: build model source
-        model_source = build_model_source(
+        model_source: ModelSource = build_model_source(
             components_model_source=components_model_source
         )
 
