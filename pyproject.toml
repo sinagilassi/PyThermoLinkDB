@@ -27,7 +27,7 @@ dependencies = [
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
     "pythermodb>=1.11.42",
-    "pythermodb-settings>=0.1.5",
+    "pythermodb-settings>=0.1.6",
     "rich>=14.1.0",
 ]
 
