@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import List, Dict
+from typing import List, Dict, Literal, Optional
 from pythermodb_settings.models import Component, ComponentRule
 # local
 from ..config import DEFAULT_RULES_KEY, DATA_KEY, EQUATIONS_KEY
@@ -198,3 +198,140 @@ def look_up_component_rules(
     except Exception as e:
         logger.error(f"Error in look_up_component_rules: {e}")
         raise Exception(f"Error in look_up_component_rules: {e}")
+
+
+def find_mixture_ids_in_rules(
+    rules: Dict[str, Dict[str, ComponentRule]],
+    delimiter: str = '|'
+) -> List[str]:
+    '''
+    Find mixture ids in rules dictionary. By default, the mixture id should be defined as `component-name-1 | component-name-2 | ...` or `component-formula-1 | component-formula-2 | ...`.
+
+    Parameters
+    ----------
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary with mixture ids as keys
+
+    Returns
+    -------
+    List[str]
+        List of mixture ids
+    '''
+    try:
+        # rules keys
+        rules_keys = list(rules.keys())
+
+        # check if rules_keys is empty
+        if not rules_keys:
+            return []
+
+        # NOTE: mixture ids should contain '|'
+        rules_keys = [key for key in rules_keys if delimiter in key]
+
+        # return
+        return rules_keys
+    except Exception as e:
+        logger.error(f"Error in find_mixture_ids_in_rules: {e}")
+        raise Exception(f"Error in find_mixture_ids_in_rules: {e}")
+
+
+def normalize_rules(
+    mixture_ids: List[str],
+    rules: Dict[str, Dict[str, ComponentRule]],
+    delimiter: str = '|'
+):
+    '''
+    Normalize rules dictionary by alphabetically sorting the rules keys (mixture ids).
+
+    Parameters
+    ----------
+    mixture_ids: List[str]
+        List of mixture ids
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary with mixture ids as keys
+    delimiter: str, optional
+        Delimiter used to separate components in mixture id, by default '|'
+
+    Returns
+    -------
+    Dict[str, Dict[str, ComponentRule]]
+        Normalized rules dictionary
+    '''
+    try:
+        normalized_rules = {}
+
+        # iterate mixture_ids
+        for mixture_id in mixture_ids:
+            # split mixture_id by '|'
+            components = [comp.strip() for comp in mixture_id.split(delimiter)]
+            # sort components alphabetically
+            components_sorted = sorted(components, key=lambda x: x.lower())
+            # join components back to mixture_id
+            normalized_mixture_id = delimiter.join(components_sorted)
+            # add to normalized_rules
+            if mixture_id in rules:
+                normalized_rules[normalized_mixture_id] = rules[mixture_id]
+
+        # res
+        return normalized_rules
+    except Exception as e:
+        logger.error(f"Error in normalize_rules: {e}")
+        raise Exception(f"Error in normalize_rules: {e}")
+
+
+def look_up_mixture_rules(
+    mixture_id: str,
+    rules: Dict[str, Dict[str, ComponentRule]],
+    delimiter: str = '|',
+    search_key: Optional[str] = None
+) -> Dict[str, ComponentRule] | None:
+    '''
+    Look up mixture rules from rules dictionary based on mixture id.
+
+    Parameters
+    ----------
+    mixture_id: str
+        Mixture id (name or formula)
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary with mixture ids as keys
+    delimiter: str, optional
+        Delimiter used to separate components in mixture id, by default '|'
+    search_key: str, optional
+        Search key type, by default None (not used)
+
+    Returns
+    -------
+    Dict[str, ComponentRule] | None
+        Mixture rules dictionary
+    '''
+    try:
+        # rules keys (case insensitive)
+        rules_keys_lower = {key.lower(): key for key in rules.keys()}
+
+        # >> remove extra spaces
+        mixture_id = delimiter.join(
+            [comp.strip() for comp in mixture_id.split(delimiter)]
+        )
+
+        # reference rules
+        reference_rules = None
+
+        # NOTE: look up rules (case insensitive)
+        if mixture_id.lower() in rules_keys_lower:
+            reference_rules = rules[rules_keys_lower[mixture_id.lower()]]
+        else:
+            reference_rules = None
+
+        # NOTE: not found
+        if reference_rules is None and search_key is not None:
+            # check for DEFAULT_RULES_KEY
+            if DEFAULT_RULES_KEY.lower() in rules_keys_lower:
+                reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
+            else:
+                reference_rules = None
+
+        # return
+        return reference_rules
+    except Exception as e:
+        logger.error(f"Error in look_up_mixture_rules: {e}")
+        raise Exception(f"Error in look_up_mixture_rules: {e}")

@@ -1,8 +1,7 @@
 # import libs
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from pyThermoDB import (
-    TableData,
     TableEquation,
     TableMatrixData,
     TableMatrixEquation
@@ -13,7 +12,7 @@ from pythermodb_settings.models import Component
 
 # NOTE: data source
 PropertyData = Dict[str, str | float | int | bool | None]
-DataSource = Dict[str, PropertyData]
+DataSource = Dict[str, PropertyData | TableMatrixData]
 # NOTE: equation source
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
 
