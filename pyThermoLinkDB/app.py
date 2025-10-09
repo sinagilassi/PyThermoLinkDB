@@ -8,11 +8,11 @@ from pythermodb_settings.models import (
     ComponentConfig,
     ComponentRule,
     ReferenceThermoDB,
-    ComponentThermoDBSource
+    ComponentThermoDBSource,
 )
 # local
 from .docs import ThermoDBHub
-from .models import ComponentModelSource, ModelSource
+from .models import ComponentModelSource, ModelSource, MixtureModelSource
 from .utils import set_component_key, create_rules_from_str, extract_labels_from_rules, look_up_component_rules
 from .config import DEFAULT_RULES_KEY
 
@@ -366,15 +366,15 @@ def build_components_model_source(
 
 
 def build_model_source(
-    components_model_source: List[ComponentModelSource]
+    source: List[ComponentModelSource] | List[MixtureModelSource]
 ) -> ModelSource:
     '''
     Build model source from list of component model source
 
     Parameters
     ----------
-    components_model_source: List[ComponentModelSource]
-        List of ComponentModelSource object containing data source and equation source
+    source: List[ComponentModelSource] | List[MixtureModelSource]
+        List of ComponentModelSource/MixtureModelSource object containing data source and equation source
 
     Returns
     -------
@@ -389,7 +389,7 @@ def build_model_source(
         )
 
         # iterate over components model source
-        for component_model_source in components_model_source:
+        for component_model_source in source:
             # add to model source
             # >> data source
             model_source.data_source.update(
@@ -491,7 +491,7 @@ def load_and_build_model_source(
 
         # SECTION: build model source
         model_source: ModelSource = build_model_source(
-            components_model_source=components_model_source
+            source=components_model_source
         )
 
         # return
