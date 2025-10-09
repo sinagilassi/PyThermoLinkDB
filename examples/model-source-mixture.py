@@ -3,16 +3,14 @@ import os
 from typing import List
 from rich import print
 import pyThermoLinkDB as ptldb
-from pyThermoLinkDB import build_components_model_source, build_model_source
-from pyThermoLinkDB.models import ComponentModelSource, ModelSource, MixtureModelSource
+from pyThermoLinkDB import build_model_source, build_mixture_model_source
+from pyThermoLinkDB.models import ModelSource, MixtureModelSource
 import pyThermoDB as ptdb
 from pythermodb_settings.models import Component
 from pyThermoDB import (
-    ComponentThermoDB,
     MixtureThermoDB,
     build_mixture_thermodb_from_reference,
 )
-
 
 # check version
 print(ptldb.__version__)
@@ -178,6 +176,14 @@ REFERENCES:
             - [2,methanol|methane,methane,CH4,g,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
 """
 
+# current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"current dir: {current_dir}")
+
+# thermodb directory
+thermodb_dir = os.path.join(current_dir, "thermodb")
+print(f"thermodb dir: {thermodb_dir}")
+
 # ====================================
 # ☑️ SET COMPONENTS
 # ====================================
@@ -188,10 +194,12 @@ ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
 methane = Component(name="methane", formula="CH4", state="g")
 
 # ! mixture
-mixture_components = [methanol, ethanol]
+binary_mixture_components = [methanol, ethanol]
+ternary_mixture_components = [methanol, ethanol, methane]
 # >> methanol-ethanol
 # >> methanol-methane
 # >> ethanol-methane
+mixture_names: List[str] = ['methanol|ethanol', 'methanol|methane']
 
 # ====================================
 # ☑️ BUILD MIXTURE THERMODB
@@ -199,8 +207,11 @@ mixture_components = [methanol, ethanol]
 # SECTION: build component thermodb
 # ! mixture thermodb
 mixture_thermodb_: MixtureThermoDB | None = build_mixture_thermodb_from_reference(
-    components=mixture_components,
+    components=ternary_mixture_components,
     reference_content=REFERENCE_CONTENT,
+    mixture_names=mixture_names,
+    thermodb_save_path=thermodb_dir,
+    thermodb_save=True,
 )
 print(f"mixture_thermodb_: {mixture_thermodb_}")
 # >> check
@@ -242,6 +253,8 @@ ALL:
     acentric-factor: AcFa
     enthalpy-of-formation-ideal-gas: EnFo
     gibbs-energy-of-formation-ideal-gas: GiEnFo
+    a: a1
+    b: b1
   EQUATIONS:
     vapor-pressure: VaPr
     ideal-gas-heat-capacity: Cp_IG
@@ -251,13 +264,21 @@ ALL:
 # ☑️ BUILD MIXTURE MODEL SOURCE
 # ====================================
 # NOTE: build mixture model source
-mixture_model_source: MixtureModelSource = build_components_model_source(
-    components_thermodb=[thermodb_CO2, thermodb_ethanol],
+mixture_model_source: MixtureModelSource = build_mixture_model_source(
+    mixture_thermodb=mixture_thermodb_,
+)
+print(f"mixture_model_source: {mixture_model_source}")
+
+# NOTE: add rules to the model source
+mixture_model_source: MixtureModelSource = build_mixture_model_source(
+    mixture_thermodb=mixture_thermodb_,
+    rules=RULES_YAML_2,
+    overwrite_rules=False,
 )
 print(f"mixture_model_source: {mixture_model_source}")
 
 # SECTION: build model source
-model_source = build_model_source(
-    source=mixture_model_source,
+model_source: ModelSource = build_model_source(
+    source=[mixture_model_source],
 )
 print(f"model_source: {model_source}")

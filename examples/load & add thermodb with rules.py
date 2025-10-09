@@ -6,7 +6,13 @@ import pyThermoLinkDB as ptdblink
 from pyThermoLinkDB import load_and_build_model_source
 from pyThermoLinkDB.models import ModelSource
 import pyThermoDB as ptdb
-from pythermodb_settings.models import Component, ComponentRule, ComponentThermoDBSource
+from pythermodb_settings.models import (
+    Component,
+    ComponentRule,
+    ComponentThermoDBSource,
+    MixtureThermoDBSource
+)
+from pyThermoDB.core import TableMatrixData
 
 # check version
 print(ptdblink.__version__)
@@ -19,24 +25,53 @@ print(ptdb.__version__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"current dir: {current_dir}")
 
-# NOTE: CO2
+# NOTE: thermodb configurations
+# methane gas thermodb file
 _thermodb_file = os.path.join(
     current_dir,
     'thermodb',
     'methane-g.pkl'
 )
 
+# binary mixture thermodb file
+_mixture_thermodb_file = os.path.join(
+    current_dir,
+    'thermodb',
+    'mixture methanol-ethanol.pkl'
+)
+
 # NOTE: components
-_component = Component(
+methane = Component(
     name='Methane',
     formula='CH4',
     state='g'
 )
 
+methanol = Component(
+    name='methanol',
+    formula='CH3OH',
+    state='l'
+)
+
+ethanol = Component(
+    name='ethanol',
+    formula='C2H5OH',
+    state='l'
+)
+
+# =======================================
+# SECTION: create thermodb source
+# ======================================
 # NOTE: component thermodb
-_component_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
-    component=_component,
+methane_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
+    component=methane,
     source=_thermodb_file
+)
+
+# NOTE: mixture thermodb
+mixture_components: MixtureThermoDBSource = MixtureThermoDBSource(
+    components=[methanol, ethanol],
+    source=_mixture_thermodb_file
 )
 
 # =======================================
@@ -80,7 +115,7 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
 }
 
 model_source2: ModelSource = load_and_build_model_source(
-    thermodb_sources=[_component_thermodb],
+    thermodb_sources=[methane_thermodb, mixture_components],
     rules=thermodb_rules,
 )
 print(model_source2)
@@ -115,3 +150,30 @@ eq2_ = equationsource['Methane-g']['Cp_IG']
 print(type(eq2_))
 print(eq2_)
 print(eq2_.args)
+
+# NOTE: by mixture name (should be in order alphabetically)
+# data
+dt3_ = datasource['ethanol|methanol']['a']
+# >> check data table matrix
+if not isinstance(dt3_, TableMatrixData):
+    raise ValueError("dt3_ is not TableMatrixData")
+print(dt3_)
+print(type(dt3_))
+print(dt3_.matrix_table)
+print(dt3_.matrix_symbol)
+print(dt3_.matrix_data_structure())
+
+# NOTE: old format
+print(dt3_.get_matrix_property(
+    "alpha_i_j",
+    [ethanol.name, methanol.name],
+    symbol_format='alphabetic'
+)
+)
+
+nrtl_data_ = f"a_{ethanol.name}_{methanol.name}"
+alpha_ij = dt3_.ijs(nrtl_data_)
+print(alpha_ij)
+nrtl_data_ = f"a | {ethanol.name} | {methanol.name}"
+alpha_ij = dt3_.ijs(nrtl_data_)
+print(alpha_ij)
