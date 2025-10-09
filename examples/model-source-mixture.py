@@ -4,11 +4,15 @@ from typing import List
 from rich import print
 import pyThermoLinkDB as ptldb
 from pyThermoLinkDB import build_components_model_source, build_model_source
-from pyThermoLinkDB.models import ComponentModelSource, ModelSource
+from pyThermoLinkDB.models import ComponentModelSource, ModelSource, MixtureModelSource
 import pyThermoDB as ptdb
 from pythermodb_settings.models import Component
-from pyThermoDB import ComponentThermoDB
-from pyThermoDB import build_component_thermodb_from_reference
+from pyThermoDB import (
+    ComponentThermoDB,
+    MixtureThermoDB,
+    build_mixture_thermodb_from_reference,
+)
+
 
 # check version
 print(ptldb.__version__)
@@ -169,7 +173,7 @@ REFERENCES:
             UNIT: [None,None,None,None,None,1,1,1,1,1,1,1,1]
           VALUES:
             - [1,methanol|ethanol,methanol,CH3OH,l,0,1,1,1.564200272,0,35.05450323,0,4.481683583]
-            - [2,methanol|ethanol,ethanol,C2H5OH,g,2,3,-20.63243601,0,0.059982839,0,4.481683583,0]
+            - [2,methanol|ethanol,ethanol,C2H5OH,l,2,3,-20.63243601,0,0.059982839,0,4.481683583,0]
             - [1,methanol|methane,methanol,CH3OH,l,1,0.300492719,0,1.564200272,0,35.05450323,0,4.481683583]
             - [2,methanol|methane,methane,CH4,g,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
 """
@@ -184,7 +188,7 @@ ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
 methane = Component(name="methane", formula="CH4", state="g")
 
 # ! mixture
-mixture_components = [methanol, ethanol, methane]
+mixture_components = [methanol, ethanol]
 # >> methanol-ethanol
 # >> methanol-methane
 # >> ethanol-methane
@@ -193,35 +197,15 @@ mixture_components = [methanol, ethanol, methane]
 # ☑️ BUILD MIXTURE THERMODB
 # ====================================
 # SECTION: build component thermodb
-# ! CO2
-thermodb_CO2: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name=component_name,
-    component_formula=component_formula,
-    component_state=component_state,
+# ! mixture thermodb
+mixture_thermodb_: MixtureThermoDB | None = build_mixture_thermodb_from_reference(
+    components=mixture_components,
     reference_content=REFERENCE_CONTENT,
 )
-print(f"thermodb_component_: {thermodb_CO2}")
+print(f"mixture_thermodb_: {mixture_thermodb_}")
 # >> check
-if thermodb_CO2 is None:
-    raise ValueError("thermodb_CO2 is None")
-
-# ! ethanol
-C2H6O = Component(
-    name='ethanol',
-    formula='C2H6O',
-    state='l'
-)
-
-thermodb_ethanol: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='ethanol',
-    component_formula='C2H6O',
-    component_state='l',
-    reference_content=REFERENCE_CONTENT,
-)
-print(f"thermodb_ethanol: {thermodb_ethanol}")
-# >> check
-if thermodb_ethanol is None:
-    raise ValueError("thermodb_ethanol is None")
+if mixture_thermodb_ is None:
+    raise ValueError("mixture_thermodb_ is None")
 
 # SECTION: build model source
 # NOTE: rules
@@ -263,17 +247,17 @@ ALL:
     ideal-gas-heat-capacity: Cp_IG
 """
 
-# NOTE: component
-components: list[Component] = [CO2, C2H6O]
-
-# NOTE: build components model source
-components_model_source: List[ComponentModelSource] = build_components_model_source(
+# ====================================
+# ☑️ BUILD MIXTURE MODEL SOURCE
+# ====================================
+# NOTE: build mixture model source
+mixture_model_source: MixtureModelSource = build_components_model_source(
     components_thermodb=[thermodb_CO2, thermodb_ethanol],
 )
-print(f"components_model_source: {components_model_source}")
+print(f"mixture_model_source: {mixture_model_source}")
 
 # SECTION: build model source
 model_source = build_model_source(
-    components_model_source=components_model_source,
+    source=mixture_model_source,
 )
 print(f"model_source: {model_source}")

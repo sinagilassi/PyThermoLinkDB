@@ -267,6 +267,6 @@ print(f"components_model_source: {components_model_source}")
 
 # SECTION: build model source
 model_source = build_model_source(
-    components_model_source=components_model_source,
+    source=components_model_source,
 )
 print(f"model_source: {model_source}")
