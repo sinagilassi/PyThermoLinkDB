@@ -381,8 +381,8 @@ dependencies = [
 requires-dist = [
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
-    { name = "pythermodb", specifier = ">=1.11.39" },
-    { name = "pythermodb-settings", specifier = ">=0.1.1" },
+    { name = "pythermodb", specifier = ">=1.11.42" },
+    { name = "pythermodb-settings", specifier = ">=0.1.5" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "rich", specifier = ">=14.1.0" },
 ]
