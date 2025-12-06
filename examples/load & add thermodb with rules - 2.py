@@ -129,6 +129,9 @@ if CO2_eq is not None:
     Cp_IG_eq = CO2_eq.eq(name='Cp_IG')
     print(Cp_IG_eq)
     if Cp_IG_eq is not None:
+        # inputs
+        print(Cp_IG_eq.inputs)
+        # fn
         print(Cp_IG_eq.fn(T=298.15))
         # calc
         print(Cp_IG_eq.calc(T=298.15, P=12))
