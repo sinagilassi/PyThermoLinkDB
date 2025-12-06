@@ -2,6 +2,8 @@
 import logging
 from pyThermoDB import TableMatrixData, TableData, TableEquation
 # local
+# ! deps
+from ..config.deps import get_config
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -11,7 +13,10 @@ class ThermoLink:
 
     def __init__(self):
         # load reference
-        pass
+        # NOTE: get config
+        self.config = get_config()
+        # ! original equation label
+        self.original_equation_label = self.config.original_equation_label
 
     def _set_datasource(
         self,
@@ -250,6 +255,12 @@ class ThermoLink:
                                 _val.return_symbols.keys()
                             )
 
+                            # NOTE: equation identifier
+                            return_identifier = _val.make_identifiers(
+                                param_id='return',
+                                mode="symbol"
+                            )
+
                             # ! set original symbol
                             returned_symbol = None
                             # >> only if one symbol
@@ -257,7 +268,7 @@ class ThermoLink:
                                 returned_symbol = original_symbols[0]
 
                             # NOTE: update equation symbol with rules
-                            # check if component is in thermodb_rule
+                            # ! check if component is in thermodb_rule
                             if component in thermodb_rule.keys():
                                 # get thermodb rule
                                 _rules = thermodb_rule[component].get(
@@ -265,19 +276,21 @@ class ThermoLink:
                                     None
                                 )
 
-                                # NOTE: verify _rules keys to set with equation identifier
+                                # SECTION: verify _rules keys to set with equation identifier
                                 if _rules:
-                                    # ! keys (equation identifiers)
+                                    # ? keys (equation identifiers)
                                     keys_ = list(_rules.keys())
-                                    # ! values (symbols)
+                                    # ? values (symbols)
                                     values_ = list(_rules.values())
 
-                                    # check & set
+                                    # NOTE: check & set symbol if found in rules
                                     if equation_identifier in keys_:
-                                        # rename: use the symbol from rules
-                                        symbol = _rules[equation_identifier]
+                                        # ! rename: use the symbol from rules (get value by key)
+                                        symbol = str(
+                                            _rules[equation_identifier]
+                                        )
                                     else:
-                                        # ! check returned_symbol
+                                        # ! check returned_symbol if in values
                                         if (
                                             returned_symbol is not None and
                                             returned_symbol in values_
@@ -287,7 +300,18 @@ class ThermoLink:
                                                 returned_symbol
                                             )
                                             # set symbol
-                                            symbol = _rules[keys_[idx_]]
+                                            symbol = str(_rules[keys_[idx_]])
+                                elif (
+                                    len(return_identifier) == 1 and
+                                    self.original_equation_label is False
+                                ):
+                                    # ! set symbol using return identifier
+                                    symbol = str(return_identifier[0])
+                                else:
+                                    # log
+                                    logger.warning(
+                                        f'No matching rule found for equation {equation_identifier} of component {component}'
+                                    )
 
                             # LINK: update
                             datasource[component][symbol] = _val

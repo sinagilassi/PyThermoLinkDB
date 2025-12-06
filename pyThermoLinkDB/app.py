@@ -24,6 +24,8 @@ from .utils import (
     look_up_mixture_rules
 )
 from .config import DEFAULT_RULES_KEY
+# ! deps
+from .config.deps import set_config, AppConfig
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -1064,6 +1066,7 @@ def load_and_build_model_source(
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
+    original_equation_label: bool = True,
 ) -> ModelSource:
     '''
     Load thermodb from thermodb sources and build model source
@@ -1084,6 +1087,8 @@ def load_and_build_model_source(
         Whether to overwrite existing rules in the thermodb hub, by default False
     verbose: bool, optional
         Whether to print verbose output, by default False
+    original_equation_label: bool, optional
+        Whether to use original equation label from thermodb, by default True
 
     Returns
     -------
@@ -1091,6 +1096,13 @@ def load_and_build_model_source(
         ModelSource object containing data source and equation source for multiple components/mixtures
     '''
     try:
+        # LINK: set include_data in config
+        cfg = AppConfig(
+            original_equation_label=original_equation_label
+        )
+        # ! set config
+        set_config(cfg)
+
         # NOTE: check inputs
         if not isinstance(thermodb_sources, list) or len(thermodb_sources) == 0:
             logger.error(
