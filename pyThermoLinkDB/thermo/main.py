@@ -6,9 +6,9 @@ from pythermodb_settings.models import Component
 from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
-from .equation_sources import EquationSources
-from .equation_source import EquationSource
-from .data_source import DataSource
+from .equation_sources import EquationSourcesCore
+from .equation_source import EquationSourceCore
+from .data_source import DataSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ def mkeqs(
         'Name-Formula-State',
         'Formula-Name-State'
     ] = 'Name-State',
-) -> Optional[EquationSources]:
+) -> Optional[EquationSourcesCore]:
     """
-    Make an equation source for a given property and component.
+    Make an equation source core for a given property and component.
 
     Parameters
     ----------
@@ -42,8 +42,8 @@ def mkeqs(
 
     Returns
     -------
-    Optional[EquationSources]
-        An EquationSources object if the component equations are found; otherwise, None.
+    Optional[EquationSourcesCore]
+        An EquationSourcesCore object if the component equations are found; otherwise, None.
     """
     try:
         # SECTION: Validate inputs
@@ -59,7 +59,7 @@ def mkeqs(
         Source_ = Source(model_source=model_source)
 
         # SECTION: Create XProp object
-        return EquationSources(
+        return EquationSourcesCore(
             component=component,
             source=Source_,
             component_key=component_key,
@@ -81,9 +81,9 @@ def mkeq(
         'Name-Formula-State',
         'Formula-Name-State'
     ] = 'Name-State',
-) -> Optional[EquationSource]:
+) -> Optional[EquationSourceCore]:
     """
-    Make an equation source for a given property and component.
+    Make an equation source core for a given property and component.
 
     Parameters
     ----------
@@ -98,8 +98,8 @@ def mkeq(
 
     Returns
     -------
-    Optional[EquationSource]
-        An EquationSource object if the component equations are found; otherwise, None.
+    Optional[EquationSourceCore]
+        An EquationSourceCore object if the component equations are found; otherwise, None.
     """
     try:
         # SECTION: Validate inputs
@@ -138,8 +138,8 @@ def mkeq(
                 f"Property '{name}' not found for component '{component_id}' in the source.")
             return None
 
-        # SECTION: Create XProp object
-        return EquationSource(
+        # SECTION: Create EquationSourceCore object
+        return EquationSourceCore(
             prop_name=name,
             component=component,
             source=Source_,
@@ -163,9 +163,9 @@ def mkdt(
         'Name-Formula-State',
         'Formula-Name-State'
     ] = 'Name-State',
-) -> Optional[DataSource]:
+) -> Optional[DataSourceCore]:
     """
-    Make a data source for a given component.
+    Make a data source core for a given component.
 
     Parameters
     ----------
@@ -178,8 +178,8 @@ def mkdt(
 
     Returns
     -------
-    Optional[DataSource]
-        A DataSource object if the component data is found; otherwise, None.
+    Optional[DataSourceCore]
+        A DataSourceCore object if the component data is found; otherwise, None.
     """
     try:
         # SECTION: Validate inputs
@@ -194,8 +194,8 @@ def mkdt(
         # SECTION: Prepare source
         Source_ = Source(model_source=model_source)
 
-        # SECTION: Create DataSource object
-        return DataSource(
+        # SECTION: Create DataSourceCore object
+        return DataSourceCore(
             component=component,
             source=Source_,
             component_key=component_key,
