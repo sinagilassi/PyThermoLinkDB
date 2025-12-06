@@ -6,13 +6,47 @@ from pyThermoDB.core import TableEquation
 from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
-from .equation_source import EquationSource
+from .equation_source import EquationSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
 
 
-class EquationSources:
+class EquationSourcesCore:
+    """
+    Core adapter for retrieving all equation definitions available for a single
+    component from a given Source.
+
+    This helper locates and exposes the set of TableEquation records (by ID)
+    that a Source provides for a Component, and it provides a factory method
+    to construct an EquationSourceCore for a specific property/equation.
+
+    Responsibilities
+    - Build a component identifier using :func:`pythermodb_settings.utils.set_component_id`.
+    - Query the provided ``source`` via its ``component_eq_extractor`` to obtain
+    a mapping of equation IDs to :class:`pyThermoDB.core.TableEquation`.
+    - Provide a simple API to list available equation IDs (``equations()``)
+    and to construct a prepared :class:`EquationSourceCore` for a chosen ID
+    (``eq(name)``).
+    - Log warnings when no equations are found and surface errors when creation
+    of an EquationSourceCore is not possible.
+
+    Attributes
+    - ``component`` (:class:`pythermodb_settings.models.Component`): Component for
+    which equations are requested (name, formula, state, optional mole_fraction).
+    - ``source`` (:class:`pyThermoLinkDB.thermo.Source`): Source instance used to retrieve component equations; expected to implement
+    - ``component_eq_extractor(component_id)`` and ``is_prop_eq_available(component_id, prop_name)``.
+    - ``component_key`` (Literal): Key format used to form the component ID.
+    - ``component_id`` (str): Computed identifier for the component using ``set_component_id`` and ``component_key``.
+    - ``component_equations`` (Optional[Dict[str, TableEquation]]): Mapping of equation IDs to :class:`pyThermoDB.core.TableEquation` returned by the
+    source, or ``None`` if not available.
+
+    Notes
+    - The class is a light-weight index/adapter and does not validate or execute equations itself; creating an EquationSourceCore (via ``eq``) prepares a
+    single equation for execution and may surface further errors if the underlying source data are malformed.
+    - If ``component_equations`` is ``None``, ``equations()`` returns an empty list and ``eq(name)`` will log an error and return ``None``.
+    """
+
     def __init__(
         self,
         component: Component,
@@ -82,7 +116,7 @@ class EquationSources:
     def eq(
         self,
         name: str
-    ) -> Optional[EquationSource]:
+    ) -> Optional[EquationSourceCore]:
         """
         Make an equation source for a given property.
 
@@ -93,8 +127,8 @@ class EquationSources:
 
         Returns
         -------
-        Optional[EquationSource]
-            An EquationSource object if the equation is found; otherwise, None.
+        Optional[EquationSourceCore]
+            An EquationSourceCore object if the equation is found; otherwise, None.
         """
         try:
             if self.component_equations is None:
@@ -111,7 +145,7 @@ class EquationSources:
                 return None
 
             # SECTION: Create EquationSource object
-            return EquationSource(
+            return EquationSourceCore(
                 prop_name=name,
                 component=self.component,
                 source=self.source,
