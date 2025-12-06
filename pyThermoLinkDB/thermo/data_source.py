@@ -2,7 +2,6 @@
 import logging
 from typing import Dict, Literal, Any, Optional, List
 from pythermodb_settings.models import Component
-from pyThermoDB.core import TableData
 from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
@@ -13,7 +12,39 @@ from ..models.component_models import PropResult
 logger = logging.getLogger(__name__)
 
 
-class DataSource:
+class DataSourceCore:
+    """
+    Core adapter for retrieving component property data from a :class:`Source`.
+
+    This lightweight helper binds a :class:`pythermodb_settings.models.Component`
+    instance to a :class:`pyThermoLinkDB.thermo.Source` and exposes convenience
+    methods to access component-level property data provided by that source.
+
+    Responsibilities
+    - Compute a stable component identifier using :func:`pythermodb_settings.utils.set_component_id`
+        together with the chosen ``component_key``.
+    - Query the provided ``source`` via its ``component_data_extractor`` for the
+        component's raw data dictionary.
+    - Provide ``props()`` to list available property names and ``prop(name)`` to
+        return a ``PropResult`` containing numeric value, unit and symbol.
+
+    Attributes
+    - ``component`` (:class:`pythermodb_settings.models.Component`): The component
+        model (name, formula, state, optional mole_fraction, ...).
+    - ``source`` (:class:`pyThermoLinkDB.thermo.Source`): The data source used to
+        extract component information. It must implement ``component_data_extractor``.
+    - ``component_key`` (Literal): Format used to build the component identifier
+        (e.g. ``'Name-State'``, ``'Formula'``).
+    - ``component_id`` (str): The identifier computed from the component and key.
+    - ``component_data`` (Optional[Dict[str, Any]]): Raw property dictionary returned
+        by the source, or ``None`` if the source had no data for the component.
+
+    Notes
+    - The class intentionally keeps logic minimal — it does not perform unit
+        conversions, interpolation, or deep validation beyond existence checks.
+    - Missing data and lookup failures are logged via the module logger.
+    """
+
     def __init__(
         self,
         component: Component,
@@ -109,7 +140,9 @@ class DataSource:
                 return None
 
             res: Dict[str, Any] | None = self.component_data.get(
-                name, None)
+                name,
+                None
+            )
 
             if res is None:
                 logger.warning(
