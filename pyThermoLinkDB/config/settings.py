@@ -1,7 +1,7 @@
 # setting
 
 # version
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 # author
 __author__ = "Sina Gilassi"
 # description
