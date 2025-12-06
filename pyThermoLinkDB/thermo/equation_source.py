@@ -52,7 +52,7 @@ class EquationSourceCore:
     - ``_num`` (int): Equation number/index.
     - ``_fn`` (Callable[..., EquationResult]): Callable that performs the
         calculation and returns an :class:`pyThermoDB.models.EquationResult`.
-    - ``_inputs`` (Dict[str, float]): Named input values (defaults) for the
+    - ``_inputs`` (Dict[str, Any]): Named input values (defaults) for the
         equation.
     - ``_args`` (Dict[str, Any]): Stored/default arguments passed to ``_fn``.
     - ``_arg_symbols`` / ``_arg_identifiers``: Metadata for argument symbols

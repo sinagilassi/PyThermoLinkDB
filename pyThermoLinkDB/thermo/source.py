@@ -370,7 +370,7 @@ class Source:
         component_id: str,
         args,
         ignore_symbols: Optional[List[str]] = None
-    ):
+    ) -> Dict[str, Any]:
         '''
         Builds args from `datasource` for the given component, ignoring specified symbols.
 
