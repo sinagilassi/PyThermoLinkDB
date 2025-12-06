@@ -7,14 +7,68 @@ from pythermodb_settings.utils import set_component_id
 from pyThermoDB.models import EquationResult
 # local
 from ..thermo import Source
-from ..models.component_models import ComponentEquationSource, CalcResult
+from ..models.component_models import ComponentEquationSource
 
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
 
 
-class EquationSource:
+class EquationSourceCore:
+    """
+    Core adapter for retrieving and preparing equation sources for a component.
+
+    This class couples a requested property equation (``prop_name``) with a
+    specific :class:`pythermodb_settings.models.Component` and a
+    :class:`pyThermoLinkDB.thermo.Source`. It locates the appropriate
+    :class:`ComponentEquationSource` from the source, extracts the underlying
+    :class:`pyThermoDB.core.TableEquation`, the callable equation implementation,
+    and metadata such as argument names, input defaults, return units and
+    symbols.
+
+    Responsibilities
+    - Build a component identifier using :func:`pythermodb_settings.utils.set_component_id`.
+    - Query the provided ``source`` via its ``eq_builder`` for available
+        equations matching ``prop_name`` and the component.
+    - Expose convenient properties for the equation object, function,
+        inputs/default-args, argument symbols/identifiers and return metadata.
+    - Provide ``calc(**input_args)`` to execute the selected equation with a
+        combination of stored default arguments and runtime inputs.
+
+    Attributes
+    - ``prop_name`` (str): Property/equation identifier requested (e.g. ``'VaPr'``).
+    - ``component`` (:class:`pythermodb_settings.models.Component`): The component
+        for which the equation is requested.
+    - ``source`` (:class:`pyThermoLinkDB.thermo.Source`): The source used to
+        locate equation definitions; must implement ``eq_builder`` returning a
+        mapping of component IDs to :class:`ComponentEquationSource`.
+    - ``component_key`` (Literal): Format used to form the component identifier.
+    - ``component_id`` (str): Computed identifier for the component using
+        ``set_component_id`` and ``component_key``.
+    - ``component_equation`` (:class:`ComponentEquationSource`): The selected
+        equation source record for the component and ``prop_name``.
+    - ``_eq`` (:class:`pyThermoDB.core.TableEquation`): The equation metadata
+        object (body, description, etc.).
+    - ``_num`` (int): Equation number/index.
+    - ``_fn`` (Callable[..., EquationResult]): Callable that performs the
+        calculation and returns an :class:`pyThermoDB.models.EquationResult`.
+    - ``_inputs`` (Dict[str, float]): Named input values (defaults) for the
+        equation.
+    - ``_args`` (Dict[str, Any]): Stored/default arguments passed to ``_fn``.
+    - ``_arg_symbols`` / ``_arg_identifiers``: Metadata for argument symbols
+        and identifiers.
+    - ``_returns`` / ``_return_symbols`` / ``_return_identifiers``: Metadata
+        describing returned values, their units and symbols; ``_return_unit`` and
+        ``_return_symbol`` store the primary return unit and symbol.
+
+    Notes
+    - The class focuses on locating and preparing equation metadata and
+        dispatching the equation callable; it does not perform unit conversions
+        or attempt to harmonize differing units across sources.
+    - If no matching equation is found for the component and ``prop_name``, a
+        ``ValueError`` is raised and the event is logged.
+    """
+
     def __init__(
         self,
         prop_name: str,
@@ -30,7 +84,7 @@ class EquationSource:
         ] = 'Name-State',
     ) -> None:
         """
-        Initialize EquationSource with a component and source.
+        Initialize EquationSourceCore with a property name, component, and source.
 
         Parameters
         ----------
