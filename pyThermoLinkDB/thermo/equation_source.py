@@ -72,6 +72,8 @@ class EquationSource:
         self._num: int = self.component_equation.num
         # ! fn
         self._fn = self.component_equation.fn
+        # ! inputs
+        self._inputs: Dict[str, float] = self.component_equation.inputs or {}
         # ! args
         self._args: Dict[
             str,
@@ -143,6 +145,18 @@ class EquationSource:
             The equation function.
         """
         return self._fn
+
+    @property
+    def inputs(self) -> Dict[str, float]:
+        """
+        Get the input values for the equation.
+
+        Returns
+        -------
+        Dict[str, float]
+            A dictionary of input names and their values.
+        """
+        return self._inputs
 
     @property
     def body(self) -> str:
