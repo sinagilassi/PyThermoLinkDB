@@ -11,7 +11,7 @@ from pythermodb_settings.models import (
     ComponentRule,
     ComponentThermoDBSource,
 )
-from pyThermoLinkDB.thermo import mkdt, mkeqs
+from pyThermoLinkDB.thermo import mkdt, mkeq, mkeqs
 
 # version
 print(ptdblink.__version__)
@@ -112,21 +112,41 @@ if CO2_dt is not None:
     print(CO2_dt.props())
     print(CO2_dt.prop(name='EnFo'))
 
+
 # NOTE : CO2 equation
-CO2_eq = mkeqs(
+# ! make equation source for a component and a specific equation
+CO2_Cp_IG_eq = mkeq(
+    name='Cp_IG',
+    component=CO2_comp,
+    model_source=model_source,
+    component_key='Name-State',
+)
+
+# print
+print(CO2_Cp_IG_eq)
+
+# >> check
+if CO2_Cp_IG_eq is not None:
+    print(CO2_Cp_IG_eq.inputs)
+    print(CO2_Cp_IG_eq.args)
+    print(CO2_Cp_IG_eq.fn(T=298.15))
+    print(CO2_Cp_IG_eq.calc(T=298.15, P=12))
+
+# ! make equation source for a component including all equations
+CO2_eqs = mkeqs(
     component=CO2_comp,
     model_source=model_source,
     component_key='Name-State',
 )
 # print
-print(CO2_eq)
+print(CO2_eqs)
 
 # >> check
-if CO2_eq is not None:
-    print(CO2_eq.equations())
+if CO2_eqs is not None:
+    print(CO2_eqs.equations())
 
     # >> make Cp_IG equation source
-    Cp_IG_eq = CO2_eq.eq(name='Cp_IG')
+    Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
     print(Cp_IG_eq)
     if Cp_IG_eq is not None:
         # inputs
@@ -137,7 +157,7 @@ if CO2_eq is not None:
         print(Cp_IG_eq.calc(T=298.15, P=12))
 
     # >> make VaPr equation source
-    VaPr_eq = CO2_eq.eq(name='VaPr')
+    VaPr_eq = CO2_eqs.eq(name='VaPr')
     print(VaPr_eq)
     if VaPr_eq is not None:
         print(VaPr_eq.fn(T=220))
