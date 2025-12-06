@@ -17,9 +17,50 @@ logger = logging.getLogger(__name__)
 # SECTION: Source class
 
 class Source:
-    '''
-    Source to manage datasource and equationsource built by PyThermoDB and PyThermoLinkDB.
-    '''
+    """
+    Manager for model "datasource" and "equationsource" payloads used by PyThermoDB and pyThermoLinkDB.
+
+    This class wraps an optional ModelSource and exposes a small API to:
+    - access datasource and equationsource dictionaries,
+    - extract individual records for components and properties,
+    - validate/build runtime argument dictionaries for equation execution,
+    - construct and execute equation callables (via eq_builder and exec_eq).
+
+    Responsibilities
+    - Store and expose the parsed model_source payload (ModelSource.data_source and ModelSource.equation_source).
+    - Provide safe extractors for component/property-level data and equations.
+    - Provide helpers to build argument dictionaries from datasource entries and to validate argument requirements of TableEquation instances.
+    - Provide higher-level equation-building (eq_builder) and execution (exec_eq) helpers that orchestrate TableEquation usage across components.
+
+    Expected input structures (contracts)
+    - model_source.equation_source: dict mapping component_id -> prop_name -> TableEquation-like object (must expose .args, .arg_symbols, .returns .return_symbols, .eq_num, .body, .cal).
+    - model_source.data_source: dict mapping component_id -> symbol -> value (basic property values used to populate equation inputs).
+
+    Attributes
+    - model_source (Optional[ModelSource]): Original model source object passed to the constructor.
+    - _datasource (Optional[Dict[str, Any]]): Internal datasource dictionary or None when not provided.
+    - _equationsource (Optional[Dict[str, Any]]): Internal equationsource dictionary or None when not provided.
+
+    Public methods (high level)
+    - datasource / equationsource: properties returning the respective dict or an empty dict when not set.
+    - set_source(model_source): parse/assign internal datastructures.
+    - eq_extractor(component_id, prop_name): return a TableEquation for a component/property or None.
+    - component_eq_extractor(component_id): return all equations for a component or None.
+    - data_extractor(component_id, prop_name): return a datasource property dict or None.
+    - component_data_extractor(component_id): return datasource for a component or None.
+    - check_args(component_id, args): validate that required args exist in the datasource and return the subset used for building inputs.
+    - build_args(component_id, args, ignore_symbols=None): construct an input mapping for an equation using the datasource and optional ignored symbols.
+    - eq_builder(components, prop_name, component_key, **kwargs): construct a mapping of component_id -> ComponentEquationSource ready for execution.
+    - exec_eq(components, eq_src_comp, args_values=None, component_key, **kwargs): execute previously built equations and return results.
+    - get_component_data(component_id, components, component_key): aggregate datasource and equationsource entries for a component.
+    - is_prop_available / is_prop_eq_available / is_prop_data_available: availability checks across datasource and equationsource.
+
+    Notes
+    - The Source class is an adapter/utility and does not perform unit conversions or semantic harmonization of values between different sources.
+    - Many methods return None on error and log via the module logger; callers should check for None and handle errors appropriately.
+    - The class assumes a consistent structure for TableEquation-like objects and for datasource/equationsource dictionaries as described above.
+    """
+
     # NOTE: variables
 
     def __init__(
