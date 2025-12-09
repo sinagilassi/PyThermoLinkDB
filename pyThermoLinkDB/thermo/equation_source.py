@@ -138,10 +138,15 @@ class EquationSourceCore:
             str,
             Any
         ] = self.component_equation.arg_symbols or {}
-        # ! args identifiers
+        # ! arg identifiers
         self._arg_identifiers: List[
             str
         ] = self.component_equation.arg_identifiers or []
+        # ! arg mappings
+        self._arg_mappings: Dict[
+            str,
+            Any
+        ] = self.component_equation.arg_mappings or {}
         # ! returns
         self._returns: Dict[
             str,
@@ -259,6 +264,18 @@ class EquationSourceCore:
             A list of argument identifiers.
         """
         return self._arg_identifiers
+
+    @property
+    def arg_mappings(self) -> Dict[str, Any]:
+        """
+        Get the argument mappings for the equation.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary of argument names and their mappings.
+        """
+        return self._arg_mappings
 
     @property
     def returns(self) -> Dict[str, Any]:

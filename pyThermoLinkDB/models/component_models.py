@@ -15,6 +15,8 @@ class ComponentEquationSource(BaseModel):
     ----------
     source: TableEquation
         The equation source from PyThermoDB
+    inputs: Dict[str, Any]
+        The equation inputs
     num: int
         The equation number
     body: str
@@ -65,6 +67,10 @@ class ComponentEquationSource(BaseModel):
     arg_identifiers: List[str] = Field(
         default_factory=list,
         description="The equation argument identifiers."
+    )
+    arg_mappings: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The equation argument mappings."
     )
     returns: Dict[str, Any] = Field(
         default_factory=dict,

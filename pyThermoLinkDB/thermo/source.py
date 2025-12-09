@@ -316,7 +316,7 @@ class Source:
         self,
         component_id: str,
         args
-    ):
+    ) -> Dict[str, Any]:
         '''
         Checks equation args against datasource, returns required args used in calculation.
 
@@ -329,7 +329,7 @@ class Source:
 
         Returns
         -------
-        list
+        Dict[str, Any]
             The required args.
 
         Notes
@@ -339,7 +339,7 @@ class Source:
         '''
         try:
             # NOTE: required args
-            required_args = []
+            required_args = {}
 
             # datasource list
             datasource_component_list = list(
@@ -354,8 +354,10 @@ class Source:
             for arg_key, arg_value in args.items():
                 # symbol
                 if arg_value['symbol'] in datasource_component_list:
-                    # update
-                    required_args.append(arg_value)
+                    # symbol
+                    symbol_ = arg_value['symbol']
+                    #  value
+                    required_args[symbol_] = arg_value
                 else:
                     raise Exception('Args not in datasource!')
 
@@ -368,7 +370,7 @@ class Source:
     def build_args(
         self,
         component_id: str,
-        args: list,
+        args: Dict[str, Any],
         ignore_symbols: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         '''
@@ -378,8 +380,8 @@ class Source:
         ----------
         component_id : str
             The id of the component.
-        args : tuple
-            equation args
+        args : Dict[str, Any]
+            The equation args containing name, symbol, and unit.
         ignore_symbols : list
             list of symbols to ignore, default is None but it can be defined as ["T", "P"]
 
@@ -410,11 +412,7 @@ class Source:
 
                 # iterate through args and set to None
                 res = {
-                    arg['symbol'].strip(): {
-                        'value': None,
-                        'symbol': arg['symbol'],
-                        'unit': arg['unit']
-                    } for arg in args
+                    v['symbol']: {'value': None, 'symbol': v['symbol'], 'unit': v['unit']} for k, v in args.items()
                 }
 
                 return res
@@ -424,10 +422,11 @@ class Source:
             res = {}
 
             # looping through args
-            for arg in args:
+            # ! v contains name, symbol, unit
+            for k, v in args.items():
                 # symbol
-                symbol = arg['symbol']
-                unit = arg['unit'] if 'unit' in arg.keys() else None
+                symbol = v['symbol']
+                unit = v['unit']
 
                 # NOTE: check if symbol is in ignore symbols
                 if ignore_symbols is not None:
@@ -437,6 +436,7 @@ class Source:
                         for key, value in component_datasource.items():
                             if symbol == key:
                                 res[symbol] = {
+                                    # ? taken from datasource
                                     'value': value['value'],
                                     'symbol': symbol,
                                     'unit': unit
@@ -458,6 +458,7 @@ class Source:
                             # update
                             # >> extract value
                             res[symbol] = {
+                                # ? taken from datasource
                                 'value': value['value'],
                                 'symbol': symbol,
                                 'unit': unit
@@ -560,7 +561,7 @@ class Source:
             # NOTE: args
             _args = _eq.args
             # TODO: return only required args
-            _args_required = self.check_args(
+            arg_mapping = self.check_args(
                 component,
                 _args
             )
@@ -568,12 +569,8 @@ class Source:
             # build args
             _input_args = self.build_args(
                 component_id=component,
-                args=_args_required,
+                args=arg_mapping,
             )
-
-            # NOTE: update P and T
-            # _args_['T'] = None
-            # _args_['P'] = None
 
             # NOTE: create equation builder result
             # ! number
@@ -604,6 +601,7 @@ class Source:
                 args=args_,
                 arg_symbols=arg_symbols_,
                 arg_identifiers=arg_identifiers,
+                arg_mappings=arg_mapping,
                 returns=returns_,
                 return_symbols=return_symbols_,
                 return_identifiers=return_identifiers
