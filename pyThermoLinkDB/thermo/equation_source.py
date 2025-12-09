@@ -388,6 +388,8 @@ class EquationSourceCore:
                 # NOTE: execute without input args
                 input_args = {}
 
+            print(self._args)
+
             # SECTION: calculate
             result: EquationResult = self._fn(
                 **{**self._args, **input_args}

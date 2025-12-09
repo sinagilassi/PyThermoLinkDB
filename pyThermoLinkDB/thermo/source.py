@@ -368,8 +368,8 @@ class Source:
     def build_args(
         self,
         component_id: str,
-        args,
-        ignore_symbols: Optional[List[str]] = None
+        args: list,
+        ignore_symbols: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         '''
         Builds args from `datasource` for the given component, ignoring specified symbols.
@@ -382,6 +382,17 @@ class Source:
             equation args
         ignore_symbols : list
             list of symbols to ignore, default is None but it can be defined as ["T", "P"]
+
+        Returns
+        -------
+        Dict[str, Any]
+            The built args dictionary.
+
+        Notes
+        -----
+        - The built args dictionary contains the argument symbols as keys and their corresponding values from the datasource.
+        - Symbols in the ignore_symbols list are skipped and set to None.
+        - args units are automatically handled if provided.
         '''
         try:
             # SECTION: data source for component
@@ -398,7 +409,13 @@ class Source:
                 logger.warning("Component datasource is empty.")
 
                 # iterate through args and set to None
-                res = {arg['symbol'].strip(): None for arg in args}
+                res = {
+                    arg['symbol'].strip(): {
+                        'value': None,
+                        'symbol': arg['symbol'],
+                        'unit': arg['unit']
+                    } for arg in args
+                }
 
                 return res
 
@@ -410,6 +427,7 @@ class Source:
             for arg in args:
                 # symbol
                 symbol = arg['symbol']
+                unit = arg['unit'] if 'unit' in arg.keys() else None
 
                 # NOTE: check if symbol is in ignore symbols
                 if ignore_symbols is not None:
@@ -418,21 +436,42 @@ class Source:
                         # check in component database
                         for key, value in component_datasource.items():
                             if symbol == key:
-                                res[symbol] = value
-                            else:
-                                # default None
-                                res[symbol] = None
+                                res[symbol] = {
+                                    'value': value['value'],
+                                    'symbol': symbol,
+                                    'unit': unit
+                                }
+
+                    # ! check if not updated means external arg
+                    if symbol not in res.keys():
+                        # >> for external args which should be provided later
+                        res[symbol] = {
+                            'value': None,
+                            'symbol': symbol,
+                            'unit': unit
+                        }
+
                 else:
                     # ! check in component database
                     for key, value in component_datasource.items():
                         if symbol == key:
                             # update
                             # >> extract value
-                            res[symbol] = value
-                        else:
-                            # default None
-                            # >> for external args which should be provided later
-                            res[symbol] = None
+                            res[symbol] = {
+                                'value': value['value'],
+                                'symbol': symbol,
+                                'unit': unit
+                            }
+
+                    # ! check if not updated means external arg
+                    if symbol not in res.keys():
+                        # >> for external args which should be provided later
+                        res[symbol] = {
+                            'value': None,
+                            'symbol': symbol,
+                            'unit': unit
+                        }
+
             return res
         except Exception as e:
             raise Exception('Building args failed!, ', e)
@@ -520,7 +559,7 @@ class Source:
 
             # NOTE: args
             _args = _eq.args
-            # check args (SI)
+            # TODO: return only required args
             _args_required = self.check_args(
                 component,
                 _args
