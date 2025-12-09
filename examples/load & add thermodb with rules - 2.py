@@ -212,8 +212,9 @@ if ethane_eqs is not None:
     print(Cp_LIQ_eq)
     if Cp_LIQ_eq is not None:
         # inputs
-        print(Cp_LIQ_eq.inputs)
         print(Cp_LIQ_eq.args)
+        print(Cp_LIQ_eq.inputs)
+        print(Cp_LIQ_eq.arg_mappings)
         print(Cp_LIQ_eq.fn(T=298.15))
         # calc
         print(Cp_LIQ_eq.calc(T=298.15))
