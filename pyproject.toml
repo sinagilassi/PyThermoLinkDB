@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyThermoLinkDB"
-version = "1.4.4"
+version = "1.4.5"
 description = "PyThermoLinkDB is a Python package providing a robust and efficient interface between `PyThermoDB` and other applications."
 readme = "README.md"
 authors = [
