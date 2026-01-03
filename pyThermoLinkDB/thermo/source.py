@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import List, Dict, Optional, Any, Tuple, Literal, cast
+from typing import List, Dict, Optional, Any, Tuple, Literal
 from pyThermoDB.core import TableEquation
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component
@@ -514,6 +514,11 @@ class Source:
             - arg_symbols: The equation argument symbols.
             - returns: The equation returns.
             - return_symbols: The equation return symbols.
+
+        Raises
+        ------
+        ValueError
+            If the equation source is not defined or if the property name is empty.
         '''
         # NOTE: check if model source is valid
         if self.equationsource is None:
@@ -533,8 +538,9 @@ class Source:
         for component in component_ids:
             # check equation availability
             if prop_name not in self.equationsource[component].keys():
-                raise ValueError(
-                    f"Property '{prop_name}' not found in model source registered for {component}.")
+                logger.error(
+                    f"Component '{component}' does not have property '{prop_name}' in model source.")
+                return None
 
         # NOTE: property name
         if len(prop_name) == 0:
