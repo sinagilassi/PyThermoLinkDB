@@ -151,12 +151,18 @@ def build_component_model_source(
             component,
             component_key='Formula-State'
         )
+        # >> name formula
+        name_formula = set_component_key(
+            component,
+            component_key='Name-Formula'
+        )
 
         # NOTE: component rules
         # create dict to hold component rules both name-state and formula-state
         component_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
             name_state: reference_rules,
             formula_state: reference_rules,
+            name_formula: reference_rules,
         }
 
         # SECTION: check rules
@@ -171,7 +177,8 @@ def build_component_model_source(
                 # reset component_rules_dict
                 component_rules_dict = {
                     name_state: {},
-                    formula_state: {}
+                    formula_state: {},
+                    name_formula: {}
                 }
 
                 # >> log
@@ -214,10 +221,21 @@ def build_component_model_source(
                 # >> set
                 component_rules_dict[formula_state] = formula_state_rules_
 
+            # ! >> by name-formula
+            name_formula_rules_ = look_up_component_rules(
+                component=component,
+                rules=rules,
+                search_key="Name-Formula"
+            )
+            if name_formula_rules_:
+                # >> set
+                component_rules_dict[name_formula] = name_formula_rules_
+
             # NOTE: check if `component_rules_dict` is still empty, then use default rules if exists
             if (
                 len(component_rules_dict[name_state]) == 0 and
-                len(component_rules_dict[formula_state]) == 0
+                len(component_rules_dict[formula_state]) == 0 and
+                len(component_rules_dict[name_formula]) == 0
             ):
                 # ! >> by default rules key
                 default_rules_ = look_up_component_rules(
@@ -230,6 +248,7 @@ def build_component_model_source(
                     # >> set
                     component_rules_dict[name_state] = default_rules_
                     component_rules_dict[formula_state] = default_rules_
+                    component_rules_dict[name_formula] = default_rules_
                 else:
                     # log
                     logger.warning(
@@ -244,10 +263,15 @@ def build_component_model_source(
             formula_state_rules_labels = extract_labels_from_rules(
                 component_rules_dict[formula_state]
             ) if component_rules_dict[formula_state] else []
+
+            name_formula_rules_labels = extract_labels_from_rules(
+                component_rules_dict[name_formula]
+            ) if component_rules_dict[name_formula] else []
+
             # >> combine and unique
             component_rules_labels = list(
                 set(
-                    name_state_rules_labels + formula_state_rules_labels
+                    name_state_rules_labels + formula_state_rules_labels + name_formula_rules_labels
                 )
             )
 
@@ -287,6 +311,9 @@ def build_component_model_source(
             None
         ) or component_rules_dict.get(
             formula_state,
+            None
+        ) or component_rules_dict.get(
+            name_formula,
             None
         )
 
@@ -328,6 +355,22 @@ def build_component_model_source(
             else:
                 logger.warning(
                     f"Failed to add thermodb for component: {formula_state}")
+
+        # NOTE: name formula as id
+        # >> add
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name=name_formula,
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(f"Added thermodb for component: {name_formula}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for component: {name_formula}")
 
         # SECTION: build component model source
         datasource, equationsource = thermodb_hub.build()
