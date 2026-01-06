@@ -1,7 +1,7 @@
 # import libs
 import logging
 from typing import Dict, Literal, Any, Optional, List
-from pythermodb_settings.models import Component
+from pythermodb_settings.models import Component, ComponentKey
 from pyThermoDB.core import TableEquation
 from pythermodb_settings.utils import set_component_id
 # local
@@ -51,14 +51,7 @@ class EquationSourcesCore:
         self,
         component: Component,
         source: Source,
-        component_key: Literal[
-            'Name-State',
-            'Formula-State',
-            'Name',
-            'Formula',
-            'Name-Formula-State',
-            'Formula-Name-State'
-        ] = 'Name-State',
+        component_key: ComponentKey = 'Name-State',
     ) -> None:
         """
         Initialize EquationSource with a component and source.
