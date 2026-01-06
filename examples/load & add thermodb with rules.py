@@ -140,6 +140,12 @@ print(eq1_)
 print(eq1_.args)
 print(eq1_.cal(T=298.15))
 
+eq1_ = equationsource['Methane-CH4']['Cp_IG']
+print(type(eq1_))
+print(eq1_)
+print(eq1_.args)
+print(eq1_.cal(T=298.15))
+
 # NOTE: by name-state
 # data
 dt2_ = datasource['Methane-g']['EnFo']
