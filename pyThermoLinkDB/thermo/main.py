@@ -2,7 +2,7 @@
 import logging
 from typing import Literal, Optional, Tuple
 from pyThermoLinkDB.models import ModelSource
-from pythermodb_settings.models import Component
+from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
@@ -19,14 +19,7 @@ logger = logging.getLogger(__name__)
 def mkeqs(
     component: Component,
     model_source: ModelSource,
-    component_key: Literal[
-        'Name-State',
-        'Formula-State',
-        'Name',
-        'Formula',
-        'Name-Formula-State',
-        'Formula-Name-State'
-    ] = 'Name-State',
+    component_key: ComponentKey = 'Name-State',
 ) -> Optional[EquationSourcesCore]:
     """
     Make an equation source core for a given property and component.
@@ -73,14 +66,7 @@ def mkeq(
     name: str,
     component: Component,
     model_source: ModelSource,
-    component_key: Literal[
-        'Name-State',
-        'Formula-State',
-        'Name',
-        'Formula',
-        'Name-Formula-State',
-        'Formula-Name-State'
-    ] = 'Name-State',
+    component_key: ComponentKey = 'Name-State',
 ) -> Optional[EquationSourceCore]:
     """
     Make an equation source core for a given property and component.
@@ -155,14 +141,7 @@ def mkeq(
 def mkdt(
     component: Component,
     model_source: ModelSource,
-    component_key: Literal[
-        'Name-State',
-        'Formula-State',
-        'Name',
-        'Formula',
-        'Name-Formula-State',
-        'Formula-Name-State'
-    ] = 'Name-State',
+    component_key: ComponentKey = 'Name-State',
 ) -> Optional[DataSourceCore]:
     """
     Make a data source core for a given component.
