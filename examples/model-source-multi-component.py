@@ -173,6 +173,16 @@ REFERENCES:
             - [1,methane|ethanol,methanol,CH3OH,0,0.300492719,0,1.564200272,0,35.05450323,0,4.481683583]
             - [2,methane|ethanol,ethanol,C2H5OH,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
 """
+# SECTION: Directory paths
+# parent directory
+parent_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"parent directory: {parent_dir}")
+# thermodb directory
+thermodb_dir = os.path.join(parent_dir, 'thermodb')
+print(f"thermodb directory: {thermodb_dir}")
+
+# SECTION: ignore props
+IGNORE_PROPS: list[str] = ['MW', 'Cp_IG', 'VaPr']
 
 # SECTION: check component availability
 component_name = 'carbon dioxide'
@@ -192,6 +202,9 @@ thermodb_CO2: ComponentThermoDB | None = build_component_thermodb_from_reference
     component_formula=component_formula,
     component_state=component_state,
     reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
 )
 print(f"thermodb_component_: {thermodb_CO2}")
 # >> check
@@ -210,11 +223,78 @@ thermodb_ethanol: ComponentThermoDB | None = build_component_thermodb_from_refer
     component_formula='C2H6O',
     component_state='l',
     reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
 )
 print(f"thermodb_ethanol: {thermodb_ethanol}")
 # >> check
 if thermodb_ethanol is None:
     raise ValueError("thermodb_ethanol is None")
+
+# ! methane
+C1H4 = Component(
+    name='methane',
+    formula='CH4',
+    state='g'
+)
+thermodb_methane: ComponentThermoDB | None = build_component_thermodb_from_reference(
+    component_name='methane',
+    component_formula='CH4',
+    component_state='g',
+    reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
+)
+print(f"thermodb_methane: {thermodb_methane}")
+
+# >> check
+if thermodb_methane is None:
+    raise ValueError("thermodb_methane is None")
+
+# ! CO
+CO = Component(
+    name='carbon monoxide',
+    formula='CO',
+    state='g'
+)
+thermodb_CO: ComponentThermoDB | None = build_component_thermodb_from_reference(
+    component_name='carbon monoxide',
+    component_formula='CO',
+    component_state='g',
+    reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
+)
+print(f"thermodb_CO: {thermodb_CO}")
+
+# >> check
+if thermodb_CO is None:
+    raise ValueError("thermodb_CO is None")
+
+# ! H2O
+H2O = Component(
+    name='water',
+    formula='H2O',
+    state='g'
+)
+thermodb_H2O: ComponentThermoDB | None = build_component_thermodb_from_reference(
+    component_name='water',
+    component_formula='H2O',
+    component_state='g',
+    reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
+)
+
+print(f"thermodb_H2O: {thermodb_H2O}")
+
+# >> check
+if thermodb_H2O is None:
+    raise ValueError("thermodb_H2O is None")
 
 # SECTION: build model source
 # NOTE: rules
@@ -269,4 +349,5 @@ print(f"components_model_source: {components_model_source}")
 model_source = build_model_source(
     source=components_model_source,
 )
-print(f"model_source: {model_source}")
+print(f"model_source:")
+print(model_source)
