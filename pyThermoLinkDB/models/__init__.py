@@ -7,10 +7,14 @@ from .source import (
     MixtureModelSource
 )
 
+# ref
+from .ref import ComponentKey
+
 __all__ = [
     "ComponentModelSource",
     "DataSource",
     "EquationSource",
     "ModelSource",
     "MixtureModelSource",
+    "ComponentKey"
 ]
