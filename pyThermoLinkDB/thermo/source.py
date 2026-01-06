@@ -1,9 +1,9 @@
 # import libs
 import logging
-from typing import List, Dict, Optional, Any, Tuple, Literal
+from typing import List, Dict, Optional, Any, Tuple
 from pyThermoDB.core import TableEquation
 from pyThermoDB.models import EquationResult
-from pythermodb_settings.models import Component
+from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import set_component_id
 from pyThermoLinkDB.models import ModelSource
 # local
@@ -481,14 +481,7 @@ class Source:
         self,
         components: List[Component],
         prop_name: str,
-        component_key: Literal[
-            'Name-State',
-            'Formula-State',
-            'Name',
-            'Formula',
-            'Name-Formula-State',
-            'Formula-Name-State'
-        ] = 'Name-State',
+        component_key: ComponentKey = 'Name-State',
         **kwargs
     ) -> Optional[Dict[str, ComponentEquationSource]]:
         '''
@@ -623,14 +616,7 @@ class Source:
         components: List[Component],
         eq_src_comp: Dict[str, ComponentEquationSource],
         args_values: Optional[Dict[str, float]] = None,
-        component_key: Literal[
-            'Name-State',
-            'Formula-State',
-            'Name',
-            'Formula',
-            'Name-Formula-State',
-            'Formula-Name-State'
-        ] = 'Name-State',
+        component_key: ComponentKey = 'Name-State',
         **kwargs
     ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
         '''
@@ -768,14 +754,7 @@ class Source:
         self,
         component_id: str,
         components: List[Component],
-        component_key: Literal[
-            'Name-State',
-            'Formula-State',
-            'Name',
-            'Formula',
-            'Name-Formula-State',
-            'Formula-Name-State'
-        ] = 'Name-State',
+        component_key: ComponentKey = 'Name-State',
     ) -> Optional[Dict[str, Any]]:
         """
         Get the component data from the datasource.
