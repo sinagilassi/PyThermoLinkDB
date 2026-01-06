@@ -29,7 +29,7 @@ print(f"current dir: {current_dir}")
 _thermodb_file = os.path.join(
     current_dir,
     'thermodb',
-    'carbon dioxide-g.pkl'
+    'carbon dioxide.pkl'
 )
 
 # NOTE: components
@@ -40,16 +40,16 @@ CO2_comp = Component(
 )
 
 # thermodb file
-ethane_thermodb_file = os.path.join(
+ethanol_thermodb_file = os.path.join(
     current_dir,
     'thermodb',
-    'ethane-g.pkl'
+    'ethanol.pkl'
 )
 
-ethane_comp = Component(
-    name='ethane',
-    formula='C2H6',
-    state='g'
+ethanol_comp = Component(
+    name='ethanol',
+    formula='C2H5OH',
+    state='l'
 )
 
 # =======================================
@@ -61,10 +61,10 @@ CO2_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
     source=_thermodb_file
 )
 
-# NOTE: ethane thermodb
-ethane_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
-    component=ethane_comp,
-    source=ethane_thermodb_file
+# ! ethanol
+ethanol_thermodb: ComponentThermoDBSource = ComponentThermoDBSource(
+    component=ethanol_comp,
+    source=ethanol_thermodb_file
 )
 
 # =======================================
@@ -85,10 +85,34 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
     },
 }
 
-# load and build model source
+# NOTE: load and build model source
+# ! with rules
 model_source: ModelSource = load_and_build_model_source(
-    thermodb_sources=[CO2_thermodb, ethane_thermodb],
+    thermodb_sources=[
+        CO2_thermodb,
+        ethanol_thermodb
+    ],
     rules=thermodb_rules,
+    original_equation_label=False
+)
+print(model_source)
+
+# ! without rules & original labels is True
+model_source: ModelSource = load_and_build_model_source(
+    thermodb_sources=[
+        CO2_thermodb,
+        ethanol_thermodb
+    ],
+    original_equation_label=True
+)
+print(model_source)
+
+# ! without rules & original labels is False
+model_source: ModelSource = load_and_build_model_source(
+    thermodb_sources=[
+        CO2_thermodb,
+        ethanol_thermodb
+    ],
     original_equation_label=False
 )
 print(model_source)
@@ -102,7 +126,7 @@ equationsource = model_source.equation_source
 # =======================================
 # NOTE: by formula-state
 # data
-dt1_ = datasource['CO2-g']['EnFo']
+dt1_ = datasource['CO2-g']['EnFo_IG']
 print(type(dt1_))
 print(dt1_)
 
@@ -161,54 +185,54 @@ CO2_eqs = mkeqs(
 print(CO2_eqs)
 
 # ! make equation source
-ethane_eqs = mkeqs(
-    component=ethane_comp,
+ethanol_eqs = mkeqs(
+    component=ethanol_comp,
     model_source=model_source,
     component_key='Name-State',
 )
 # print
-print(ethane_eqs)
+print(ethanol_eqs)
 
 # NOTE: >> check CO2 equations
-# if CO2_eqs is not None:
-#     print(CO2_eqs.equations())
+if CO2_eqs is not None:
+    print(CO2_eqs.equations())
 
-#     # >> make Cp_IG equation source
-#     Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
-#     print(Cp_IG_eq)
-#     if Cp_IG_eq is not None:
-#         # inputs
-#         print(Cp_IG_eq.inputs)
-#         # fn
-#         print(Cp_IG_eq.fn(T=298.15))
-#         # calc
-#         print(Cp_IG_eq.calc(T=298.15, P=12))
+    # >> make Cp_IG equation source
+    Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
+    print(Cp_IG_eq)
+    if Cp_IG_eq is not None:
+        # inputs
+        print(Cp_IG_eq.inputs)
+        # fn
+        print(Cp_IG_eq.fn(T=298.15))
+        # calc
+        print(Cp_IG_eq.calc(T=298.15, P=12))
 
-#     # >> make VaPr equation source
-#     VaPr_eq = CO2_eqs.eq(name='VaPr')
-#     print(VaPr_eq)
-#     if VaPr_eq is not None:
-#         print(VaPr_eq.fn(T=220))
-#         # calc
-#         print(VaPr_eq.calc(T=220))
+    # >> make VaPr equation source
+    VaPr_eq = CO2_eqs.eq(name='VaPr')
+    print(VaPr_eq)
+    if VaPr_eq is not None:
+        print(VaPr_eq.fn(T=220))
+        # calc
+        print(VaPr_eq.calc(T=220))
 
 # NOTE: >> check ethane equations
-if ethane_eqs is not None:
-    print(ethane_eqs.equations())
+if ethanol_eqs is not None:
+    print(ethanol_eqs.equations())
 
-    # # >> make Cp_IG equation source
-    # Cp_IG_eq = ethane_eqs.eq(name='Cp_IG')
-    # print(Cp_IG_eq)
-    # if Cp_IG_eq is not None:
-    #     # inputs
-    #     print(Cp_IG_eq.inputs)
-    #     # fn
-    #     print(Cp_IG_eq.fn(T=298.15))
-    #     # calc
-    #     print(Cp_IG_eq.calc(T=298.15, P=12))
+    # >> make Cp_IG equation source
+    Cp_IG_eq = ethanol_eqs.eq(name='Cp_IG')
+    print(Cp_IG_eq)
+    if Cp_IG_eq is not None:
+        # inputs
+        print(Cp_IG_eq.inputs)
+        # fn
+        print(Cp_IG_eq.fn(T=298.15))
+        # calc
+        print(Cp_IG_eq.calc(T=298.15, P=12))
 
     # >> make Cp_LIQ equation source
-    Cp_LIQ_eq = ethane_eqs.eq(name='Cp_LIQ')
+    Cp_LIQ_eq = ethanol_eqs.eq(name='Cp_LIQ')
     print(Cp_LIQ_eq)
     if Cp_LIQ_eq is not None:
         # inputs

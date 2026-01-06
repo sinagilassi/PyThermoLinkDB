@@ -72,11 +72,11 @@ REFERENCES:
         general-data:
           TABLE-ID: 2
           DESCRIPTION:
-            This table provides the general data of different chemical species participating in the CO2 hydrogenation reaction and includes molecular weight (MW) in g/mol, critical temperature (Tc) in K, critical pressure (Pc) in MPa, and critical molar volume (Vc) in m3/kmol. The table also includes the critical compressibility factor (Zc), acentric factor (AcFa), enthalpy of formation (EnFo) in kJ/mol, and Gibbs energy of formation (GiEnFo) in kJ/mol. The chemical state of the species is also provided in the table and hence the enthalpy of formation and Gibbs energy of formation are provided for the ideal gas and liquid state are designated as EnFo_IG, GiEnFo_IG, EnFo_LIQ, and GiEnFo_LIQ, respectively.
+            This table provides the general data of different chemical species participating in the CO2 hydrogenation reaction and includes molecular weight (MW) in g/mol, critical temperature (Tc) in K, critical pressure (Pc) in MPa, and critical molar volume (Vc) in m3/kmol. The table also includes the critical compressibility factor (Zc), acentric factor (AcFa), enthalpy of formation (EnFo_IG) in kJ/mol, and Gibbs energy of formation (GiEnFo_IG) in kJ/mol. The chemical state of the species is also provided in the table and hence the enthalpy of formation and Gibbs energy of formation are provided for the ideal gas and liquid state are designated as EnFo_IG, GiEnFo_IG, EnFo_LIQ, and GiEnFo_LIQ, respectively.
           DATA: []
           STRUCTURE:
             COLUMNS: [No.,Name,Formula,State,Molecular-Weight,Critical-Temperature,Critical-Pressure,Critical-Molar-Volume,Critical-Compressibility-Factor,Acentric-Factor,Enthalpy-of-Formation,Gibbs-Energy-of-Formation]
-            SYMBOL: [None,None,None,None,MW,Tc,Pc,Vc,Zc,AcFa,EnFo,GiEnFo]
+            SYMBOL: [None,None,None,None,MW,Tc,Pc,Vc,Zc,AcFa,EnFo_IG,GiEnFo_IG]
             UNIT: [None,None,None,None,g/mol,K,MPa,m3/kmol,None,None,kJ/mol,kJ/mol]
             CONVERSION: [None,None,None,None,1,1,1,1,1,1,1,1]
           VALUES:
@@ -232,6 +232,27 @@ print(f"thermodb_ethanol: {thermodb_ethanol}")
 if thermodb_ethanol is None:
     raise ValueError("thermodb_ethanol is None")
 
+# ! methanol
+CH3OH = Component(
+    name='methanol',
+    formula='CH3OH',
+    state='g'
+)
+
+thermodb_methanol: ComponentThermoDB | None = build_component_thermodb_from_reference(
+    component_name='methanol',
+    component_formula='CH3OH',
+    component_state='g',
+    reference_content=REFERENCE_CONTENT,
+    ignore_state_props=IGNORE_PROPS,
+    thermodb_save=True,
+    thermodb_save_path=thermodb_dir
+)
+print(f"thermodb_methanol: {thermodb_methanol}")
+# >> check
+if thermodb_methanol is None:
+    raise ValueError("thermodb_methanol is None")
+
 # ! methane
 C1H4 = Component(
     name='methane',
@@ -248,7 +269,6 @@ thermodb_methane: ComponentThermoDB | None = build_component_thermodb_from_refer
     thermodb_save_path=thermodb_dir
 )
 print(f"thermodb_methane: {thermodb_methane}")
-
 # >> check
 if thermodb_methane is None:
     raise ValueError("thermodb_methane is None")
@@ -269,7 +289,6 @@ thermodb_CO: ComponentThermoDB | None = build_component_thermodb_from_reference(
     thermodb_save_path=thermodb_dir
 )
 print(f"thermodb_CO: {thermodb_CO}")
-
 # >> check
 if thermodb_CO is None:
     raise ValueError("thermodb_CO is None")
