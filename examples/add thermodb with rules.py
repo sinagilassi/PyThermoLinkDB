@@ -23,7 +23,7 @@ print(f"current dir: {current_dir}")
 _thermodb_file = os.path.join(
     current_dir,
     'thermodb',
-    'methane-g.pkl'
+    'methane.pkl'
 )
 
 # NOTE: load
