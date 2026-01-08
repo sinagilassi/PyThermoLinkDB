@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Optional, Any, Tuple, cast
 from pyThermoDB.core import TableEquation
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component, ComponentKey
@@ -66,11 +66,23 @@ class Source:
     def __init__(
         self,
         model_source: Optional[ModelSource] = None,
+        component_key: ComponentKey = 'Name-State',
         **kwargs
     ):
-        '''Initialize the Source class.'''
+        '''
+        Initialize the Source class.
+
+        Parameters
+        ----------
+        model_source : Optional[ModelSource]
+            The model source object containing datasource and equationsource.
+        component_key : Literal['Name-State', 'Formula-State', 'Name-Formula', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
+            The key to identify the component, default is 'Name-State'.
+
+        '''
         # NOTE: set
         self.model_source = model_source
+        self.component_key = component_key
 
         # NOTE: source
         if model_source is None:
@@ -481,7 +493,6 @@ class Source:
         self,
         components: List[Component],
         prop_name: str,
-        component_key: ComponentKey = 'Name-State',
         **kwargs
     ) -> Optional[Dict[str, ComponentEquationSource]]:
         '''
@@ -493,8 +504,6 @@ class Source:
             List of component to build the equation for.
         prop_name : str
             The name of the property to build the equation for.
-        component_key : Literal['Name-State', 'Formula-State', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
-            The key to identify the component, default is 'Name-State'.
         **kwargs : dict
             Additional keyword arguments for the equation builder.
 
@@ -523,7 +532,7 @@ class Source:
             # set component id
             component_id = set_component_id(
                 component=component,
-                component_key=component_key
+                component_key=cast(ComponentKey, self.component_key)
             )
             component_ids.append(component_id)
 
@@ -616,7 +625,6 @@ class Source:
         components: List[Component],
         eq_src_comp: Dict[str, ComponentEquationSource],
         args_values: Optional[Dict[str, float]] = None,
-        component_key: ComponentKey = 'Name-State',
         **kwargs
     ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
         '''
@@ -630,8 +638,6 @@ class Source:
             Dictionary containing the equation source for each component.
         args_values : Dict[str, float]
             Dictionary containing the values for the arguments.
-        component_key : Literal['Name-State', 'Formula-State', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
-            The key to identify the component, default is 'Name-State'.
         **kwargs : dict
             Additional keyword arguments for the equation execution.
 
@@ -653,7 +659,7 @@ class Source:
                 # set component id
                 component_id = set_component_id(
                     component=component,
-                    component_key=component_key
+                    component_key=cast(ComponentKey, self.component_key)
                 )
                 component_ids.append(component_id)
 
@@ -754,7 +760,6 @@ class Source:
         self,
         component_id: str,
         components: List[Component],
-        component_key: ComponentKey = 'Name-State',
     ) -> Optional[Dict[str, Any]]:
         """
         Get the component data from the datasource.
@@ -765,8 +770,6 @@ class Source:
             The id of the component.
         components : List[str]
             List of available components.
-        component_key : Literal['Name-State', 'Formula-State', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
-            The key to identify the component, default is 'Name-State'.
 
         Returns
         -------
@@ -790,7 +793,7 @@ class Source:
                 # set component id
                 comp_id = set_component_id(
                     component=component,
-                    component_key=component_key
+                    component_key=cast(ComponentKey, self.component_key)
                 )
                 component_ids.append(comp_id)
 
