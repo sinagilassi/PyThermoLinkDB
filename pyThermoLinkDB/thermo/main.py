@@ -49,7 +49,10 @@ def mkeqs(
             return None
 
         # SECTION: Prepare source
-        Source_ = Source(model_source=model_source)
+        Source_ = Source(
+            model_source=model_source,
+            component_key=component_key,
+        )
 
         # SECTION: Create XProp object
         return EquationSourcesCore(
@@ -107,7 +110,10 @@ def mkeq(
             return None
 
         # SECTION: Prepare source
-        Source_ = Source(model_source=model_source)
+        Source_ = Source(
+            model_source=model_source,
+            component_key=component_key,
+        )
 
         # NOTE: component id
         component_id: str = set_component_id(component, component_key)
@@ -171,7 +177,10 @@ def mkdt(
             return None
 
         # SECTION: Prepare source
-        Source_ = Source(model_source=model_source)
+        Source_ = Source(
+            model_source=model_source,
+            component_key=component_key,
+        )
 
         # SECTION: Create DataSourceCore object
         return DataSourceCore(
