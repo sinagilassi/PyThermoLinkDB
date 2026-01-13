@@ -347,7 +347,7 @@ wheels = [
 
 [[package]]
 name = "pythermodb"
-version = "1.12.0"
+version = "1.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -358,9 +358,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/24/c40a440d4f08fefd27ca25d328c303643dd235f12b233954c3b8691561aa/pythermodb-1.12.0.tar.gz", hash = "sha256:85619906ed44cd7273ee4b8a55f9ecf02f7ea90f73b43cc3538579f635c7c26e", size = 160477, upload-time = "2026-01-11T22:00:29.681Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6f/f1/480ce9d26f42b67f410862120730c10587c06079e1c9cb7661ceed803238/pythermodb-1.12.1.tar.gz", hash = "sha256:267a952cead5536ad88e1cab309a5877863a961647644f64ef9b6e75463b4452", size = 162857, upload-time = "2026-01-13T01:17:06.731Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/de/f1f76597052a39fbca9bd89dfc11e2d233268317d2f95d4927353aa9e0cb/pythermodb-1.12.0-py3-none-any.whl", hash = "sha256:edc4508d2b6a51895a6719f8e3a6e2781bb999c853de41517e9f1d2f8c151aca", size = 187744, upload-time = "2026-01-11T22:00:28.668Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/09/c5add19c4e6550233e291e17aba426338a58e9506389badd5f95a44ff622/pythermodb-1.12.1-py3-none-any.whl", hash = "sha256:7d58a8151977750fcd089bc2ecdcbc2dd35b52a62d4e3f4ccc67ccd6bc4714b7", size = 190149, upload-time = "2026-01-13T01:17:04.807Z" },
 ]
 
 [[package]]

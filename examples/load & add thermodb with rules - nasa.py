@@ -36,7 +36,7 @@ CO2_thermodb_file = os.path.join(
 # NOTE: components
 # ! CO2
 CO2 = Component(
-    name='CO2',
+    name='carbon dioxide',
     formula='CO2',
     state='g'
 )
