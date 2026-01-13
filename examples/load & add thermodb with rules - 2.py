@@ -87,15 +87,15 @@ thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
 
 # NOTE: load and build model source
 # ! with rules
-model_source: ModelSource = load_and_build_model_source(
-    thermodb_sources=[
-        CO2_thermodb,
-        ethanol_thermodb
-    ],
-    rules=thermodb_rules,
-    original_equation_label=False
-)
-print(model_source)
+# model_source: ModelSource = load_and_build_model_source(
+#     thermodb_sources=[
+#         CO2_thermodb,
+#         ethanol_thermodb
+#     ],
+#     rules=thermodb_rules,
+#     original_equation_label=False
+# )
+# print(model_source)
 
 # ! without rules & original labels is True
 model_source: ModelSource = load_and_build_model_source(
