@@ -188,8 +188,8 @@ class ThermoLink:
                                         datasource[component][symbol_] = _val
                     else:
                         # no data registered
-                        raise Exception(
-                            'No data registered in thermodb, ', component)
+                        logger.info(
+                            f'No data registered for component {component}')
             # res
             return datasource
         except Exception as e:
