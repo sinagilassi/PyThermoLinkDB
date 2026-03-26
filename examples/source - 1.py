@@ -156,6 +156,6 @@ print(source)
 eq_src = source.eq_builder(
     components=[CO2_comp],
     prop_name='Cp_IG',
-    # component_keys=['Name-State', 'Formula-State', 'Name-Formula']
+    component_keys=['Name-State', 'Formula-State']
 )
 print(eq_src)
