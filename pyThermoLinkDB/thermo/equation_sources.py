@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import Dict, Literal, Any, Optional, List
+from typing import Dict, Literal, Any, Optional, List, cast
 from pythermodb_settings.models import Component, ComponentKey
 from pyThermoDB.core import TableEquation
 from pythermodb_settings.utils import set_component_id
@@ -142,7 +142,7 @@ class EquationSourcesCore:
                 prop_name=name,
                 component=self.component,
                 source=self.source,
-                component_key=self.component_key,  # type: ignore
+                component_key=cast(ComponentKey, self.component_key)
             )
         except Exception as e:
             logger.error(f"Error creating equation: {e}")

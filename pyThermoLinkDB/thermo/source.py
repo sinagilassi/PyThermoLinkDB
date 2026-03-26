@@ -493,6 +493,7 @@ class Source:
         self,
         components: List[Component],
         prop_name: str,
+        component_keys: Optional[List[ComponentKey]] = None,
         **kwargs
     ) -> Optional[Dict[str, ComponentEquationSource]]:
         '''
@@ -504,6 +505,8 @@ class Source:
             List of component to build the equation for.
         prop_name : str
             The name of the property to build the equation for.
+        component_keys : List[ComponentKey], optional
+            List of component keys to build the equation for, default is None which means it will use the component_key defined in the Source class.
         **kwargs : dict
             Additional keyword arguments for the equation builder.
 
@@ -536,6 +539,15 @@ class Source:
             )
             component_ids.append(component_id)
 
+        # NOTE: component keys already defined in source, check if component keys are valid
+        component_keys_missed: List[ComponentKey] = []
+
+        # check component keys
+        if component_keys is not None:
+            for component_key in component_keys:
+                if component_key not in self.equationsource.keys():
+                    component_keys_missed.append(component_key)
+
         # NOTE: check property
         for component in component_ids:
             # check equation availability
@@ -555,28 +567,28 @@ class Source:
         eq_src_comp = {}
 
         # looping through components
-        for component in component_ids:
+        for i, comp in enumerate(component_ids):
             # NOTE: equation source
             _eq = None
             # select equation [?]
-            _eq = self.eq_extractor(component, prop_name)
+            _eq = self.eq_extractor(comp, prop_name)
             # ! >> check
             if _eq is None:
                 logger.warning(
-                    f"Equation for property '{prop_name}' not found for component '{component}'.")
+                    f"Equation for property '{prop_name}' not found for component '{comp}'.")
                 continue
 
             # NOTE: args
             _args = _eq.args
             # TODO: return only required args
             arg_mapping = self.check_args(
-                component,
+                comp,
                 _args
             )
 
             # build args
             _input_args = self.build_args(
-                component_id=component,
+                component_id=comp,
                 args=arg_mapping,
             )
 
@@ -615,7 +627,17 @@ class Source:
                 return_identifiers=return_identifiers
             )
 
-            eq_src_comp[component] = _res
+            eq_src_comp[comp] = _res
+
+            # ! >> check component keys missed and update
+            if len(component_keys_missed) > 0:
+                for comp_key in component_keys_missed:
+                    id_ = set_component_id(
+                        component=components[i],
+                        component_key=comp_key
+                    )
+                    # update key
+                    eq_src_comp[id_] = _res
 
         # res
         return eq_src_comp

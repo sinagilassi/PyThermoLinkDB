@@ -337,7 +337,7 @@ class EquationSourceCore:
             equations = self.source.eq_builder(
                 components=[self.component],
                 prop_name=self.prop_name,
-                component_key=self.component_key  # type: ignore
+                component_key=self.component_key
             )
 
             if not equations:
