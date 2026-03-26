@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Any, Tuple, cast
 from pyThermoDB.core import TableEquation
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component, ComponentKey
-from pythermodb_settings.utils import set_component_id
+from pythermodb_settings.utils import set_component_id, build_component_mapper, is_component_key
 from pyThermoLinkDB.models import ModelSource
 # local
 from ..config.constants import DATASOURCE, EQUATIONSOURCE
@@ -61,7 +61,15 @@ class Source:
     - The class assumes a consistent structure for TableEquation-like objects and for datasource/equationsource dictionaries as described above.
     """
 
-    # NOTE: variables
+    # NOTE: Attributes
+    # ! component keys
+    _component_keys: List[ComponentKey] = [
+        'Name-State',
+        'Formula-State',
+        'Name-Formula',
+        'Name-Formula-State',
+        'Formula-Name-State'
+    ]
 
     def __init__(
         self,
@@ -78,11 +86,13 @@ class Source:
             The model source object containing datasource and equationsource.
         component_key : Literal['Name-State', 'Formula-State', 'Name-Formula', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
             The key to identify the component, default is 'Name-State'.
+        component_keys : Optional[List[ComponentKey]]
+            List of component keys to build the equation for, default is None which means it will use the component_key defined in the Source class.
 
         '''
         # NOTE: set
-        self.model_source = model_source
-        self.component_key = component_key
+        self.model_source: ModelSource | None = model_source
+        self.component_key: ComponentKey = component_key
 
         # NOTE: source
         if model_source is None:
@@ -106,6 +116,8 @@ class Source:
     def __repr__(self):
         return f"Source(datasource={self.datasource}, equationsource={self.equationsource})"
 
+    # SECTION: Properties
+    # ! datasource
     @property
     def datasource(self) -> Dict[str, Any]:
         '''
@@ -121,6 +133,7 @@ class Source:
             return {}
         return self._datasource
 
+    # ! equationsource
     @property
     def equationsource(self) -> Dict[str, Any]:
         '''
@@ -136,6 +149,41 @@ class Source:
             return {}
         return self._equationsource
 
+    # ! component keys
+    @property
+    def component_keys(self) -> List[ComponentKey]:
+        '''
+        Get the component keys.
+
+        Returns
+        -------
+        List[ComponentKey]
+            The list of component keys.
+        '''
+        return self._component_keys
+
+    @component_keys.setter
+    def component_keys(self, keys: List[ComponentKey]):
+        '''
+        Set the component keys.
+
+        Parameters
+        ----------
+        keys : List[ComponentKey]
+            The list of component keys to set.
+        '''
+        if not isinstance(keys, list):
+            logger.error("Component keys must be a list.")
+            return
+
+        for key in keys:
+            if not is_component_key(key):
+                logger.error(
+                    f"Invalid component key: {key}. Must be one of {self._component_keys}.")
+                return
+        self._component_keys = keys
+
+    # SECTION: Methods
     def set_source(self, model_source: Dict[str, Any]):
         '''
         Set the model source.
@@ -545,8 +593,14 @@ class Source:
         # check component keys
         if component_keys is not None:
             for component_key in component_keys:
-                if component_key not in self.equationsource.keys():
+                # add component key to missed list if not in source component key
+                if component_key != self.component_key:
                     component_keys_missed.append(component_key)
+        else:
+            # use default component key defined in source
+            component_keys_missed = [
+                key for key in self._component_keys if key != self.component_key
+            ]
 
         # NOTE: check property
         for component in component_ids:
@@ -631,12 +685,14 @@ class Source:
 
             # ! >> check component keys missed and update
             if len(component_keys_missed) > 0:
-                for comp_key in component_keys_missed:
-                    id_ = set_component_id(
-                        component=components[i],
-                        component_key=comp_key
-                    )
-                    # update key
+                # build component mapper for missed keys
+                mapper_ = build_component_mapper(
+                    component=components[i],
+                    component_keys=component_keys_missed
+                )
+
+                # get ids
+                for id_ in mapper_.values():
                     eq_src_comp[id_] = _res
 
         # res
