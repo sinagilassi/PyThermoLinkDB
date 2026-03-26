@@ -541,6 +541,7 @@ class Source:
         self,
         components: List[Component],
         prop_name: str,
+        component_key: Optional[ComponentKey] = None,
         component_keys: Optional[List[ComponentKey]] = None,
         **kwargs
     ) -> Optional[Dict[str, ComponentEquationSource]]:
@@ -553,6 +554,8 @@ class Source:
             List of component to build the equation for.
         prop_name : str
             The name of the property to build the equation for.
+        component_key : ComponentKey, optional
+            The key to identify the component, default is None which means it will use the component_key defined in the Source class.
         component_keys : List[ComponentKey], optional
             List of component keys to build the equation for, default is None which means it will use the component_key defined in the Source class.
         **kwargs : dict
@@ -577,32 +580,31 @@ class Source:
         if self.equationsource is None:
             raise ValueError("Equation source is not defined.")
 
+        # SECTION: check component key
+        # ! if component key is provided, use it, otherwise use the default component key defined in source
+        selected_component_key = component_key if component_key is not None else self.component_key
+
         # NOTE: extract component ids
         component_ids = []
         for component in components:
             # set component id
             component_id = set_component_id(
                 component=component,
-                component_key=cast(ComponentKey, self.component_key)
+                component_key=cast(ComponentKey, selected_component_key)
             )
             component_ids.append(component_id)
 
-        # NOTE: component keys already defined in source, check if component keys are valid
+        # SECTION: component keys already defined in source, check if component keys are valid
         component_keys_missed: List[ComponentKey] = []
 
         # check component keys
         if component_keys is not None:
             for component_key in component_keys:
                 # add component key to missed list if not in source component key
-                if component_key != self.component_key:
+                if component_key != selected_component_key:
                     component_keys_missed.append(component_key)
-        else:
-            # use default component key defined in source
-            component_keys_missed = [
-                key for key in self._component_keys if key != self.component_key
-            ]
 
-        # NOTE: check property
+        # SECTION: check property
         for component in component_ids:
             # check equation availability
             if prop_name not in self.equationsource[component].keys():
