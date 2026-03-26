@@ -840,6 +840,7 @@ class Source:
         self,
         component_id: str,
         components: List[Component],
+        component_key: Optional[ComponentKey] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Get the component data from the datasource.
@@ -850,6 +851,8 @@ class Source:
             The id of the component.
         components : List[str]
             List of available components.
+        component_key : Optional[ComponentKey]
+            The key to identify the component, default is None which means it will use the component_key defined in the Source class.
 
         Returns
         -------
@@ -867,13 +870,16 @@ class Source:
                 logger.error("Components must be a list.")
                 return None
 
+            # SECTION: set component key
+            selected_component_key = component_key if component_key is not None else self.component_key
+
             # SECTION: set component id
             component_ids = []
             for component in components:
                 # set component id
                 comp_id = set_component_id(
                     component=component,
-                    component_key=cast(ComponentKey, self.component_key)
+                    component_key=cast(ComponentKey, selected_component_key)
                 )
                 component_ids.append(comp_id)
 
@@ -882,7 +888,7 @@ class Source:
                     f"Component {component_id} is not available in the system.")
                 return None
 
-            # data
+            # SECTION: collect data
             data = {}
 
             # check datasource
