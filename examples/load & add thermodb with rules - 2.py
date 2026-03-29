@@ -11,7 +11,7 @@ from pythermodb_settings.models import (
     ComponentRule,
     ComponentThermoDBSource,
 )
-from pyThermoLinkDB.thermo import mkdt, mkeq, mkeqs
+from pyThermoLinkDB.thermo import mkdt, mkeq, mkeqs, EquationSourceCore, DataSourceCore
 
 # version
 print(ptdblink.__version__)
@@ -169,7 +169,7 @@ CO2_Cp_IG_eq = mkeq(
 print(CO2_Cp_IG_eq)
 
 # >> check
-if CO2_Cp_IG_eq is not None:
+if CO2_Cp_IG_eq is not None and isinstance(CO2_Cp_IG_eq, EquationSourceCore):
     print(CO2_Cp_IG_eq.inputs)
     print(CO2_Cp_IG_eq.args)
     print(CO2_Cp_IG_eq.fn(T=298.15))
