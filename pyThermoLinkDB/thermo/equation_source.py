@@ -120,7 +120,7 @@ class EquationSourceCore:
         # ! fn
         self._fn = self.component_equation.fn
         # ! inputs
-        self._inputs: Dict[str, float] = self.component_equation.inputs or {}
+        self._inputs: Dict[str, Any] = self.component_equation.inputs or {}
         # ! args
         self._args: Dict[
             str,
@@ -368,6 +368,29 @@ class EquationSourceCore:
             )
             raise e
 
+    def get_inputs(self):
+        """
+        Get the input arguments for the equation as dictionary containing variable name and unit.
+
+        Returns
+        -------
+        Dict[str, str]
+            A dictionary of argument names and their units.
+        """
+        # res
+        res = {}
+
+        # iterate over inputs
+        for name, details in self._arg_mappings.items():
+            # get unit
+            unit = details.get('unit', '')
+            # symbol
+            symbol = details.get('symbol', '')
+
+            res[symbol] = unit
+
+        return res
+
     def calc(
         self,
         **input_args
@@ -398,11 +421,9 @@ class EquationSourceCore:
                 # NOTE: execute without input args
                 input_args = {}
 
-            # print(self._args)
-
             # SECTION: calculate
             result: EquationResult = self._fn(
-                **{**self._args, **input_args}
+                **input_args
             )
 
             return result
