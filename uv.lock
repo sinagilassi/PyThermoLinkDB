@@ -379,7 +379,7 @@ wheels = [
 
 [[package]]
 name = "pythermolinkdb"
-version = "1.4.10"
+version = "1.4.12"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
