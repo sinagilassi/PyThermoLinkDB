@@ -379,7 +379,7 @@ wheels = [
 
 [[package]]
 name = "pythermolinkdb"
-version = "1.4.12"
+version = "1.4.13"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
@@ -404,7 +404,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "pythermodb", specifier = ">=1.12.1" },
-    { name = "pythermodb-settings", specifier = ">=0.2.1" },
+    { name = "pythermodb-settings", specifier = ">=0.2.10" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "rich", marker = "extra == 'dev'", specifier = ">=14.2.0" },
 ]
