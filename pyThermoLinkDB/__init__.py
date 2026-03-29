@@ -9,6 +9,15 @@ from .app import (
     load_and_build_mixture_model_source,
     build_mixture_model_source
 )
+# thermo
+from .thermo import (
+    mkdt,
+    mkeq,
+    mkeqs,
+    EquationSourceCore,
+    EquationSourcesCore,
+    DataSourceCore,
+)
 
 __all__ = [
     "__author__",
@@ -22,4 +31,10 @@ __all__ = [
     "build_mixture_model_source",
     "load_and_build_component_model_source",
     "load_and_build_mixture_model_source",
+    "mkdt",
+    "mkeq",
+    "mkeqs",
+    "EquationSourceCore",
+    "EquationSourcesCore",
+    "DataSourceCore",
 ]
