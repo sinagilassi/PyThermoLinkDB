@@ -87,27 +87,6 @@ wheels = [
 ]
 
 [[package]]
-name = "markdown-it-py"
-version = "4.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "mdurl" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/f5/4ec618ed16cc4f8fb3b701563655a69816155e79e24a17b651541804721d/markdown_it_py-4.0.0.tar.gz", hash = "sha256:cb0a2b4aa34f932c007117b194e945bd74e0ec24133ceb5bac59009cda1cb9f3", size = 73070, upload-time = "2025-08-11T12:57:52.854Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl", hash = "sha256:87327c59b172c5011896038353a81343b6754500a08cd7a4973bb48c6d578147", size = 87321, upload-time = "2025-08-11T12:57:51.923Z" },
-]
-
-[[package]]
-name = "mdurl"
-version = "0.1.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
-]
-
-[[package]]
 name = "numpy"
 version = "2.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -337,17 +316,8 @@ wheels = [
 ]
 
 [[package]]
-name = "pygments"
-version = "2.19.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
-]
-
-[[package]]
 name = "pythermodb"
-version = "1.12.1"
+version = "1.13.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -358,60 +328,43 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/f1/480ce9d26f42b67f410862120730c10587c06079e1c9cb7661ceed803238/pythermodb-1.12.1.tar.gz", hash = "sha256:267a952cead5536ad88e1cab309a5877863a961647644f64ef9b6e75463b4452", size = 162857, upload-time = "2026-01-13T01:17:06.731Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/8f/b01c5430f5a7dc69f234aa5604bc3a9bbd11127ae0654138313f948a1f18/pythermodb-1.13.4.tar.gz", hash = "sha256:90e4e243729b87458e064c825757703ff1f8af709a47d3ac0fba6a7bee96bc31", size = 164123, upload-time = "2026-04-24T01:40:57.554Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/09/c5add19c4e6550233e291e17aba426338a58e9506389badd5f95a44ff622/pythermodb-1.12.1-py3-none-any.whl", hash = "sha256:7d58a8151977750fcd089bc2ecdcbc2dd35b52a62d4e3f4ccc67ccd6bc4714b7", size = 190149, upload-time = "2026-01-13T01:17:04.807Z" },
+    { url = "https://files.pythonhosted.org/packages/03/93/f55b9304e8711bab96142ae13ac8d33adb7786609b321e0de3bd0c7d0cce/pythermodb-1.13.4-py3-none-any.whl", hash = "sha256:f1b5e12d19103774d041503bbd9408d184924fdce0e98f8842585a3989b6ad27", size = 192950, upload-time = "2026-04-24T01:40:56.186Z" },
 ]
 
 [[package]]
 name = "pythermodb-settings"
-version = "0.2.10"
+version = "0.2.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/df/a6d3d05be411d0734350c3ca8f5ba6faa884f6dbfa21ab7d3755eda3eb32/pythermodb_settings-0.2.10.tar.gz", hash = "sha256:f3c58d091dfa21977569d7ca248300efc6782b82515a0ce0455f17c6b828d9d4", size = 24584, upload-time = "2026-03-26T17:38:38.491Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/e2/5e8804b547c4f43e4dd25c7e49cba293f6d6fe65e1b4ac44989c251c7691/pythermodb_settings-0.2.11.tar.gz", hash = "sha256:9ffd435c4ce4605aaac9c1e2960cb9f54204d25854aff0693e1a94797c4991df", size = 24594, upload-time = "2026-04-24T00:33:01.17Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/39/e1570814697544ead41d5d9fffb21c49bdcb26390a6ad32d75b2c37903aa/pythermodb_settings-0.2.10-py3-none-any.whl", hash = "sha256:6281add1f8ab5447f32a440eb40ea028e297566b50bbfdd397e03f2afeb2c3d6", size = 28600, upload-time = "2026-03-26T17:38:37.346Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/e7/76c98706a8d8e0eed478c10b347eb27b78deed40bbedfb792f34955a719a/pythermodb_settings-0.2.11-py3-none-any.whl", hash = "sha256:8202c81263b7fb4884d787eb366ab9251199296f7136eb61a035c1ca865a3f54", size = 28597, upload-time = "2026-04-24T00:32:59.933Z" },
 ]
 
 [[package]]
 name = "pythermolinkdb"
-version = "1.4.13"
+version = "1.4.15"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
-    { name = "pydantic-settings" },
     { name = "pythermodb" },
     { name = "pythermodb-settings" },
     { name = "pyyaml" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "rich" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "rich" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2.11.7" },
-    { name = "pydantic-settings", specifier = ">=2.10.1" },
-    { name = "pythermodb", specifier = ">=1.12.1" },
-    { name = "pythermodb-settings", specifier = ">=0.2.10" },
+    { name = "pythermodb", specifier = ">=1.13.4" },
+    { name = "pythermodb-settings", specifier = ">=0.2.11" },
     { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "rich", marker = "extra == 'dev'", specifier = ">=14.2.0" },
 ]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "rich", specifier = ">=14.2.0" }]
 
 [[package]]
 name = "python-dateutil"
@@ -511,19 +464,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf", size = 134517, upload-time = "2025-08-18T20:46:02.573Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6", size = 64738, upload-time = "2025-08-18T20:46:00.542Z" },
-]
-
-[[package]]
-name = "rich"
-version = "14.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "markdown-it-py" },
-    { name = "pygments" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/d2/8920e102050a0de7bfabeb4c4614a49248cf8d5d7a8d01885fbb24dc767a/rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4", size = 219990, upload-time = "2025-10-09T14:16:53.064Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/7a/b0178788f8dc6cafce37a212c99565fa1fe7872c70c6c9c1e1a372d9d88f/rich-14.2.0-py3-none-any.whl", hash = "sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd", size = 243393, upload-time = "2025-10-09T14:16:51.245Z" },
 ]
 
 [[package]]

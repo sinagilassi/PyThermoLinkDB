@@ -156,7 +156,7 @@ equationsource = model_source2.equation_source
 # =======================================
 # NOTE: by formula-state
 # data
-dt1_ = datasource['CH4-g']['EnFo']
+dt1_ = datasource['CH4-g']['EnFo_IG']
 print(type(dt1_))
 print(dt1_)
 
@@ -175,7 +175,7 @@ print(eq1_.cal(T=298.15))
 
 # NOTE: by name-state
 # data
-dt2_ = datasource['Methane-g']['EnFo']
+dt2_ = datasource['Methane-g']['EnFo_IG']
 print(type(dt2_))
 print(dt2_)
 # equation
