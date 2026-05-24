@@ -1,6 +1,6 @@
 # import libs
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pyThermoDB import (
     TableEquation,
     TableMatrixData,
@@ -15,9 +15,22 @@ PropertyData = Dict[str, str | float | int | bool | None]
 DataSource = Dict[str, PropertyData | TableMatrixData]
 # NOTE: equation source
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
+# NOTE: symbol
+# ?? data source symbol
+DataSymbol = Dict[str, str]
+# ?? equation source symbol
 
+
+class EqSym(BaseModel):
+    args: List[str]
+    rets: List[str]
+
+
+EquationSymbol = Dict[str, EqSym]
 
 # NOTE: component model source
+
+
 class ComponentModelSource(BaseModel):
     '''
     Component model source containing data source and equation source
@@ -87,9 +100,17 @@ class ModelSource(BaseModel):
         Data source dictionary for multiple components
     equation_source: Dict[str, Dict[str, EquationSource]]
         Equation source dictionary for multiple components
+    data_symbols: Optional[Dict[str, Dict[str, DataSymbol]]] = None
+        Optional data symbol dictionary for multiple components
+    equation_symbols: Optional[Dict[str, Dict[str, EquationSymbol]]] = None
+        Optional equation symbol dictionary for multiple components
     '''
     data_source: Dict[str, DataSource]
     equation_source: Dict[str, EquationSource]
+
+    # optional
+    data_symbols: Optional[Dict[str, DataSymbol]] = None
+    equation_symbols: Optional[Dict[str, EquationSymbol]] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
