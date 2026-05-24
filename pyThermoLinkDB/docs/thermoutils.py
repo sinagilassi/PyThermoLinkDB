@@ -12,9 +12,14 @@ logger = logging.getLogger(__name__)
 
 class ThermoUtils:
 
+    def __init__(self):
+        pass
+
     # SECTION: data symbol extraction
-    @staticmethod
-    def extract_data_symbols(datasource: Dict) -> Optional[Dict[str, DataSymbol]]:
+    def extract_data_symbols(
+            self,
+            datasource: Dict
+    ) -> Optional[Dict[str, DataSymbol]]:
         '''
         Extract data symbols from the data source.
 
@@ -35,7 +40,11 @@ class ThermoUtils:
                 data_symbols[comp] = {}
                 for prop, value in prop_dict.items():
                     if isinstance(value, dict) and 'symbol' in value:
-                        data_symbols[comp][prop] = value['symbol']
+                        data_symbols[comp][prop] = {
+                            'name': value.get('name', None) or value.get('property_name', None) or 'not found',
+                            'symbol': value['symbol'],
+                            'unit': value.get('unit', '-')
+                        }
 
             # >> check
             if not data_symbols or len(data_symbols) == 0:
@@ -48,8 +57,10 @@ class ThermoUtils:
             raise Exception(f"Error in extracting data symbols: {e}") from e
 
     # SECTION: equation symbol extraction
-    @staticmethod
-    def extract_equation_symbols(equationsource: Dict) -> Optional[Dict[str, EquationSymbol]]:
+    def extract_equation_symbols(
+            self,
+            equationsource: Dict
+    ) -> Optional[Dict[str, EquationSymbol]]:
         '''
         Extract equation symbols from the equation source.
 
@@ -72,6 +83,10 @@ class ThermoUtils:
 
                     # >> check eq type
                     if isinstance(eq, TableEquation):
+                        # get return
+                        rets = eq.eq_return()
+                        # get arguments
+                        args = eq.eq_args()
                         # get return symbol
                         ret_symbol = eq.get_return_symbols()
                         # get argument symbols
@@ -79,12 +94,17 @@ class ThermoUtils:
 
                         # store
                         equation_symbols[comp][eq_name] = EqSym(
-                            args=arg_symbols,
-                            rets=ret_symbol
+                            arg_symbols=arg_symbols,
+                            ret_symbols=ret_symbol,
+                            args=args,
+                            rets=rets,
                         )
 
             # >> check
-            if not equation_symbols or len(equation_symbols) == 0:
+            if (
+                not equation_symbols or
+                len(equation_symbols) == 0
+            ):
                 logger.warning(
                     "No equation symbols found in the equation source.")
                 return None
