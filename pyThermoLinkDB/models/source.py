@@ -17,13 +17,16 @@ DataSource = Dict[str, PropertyData | TableMatrixData]
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
 # NOTE: symbol
 # ?? data source symbol
-DataSymbol = Dict[str, str]
+DataSymbol = Dict[str, Dict[str, str]]
 # ?? equation source symbol
 
 
+# NOTE: equation symbol model
 class EqSym(BaseModel):
-    args: List[str]
-    rets: List[str]
+    arg_symbols: List[str]
+    ret_symbols: List[str]
+    args: Dict[str, Dict[str, str]]
+    rets: Dict[str, Dict[str, str]]
 
 
 EquationSymbol = Dict[str, EqSym]
