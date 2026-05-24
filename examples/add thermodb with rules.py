@@ -1,5 +1,5 @@
 # import packages/modules
-from typing import Dict, Optional
+from typing import Dict
 import os
 from rich import print
 import pyThermoLinkDB as ptdblink
