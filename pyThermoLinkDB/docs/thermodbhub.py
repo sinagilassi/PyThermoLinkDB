@@ -11,7 +11,7 @@ from .utils import (
     thermodb_file_loader,
     thermodb_parser,
 )
-from ..models import ModelSource
+from ..models.source import ModelSource
 
 # NOTE: logger
 logger = logging.getLogger(__name__)
@@ -677,9 +677,12 @@ class ThermoDBHub(ThermoLink):
         - This function is a wrapper of `build` function and returns a `ModelSource` object
         '''
         try:
-            # build
+            # NOTE: build
             datasource, equationsource = self.build()
-            # res
+
+            # NOTE: extract symbols
+
+            # NOTE: create model source
             return ModelSource(
                 data_source=datasource,
                 equation_source=equationsource
