@@ -5,6 +5,7 @@
         "mkeqs",
         "ptdblink",
         "THERMODB",
-        "thermolink"
+        "thermolink",
+        "thermoutils"
     ]
 }
