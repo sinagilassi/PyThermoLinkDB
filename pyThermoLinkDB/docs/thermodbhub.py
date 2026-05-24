@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, List, Union, Dict
 from pyThermoDB import CompBuilder
 # local
+from .thermoutils import ThermoUtils
 from .thermolink import ThermoLink
 from .utils import (
     generate_summary,
@@ -17,7 +18,7 @@ from ..models.source import ModelSource
 logger = logging.getLogger(__name__)
 
 
-class ThermoDBHub(ThermoLink):
+class ThermoDBHub(ThermoLink, ThermoUtils):
     """ThermoDBHub class used to manage thermodynamic databases."""
     # vars
     _thermodb = {}
@@ -25,8 +26,11 @@ class ThermoDBHub(ThermoLink):
     _hub = {}
 
     def __init__(self):
-        # init super class
-        super().__init__()
+        # LINK: init thermolink
+        ThermoLink.__init__(self)
+
+        # LINK: init thermoutils
+        ThermoUtils.__init__(self)
 
     @property
     def thermodb(self):
@@ -681,11 +685,15 @@ class ThermoDBHub(ThermoLink):
             datasource, equationsource = self.build()
 
             # NOTE: extract symbols
+            data_symbols = self.extract_data_symbols(datasource)
+            equation_symbols = self.extract_equation_symbols(equationsource)
 
             # NOTE: create model source
             return ModelSource(
                 data_source=datasource,
-                equation_source=equationsource
+                equation_source=equationsource,
+                data_symbols=data_symbols,
+                equation_symbols=equation_symbols,
             )
         except Exception as e:
             raise Exception('Building ModelSource failed!, ', e)
