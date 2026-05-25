@@ -43,8 +43,11 @@ constants = {
 }
 
 # NOTE: add bulk data to pool
-res_ = ctx.add_bulk_to_pool(constants)
+res_ = ctx.add_many(constants)
 print(res_)
 
 # pool
 print(ctx.pools)
+
+# get
+print(ctx.get('R'))
