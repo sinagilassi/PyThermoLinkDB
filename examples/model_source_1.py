@@ -14,7 +14,7 @@ from pythermodb_settings.models import Component, Pressure, Temperature, CustomP
 from pyThermoDB import ComponentThermoDB
 from pyThermoDB import build_component_thermodb_from_reference
 # locals
-from examples.reference import REFERENCE_CONTENT
+from examples.reference_2 import REFERENCE_CONTENT
 
 # check version
 print(ptdb.__version__)
@@ -141,7 +141,7 @@ C2H6 = Component(
 components = [CO2, C2H5OH]
 
 # NOTE: ignore state properties
-ignore_state_props = ['MW', 'VaPr', 'Cp_IG']
+ignore_state_props = ['MW', 'VaPr', 'Cp_IG', 'Cp_LIQ']
 
 # ====================================================
 # SECTION: build components thermodb
@@ -180,11 +180,15 @@ model_source: ModelSource = build_model_source(
 # build datasource & equationsource
 datasource = model_source.data_source
 equationsource = model_source.equation_source
+datasource_symbol = model_source.data_symbols
+equationsource_symbol = model_source.equation_symbols
 
 # ====================================================
 # SECTION: model source
 # ====================================================
 model_source: ModelSource = ModelSource(
     data_source=datasource,
-    equation_source=equationsource
+    equation_source=equationsource,
+    data_symbols=datasource_symbol,
+    equation_symbols=equationsource_symbol,
 )
