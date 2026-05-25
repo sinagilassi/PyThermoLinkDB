@@ -3,6 +3,7 @@ from .equation_source import EquationSourceCore
 from .data_source import DataSourceCore
 from .equation_sources import EquationSourcesCore
 from .main import mkeqs, mkeq, mkdt
+from .context import Context
 
 __all__ = [
     "Source",
@@ -12,4 +13,5 @@ __all__ = [
     "mkeqs",
     "mkeq",
     "mkdt",
+    "Context"
 ]
