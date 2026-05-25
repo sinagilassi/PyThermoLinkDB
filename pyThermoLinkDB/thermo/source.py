@@ -98,12 +98,19 @@ class Source:
         if model_source is None:
             self._datasource = None
             self._equationsource = None
+            # symbols
+            self._datasource_symbol = None
+            self._equationsource_symbol = None
         else:
             # >> extract
             model_source_dict = {
                 DATASOURCE: model_source.data_source,
                 EQUATIONSOURCE: model_source.equation_source
             }
+
+            # set symbols
+            self._datasource_symbol = model_source.data_symbols
+            self._equationsource_symbol = model_source.equation_symbols
 
             # reset
             (
