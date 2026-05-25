@@ -21,7 +21,7 @@ from .thermo import (
     EquationSourceCore,
     EquationSourcesCore,
     DataSourceCore,
-    context
+    Context
 )
 
 __all__ = [
@@ -44,5 +44,5 @@ __all__ = [
     "EquationSourceCore",
     "EquationSourcesCore",
     "DataSourceCore",
-    "context"
+    "Context"
 ]
