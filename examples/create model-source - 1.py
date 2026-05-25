@@ -142,6 +142,7 @@ if ethanol_eqs is not None:
     if Cp_LIQ_eq is not None:
         # inputs
         print(Cp_LIQ_eq.args)
+        print(Cp_LIQ_eq.arg_symbols)
         print(Cp_LIQ_eq.inputs)
         print(Cp_LIQ_eq.arg_mappings)
         print(Cp_LIQ_eq.fn(T=298.15, Tc=302))
