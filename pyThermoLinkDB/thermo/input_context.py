@@ -24,6 +24,16 @@ class Context:
         # NOTE: set
         self._model_source = model_source
 
+        # SECTION: extract
+        # ! data source
+        self._data_source = model_source.data_source
+        # ! equation source
+        self._equation_source = model_source.equation_source
+        # ! data symbol
+        self._data_symbols = model_source.data_symbols
+        # ! equation symbol
+        self._equation_symbols = model_source.equation_symbols
+
     @property
     def model_source(self) -> ModelSource:
         return self._model_source
@@ -32,16 +42,9 @@ class Context:
     def required_keys(self) -> set:
         return self._required_keys
 
-    @required_keys.setter
-    def required_keys(self, keys: set):
-        if not isinstance(keys, set):
-            logger.error(
-                f"Required keys must be a set. Given type: {type(keys)}")
-            return
-        self._required_keys = keys
-
     # SECTION: CRUD operations for pools
     # NOTE: add to pool
+
     def add_to_pool(
             self,
             symbol: str,
@@ -88,6 +91,7 @@ class Context:
             return False
 
     # NOTE: add bulk to pool
+
     def add_bulk_to_pool(
             self,
             data_dict: Dict[str, Dict[str, Any]]
@@ -104,6 +108,7 @@ class Context:
             return False
 
     # NOTE: get from pool
+
     def get_from_pool(
             self,
             symbol: str
@@ -119,6 +124,7 @@ class Context:
             return None
 
     # NOTE: remove from pool
+
     def remove_from_pool(
             self,
             symbol: str
