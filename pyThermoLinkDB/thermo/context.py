@@ -13,7 +13,22 @@ logger = logging.getLogger(__name__)
 
 class Context:
     """
-    Context class for managing model sources, data sources, equation sources, and pools of constants/variables.
+    Runtime context for thermo property lookup and temporary property caching.
+
+    A ``Context`` wraps a ``ModelSource`` and builds a ``Source`` helper to read
+    component-linked data. It also maintains a property pool keyed by symbol,
+    where each entry is stored as a ``CustomProperty``.
+
+    Main responsibilities:
+    - Access source-backed component data through ``self.source``.
+    - Add/get/remove cached properties in ``pools``.
+    - Resolve properties with ``gt(...)`` by checking source data first, then
+    falling back to the pool.
+
+    Notes:
+    - ``_pools`` is defined at class level, so instances currently share the
+    same pool unless this is refactored to an instance attribute.
+    - Pool input requires ``symbol``, ``value``, and ``unit`` keys.
     """
 
     # NOTE: attributes
@@ -28,14 +43,14 @@ class Context:
             component_key: ComponentKey
     ):
         """
-        Context class for managing model sources, data sources, equation sources, and pools of constants/variables.
+        Initialize the context with model and component-source configuration.
 
         Parameters
         ----------
         model_source : ModelSource
-            The model source containing data and equations.
+            Source definition that contains thermo data configuration.
         component_key : ComponentKey
-            The key to identify components in the model source.
+            Component identifier strategy used by ``Source``.
         """
         # NOTE: set
         self._model_source = model_source
@@ -48,24 +63,63 @@ class Context:
 
     @property
     def pools(self) -> Dict[str, CustomProperty]:
+        """
+        Return the symbol-indexed property pool.
+
+        Returns
+        -------
+        Dict[str, CustomProperty]
+            Cached properties indexed by symbol.
+        """
         return self._pools
 
     @property
     def model_source(self) -> ModelSource:
+        """
+        Return the configured model source.
+
+        Returns
+        -------
+        ModelSource
+            Source metadata used by this context.
+        """
         return self._model_source
 
     @property
     def required_keys(self) -> set:
+        """
+        Return required keys for pool item payloads.
+
+        Returns
+        -------
+        set
+            Required payload keys: ``{'symbol', 'value', 'unit'}``.
+        """
         return self._required_keys
 
     # SECTION: CRUD operations for pools
     # NOTE: add to pool
 
-    def add_to_pool(
+    def add(
             self,
             symbol: str,
             data: Dict[str, Any]
     ) -> bool:
+        """
+        Add or overwrite a single property in the pool.
+
+        Parameters
+        ----------
+        symbol : str
+            Pool key used to store the property.
+        data : Dict[str, Any]
+            Property payload containing ``symbol``, ``value``, and ``unit``.
+
+        Returns
+        -------
+        bool
+            ``True`` if stored successfully, otherwise ``False``.
+        """
         try:
             # NOTE: check if symbol already exists
             if symbol in self._pools:
@@ -108,13 +162,27 @@ class Context:
 
     # NOTE: add bulk to pool
 
-    def add_bulk_to_pool(
+    def add_many(
             self,
             data_dict: Dict[str, Dict[str, Any]]
     ) -> bool:
+        """
+        Add multiple properties to the pool.
+
+        Parameters
+        ----------
+        data_dict : Dict[str, Dict[str, Any]]
+            Mapping of pool symbols to property payloads.
+
+        Returns
+        -------
+        bool
+            ``True`` if the bulk process completes, ``False`` on fatal error.
+            Individual item failures are logged and processing continues.
+        """
         try:
             for symbol, data in data_dict.items():
-                success = self.add_to_pool(symbol, data)
+                success = self.add(symbol, data)
                 if not success:
                     logger.warning(
                         f"Failed to add symbol '{symbol}' to pools. Continuing with next.")
@@ -125,10 +193,23 @@ class Context:
 
     # NOTE: get from pool
     # ! get from pool by symbol
-    def get_from_pool(
+    def get(
             self,
             symbol: str
     ) -> Optional[CustomProperty]:
+        """
+        Get a cached property by symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            Property symbol key.
+
+        Returns
+        -------
+        Optional[CustomProperty]
+            Matching property if found, otherwise ``None``.
+        """
         try:
             if symbol in self._pools:
                 return self._pools[symbol]
@@ -141,12 +222,30 @@ class Context:
 
     # ! get from data source by symbol & component id, then from pool if not found
 
-    def gt(
+    def resolve(
             self,
             symbol: str,
             component: Component,
             component_key: ComponentKey
     ) -> Optional[CustomProperty]:
+        """
+        Resolve a property from source data, then fall back to pool cache.
+
+        Parameters
+        ----------
+        symbol : str
+            Target property symbol.
+        component : Component
+            Component object used to build the component id.
+        component_key : ComponentKey
+            Key mode used by ``set_component_id``.
+
+        Returns
+        -------
+        Optional[CustomProperty]
+            Source-derived property when available; otherwise cached property
+            from the pool; ``None`` if neither is found.
+        """
         try:
             # NOTE: try to get from data source
             if self.source is not None:
@@ -169,17 +268,30 @@ class Context:
                         )
 
             # NOTE: if not found in data source, try to get from pool
-            return self.get_from_pool(symbol)
+            return self.get(symbol)
         except Exception as e:
             logger.error(f"Error getting symbol '{symbol}': {e}")
             return None
 
     # NOTE: remove from pool
 
-    def remove_from_pool(
+    def remove(
             self,
             symbol: str
     ) -> bool:
+        """
+        Remove a property from the pool by symbol.
+
+        Parameters
+        ----------
+        symbol : str
+            Property symbol key.
+
+        Returns
+        -------
+        bool
+            ``True`` if removed, ``False`` if missing or on error.
+        """
         try:
             if symbol in self._pools:
                 del self._pools[symbol]
@@ -194,7 +306,15 @@ class Context:
 
     # NOTE: clear pool
 
-    def clear_pool(self) -> bool:
+    def clear(self) -> bool:
+        """
+        Remove all cached properties from the pool.
+
+        Returns
+        -------
+        bool
+            ``True`` on success, otherwise ``False``.
+        """
         try:
             self._pools.clear()
             logger.info("Cleared all symbols from pools.")
