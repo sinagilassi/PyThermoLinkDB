@@ -160,14 +160,17 @@ for comp in components:
         raise ValueError(f"thermodb_component for {comp.name} is None")
     thermodb_components.append(thermodb_component)
 
-# ====================================================
-# SECTION: build model source
-# ====================================================
+
 # NOTE: with partially matched rules
 component_model_source: List[ComponentModelSource] = build_components_model_source(
     components_thermodb=thermodb_components,
     rules=None,
 )
+print(component_model_source)
+
+# ====================================================
+# SECTION: build model source
+# ====================================================
 
 # model source
 model_source: ModelSource = build_model_source(
@@ -192,3 +195,4 @@ model_source: ModelSource = ModelSource(
     data_symbols=datasource_symbol,
     equation_symbols=equationsource_symbol,
 )
+print(model_source)
