@@ -13,7 +13,11 @@ from pythermodb_settings.models import (
 )
 # local
 from .docs import ThermoDBHub
-from .models import ModelSource, ComponentModelSource, MixtureModelSource
+from .models import (
+    ModelSource,
+    ComponentModelSource,
+    MixtureModelSource
+)
 from .utils import (
     set_component_key,
     create_rules_from_str,
@@ -444,6 +448,7 @@ def build_components_model_source(
         raise Exception(f"Error in build_components_model_source: {e}")
 
 
+# SECTION: build mixture model source
 def build_mixture_model_source(
     mixture_thermodb: MixtureThermoDB,
     rules: Optional[
@@ -850,6 +855,8 @@ def build_mixtures_model_source(
     except Exception as e:
         logger.error(f"Error in build_mixtures_model_source: {e}")
         raise Exception(f"Error in build_mixtures_model_source: {e}")
+
+# SECTION: build model source for multiple components/mixtures
 
 
 def build_model_source(
