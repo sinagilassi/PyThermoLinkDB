@@ -123,7 +123,7 @@ class ModelSource(BaseModel):
         description="Equation source dictionary for multiple components"
     )
     constants_source: Optional[Dict[str, TableConstants]] = Field(
-        None,
+        default_factory=dict,
         description="Constants source dictionary for multiple components"
     )
 
