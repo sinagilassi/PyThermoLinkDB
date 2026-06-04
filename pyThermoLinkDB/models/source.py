@@ -14,12 +14,33 @@ from pythermodb_settings.models import Component
 # NOTE: data source
 PropertyData = Dict[str, str | float | int | bool | None]
 DataSource = Dict[str, PropertyData | TableMatrixData]
+# ?? defines as:
+#   'Tc': {
+#     'property_name': 'critical-temperature',
+#     'symbol': 'Tc',
+#     'unit': 'K',
+#     'value': '513.9',
+#     'message': 'No message',
+#     'databook_name': 'CUSTOM-REF-1',
+#     'table_name': 'general-data'
+# }
+
 # NOTE: equation source
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
+#  {
+#     'Cp_IG': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105ED8C990>,
+#     'VaPr': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105E8359D0>,
+#     'Cp_LIQ': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105ED9D450>,
+#     'EnVap': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105ED2C110>
+# }
+
+# NOTE: constants source
+ConstantsSource = Dict[str, TableConstants]
+
+
 # NOTE: symbol
 # ?? data source symbol
 DataSymbol = Dict[str, Dict[str, str]]
-# ?? equation source symbol
 
 
 # NOTE: equation symbol model
@@ -55,9 +76,18 @@ class ComponentModelSource(BaseModel):
     label_link: bool
         Whether all labels in the rules are found in the component thermodb
     '''
-    component: Component
-    data_source: Dict[str, DataSource]
-    equation_source: Dict[str, EquationSource]
+    component: Component = Field(
+        ...,
+        description="Component object containing component information such as name, formula, state, and composition"
+    )
+    data_source: Dict[str, DataSource] = Field(
+        ...,
+        description="Data source dictionary for the component"
+    )
+    equation_source: Dict[str, EquationSource] = Field(
+        ...,
+        description="Equation source dictionary for the component"
+    )
     check_labels: Optional[bool] = None
     label_link: Optional[bool] = None
 
@@ -67,6 +97,7 @@ class ComponentModelSource(BaseModel):
     )
 
 
+# NOTE: mixture model source
 class MixtureModelSource(BaseModel):
     '''
     Mixture model source containing data source and equation source for multiple components
@@ -84,11 +115,43 @@ class MixtureModelSource(BaseModel):
     label_link: bool
         Whether all labels in the rules are found in the mixture thermodb
     '''
-    components: list[Component]
-    data_source: Dict[str, DataSource]
-    equation_source: Dict[str, EquationSource]
+    components: list[Component] = Field(
+        ...,
+        description="List of components in the mixture"
+    )
+    data_source: Dict[str, DataSource] = Field(
+        ...,
+        description="Data source dictionary for the mixture"
+    )
+    equation_source: Dict[str, EquationSource] = Field(
+        ...,
+        description="Equation source dictionary for the mixture"
+    )
+
     check_labels: Optional[bool] = None
     label_link: Optional[bool] = None
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="allow"
+    )
+
+# NOTE: Constants model source
+
+
+class ConstantsModelSource(BaseModel):
+    '''
+    Constants model source containing constants source
+
+    Attributes
+    ----------
+    constants_source: Dict[str, TableConstants]
+        Constants source dictionary for multiple components
+    '''
+    constants_source: Dict[str, TableConstants] = Field(
+        ...,
+        description="Constants source dictionary for multiple components"
+    )
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
