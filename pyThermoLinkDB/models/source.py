@@ -1,10 +1,11 @@
 # import libs
-from pydantic import BaseModel, ConfigDict
-from typing import Dict, Optional, List
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Dict, Optional, List, Any
 from pyThermoDB import (
     TableEquation,
     TableMatrixData,
-    TableMatrixEquation
+    TableMatrixEquation,
+    TableConstants
 )
 from pythermodb_settings.models import Component
 # local
@@ -30,6 +31,9 @@ class EqSym(BaseModel):
 
 
 EquationSymbol = Dict[str, EqSym]
+
+# ?? constants source symbol
+ConstantsSymbol = Dict[str, Dict[str, Any]]
 
 # NOTE: component model source
 
@@ -103,17 +107,30 @@ class ModelSource(BaseModel):
         Data source dictionary for multiple components
     equation_source: Dict[str, Dict[str, EquationSource]]
         Equation source dictionary for multiple components
+    constants_source: Optional[Dict[str, TableConstants]]
+        Optional constants source dictionary for multiple components
     data_symbols: Optional[Dict[str, Dict[str, DataSymbol]]] = None
         Optional data symbol dictionary for multiple components
     equation_symbols: Optional[Dict[str, Dict[str, EquationSymbol]]] = None
         Optional equation symbol dictionary for multiple components
     '''
-    data_source: Dict[str, DataSource]
-    equation_source: Dict[str, EquationSource]
+    data_source: Dict[str, DataSource] = Field(
+        ...,
+        description="Data source dictionary for multiple components"
+    )
+    equation_source: Dict[str, EquationSource] = Field(
+        ...,
+        description="Equation source dictionary for multiple components"
+    )
+    constants_source: Optional[Dict[str, TableConstants]] = Field(
+        None,
+        description="Constants source dictionary for multiple components"
+    )
 
     # optional
     data_symbols: Optional[Dict[str, DataSymbol]] = None
     equation_symbols: Optional[Dict[str, EquationSymbol]] = None
+    constants_symbols: Optional[Dict[str, ConstantsSymbol]] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
