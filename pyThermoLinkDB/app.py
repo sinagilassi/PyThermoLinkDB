@@ -856,6 +856,12 @@ def build_mixtures_model_source(
         logger.error(f"Error in build_mixtures_model_source: {e}")
         raise Exception(f"Error in build_mixtures_model_source: {e}")
 
+# SECTION: build constant model source
+
+
+def build_constants_model_source():
+    pass
+
 # SECTION: build model source for multiple components/mixtures
 
 
