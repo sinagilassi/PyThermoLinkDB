@@ -4,6 +4,7 @@
         "mkeq",
         "mkeqs",
         "ptdblink",
+        "tableequation",
         "THERMODB",
         "thermolink",
         "thermoutils"
