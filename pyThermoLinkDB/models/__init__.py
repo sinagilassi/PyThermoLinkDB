@@ -4,7 +4,8 @@ from .source import (
     DataSource,
     EquationSource,
     ModelSource,
-    MixtureModelSource
+    MixtureModelSource,
+    ConstantsModelSource,
 )
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "EquationSource",
     "ModelSource",
     "MixtureModelSource",
+    "ConstantsModelSource"
 ]
