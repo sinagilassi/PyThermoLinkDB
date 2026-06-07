@@ -27,6 +27,7 @@ DataSource = Dict[str, PropertyData | TableMatrixData]
 
 # NOTE: equation source
 EquationSource = Dict[str, TableEquation | TableMatrixEquation]
+# ?? defines as:
 #  {
 #     'Cp_IG': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105ED8C990>,
 #     'VaPr': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105E8359D0>,
@@ -35,7 +36,21 @@ EquationSource = Dict[str, TableEquation | TableMatrixEquation]
 # }
 
 # NOTE: constants source
-ConstantsSource = Dict[str, TableConstants]
+ConstantsSource = Dict[str, Any]
+# ?? defines as:
+# 'R': 8.31446261815324
+# 'dH_rxn': {
+#     'reaction1': {
+#         'value': -100.0,
+#         'unit': 'kJ/mol',
+#         },
+#    'reaction2': {
+#         'value': -200.0,
+#         'unit': 'kJ/mol',
+#         }
+# }
+# 'K_eq': [1.0, 2.0, 3.0]
+# 'custom_constant': any value
 
 
 # NOTE: symbol
@@ -148,7 +163,7 @@ class ConstantsModelSource(BaseModel):
     constants_source: Dict[str, TableConstants]
         Constants source dictionary for multiple components
     '''
-    constants_source: Dict[str, TableConstants] = Field(
+    constants_source: ConstantsSource = Field(
         ...,
         description="Constants source dictionary for multiple components"
     )
