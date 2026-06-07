@@ -1053,6 +1053,7 @@ def build_constants_model_source(
         # ! >> check rule
         if not rule_:
             rule_ = None
+
         # >> if empty, set to None
         if rule_ and len(rule_) == 0:
             rule_ = None
