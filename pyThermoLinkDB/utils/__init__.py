@@ -5,7 +5,9 @@ from .properties import (
     look_up_component_rules,
     normalize_rules,
     find_mixture_ids_in_rules,
-    look_up_mixture_rules
+    look_up_mixture_rules,
+    look_up_constants_rules,
+    look_up_default_rules
 )
 from .loader import create_rules_from_str
 
@@ -16,5 +18,7 @@ __all__ = [
     "look_up_component_rules",
     "normalize_rules",
     "find_mixture_ids_in_rules",
-    "look_up_mixture_rules"
+    "look_up_mixture_rules",
+    "look_up_constants_rules",
+    "look_up_default_rules"
 ]
