@@ -1,6 +1,11 @@
 # import packages/modules
 import logging
-from pyThermoDB import TableMatrixData, TableData, TableEquation
+from pyThermoDB import (
+    TableMatrixData,
+    TableData,
+    TableEquation,
+    TableConstants
+)
 # local
 # ! deps
 from ..config.deps import get_config
@@ -10,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class ThermoLink:
+    """
+    ThermoLink class for linking thermodynamic data and equations from thermodb to a unified datasource with symbol mapping based on rules defined in config.
+    """
 
     def __init__(self):
         # load reference
@@ -18,6 +26,8 @@ class ThermoLink:
         # ! original equation label
         self.original_equation_label = self.config.original_equation_label
 
+    # SECTION: set datasource
+    # ! extract data source from thermodb and set symbol based on rules for each component (component id)
     def _set_datasource(
         self,
         thermodb: dict,
@@ -195,6 +205,8 @@ class ThermoLink:
         except Exception as e:
             raise Exception('Building datasource failed!, ', e)
 
+    # SECTION: set equation source
+    # ! extract equation source from thermodb and set symbol based on rules for each component (component id)
     def _set_equationsource(
         self,
         thermodb: dict,
