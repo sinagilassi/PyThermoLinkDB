@@ -6,7 +6,9 @@ DEFAULT_RULES_KEY = "ALL"
 # NOTE: data/equations key
 DATA_KEY = "DATA"
 EQUATIONS_KEY = "EQUATIONS"
+CONSTANTS_KEY = "CONSTANTS"
 
 # SECTION: PyThermoDBLink/PyThermoDB
 DATASOURCE = "datasource"
 EQUATIONSOURCE = "equationsource"
+CONSTANTSSOURCE = "constantssource"
