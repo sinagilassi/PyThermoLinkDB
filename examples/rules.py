@@ -2,7 +2,7 @@
 from pyThermoLinkDB.utils import create_rules_from_str
 from rich import print
 
-#
+# NOTE: create a rules string (YAML format)
 RULES_YAML = """
 ALL:
   DATA:
@@ -23,8 +23,15 @@ ALL:
     enthalpy-of-vaporization: EnVap
     enthalpy-of-fusion: EnFus
     enthalpy-of-sublimation: EnSub
+  CONSTANTS:
+    universal-gas-constant: R
+    gas-constant: R
+    enthalpy-of-vaporization: EnVap
+    enthalpy-of-fusion: EnFus
+    enthalpy-of-sublimation: EnSub
 """
 
-# convert
+# NOTE: convert
 rules_dict = create_rules_from_str(RULES_YAML)
+# >> all
 print(rules_dict['ALL'])
