@@ -1,8 +1,13 @@
 # import packages/modules
 import logging
-from typing import Dict, List, Optional, Literal
+from typing import Dict, List, Optional, Literal, Any
 import pyThermoDB as ptdb
-from pyThermoDB import ComponentThermoDB, CompBuilder, MixtureThermoDB
+from pyThermoDB import (
+    CompBuilder,
+    ComponentThermoDB,
+    MixtureThermoDB,
+    ConstantsThermoDB
+)
 from pythermodb_settings.models import (
     Component,
     ComponentConfig,
@@ -16,7 +21,8 @@ from .docs import ThermoDBHub
 from .models import (
     ModelSource,
     ComponentModelSource,
-    MixtureModelSource
+    MixtureModelSource,
+    ConstantsModelSource
 )
 from .utils import (
     set_component_key,
@@ -25,7 +31,9 @@ from .utils import (
     look_up_component_rules,
     find_mixture_ids_in_rules,
     normalize_rules,
-    look_up_mixture_rules
+    look_up_mixture_rules,
+    look_up_constants_rules,
+    look_up_default_rules
 )
 from .config import DEFAULT_RULES_KEY
 # ! deps
@@ -35,6 +43,7 @@ from .config.deps import set_config, AppConfig
 logger = logging.getLogger(__name__)
 
 
+# SECTION: init thermodb hub
 def init() -> ThermoDBHub:
     '''
     Init thermolinkdb app
@@ -55,6 +64,7 @@ def init() -> ThermoDBHub:
         raise Exception("Error: {}".format(e))
 
 
+# SECTION: build component model source
 def build_component_model_source(
     component_thermodb: ComponentThermoDB,
     rules: Optional[
@@ -392,6 +402,8 @@ def build_component_model_source(
     except Exception as e:
         logger.error(f"Error in build_component_model_source: {e}")
         raise Exception(f"Error in build_component_model_source: {e}")
+
+# SECTION: build components model source
 
 
 def build_components_model_source(
@@ -794,6 +806,8 @@ def build_mixture_model_source(
         logger.error(f"Error in build_mixture_model_source: {e}")
         raise Exception(f"Error in build_mixture_model_source: {e}")
 
+# SECTION: build mixture model source for multiple mixtures
+
 
 def build_mixtures_model_source(
     mixtures_thermodb: List[MixtureThermoDB],
@@ -859,8 +873,217 @@ def build_mixtures_model_source(
 # SECTION: build constant model source
 
 
-def build_constants_model_source():
-    pass
+def build_constants_model_source(
+    constants_thermodb: ConstantsThermoDB,
+    rules: Optional[
+        Dict[str, Dict[str, ComponentRule]] | str
+    ] = None,
+    check_labels: bool = True,
+    overwrite_rules: bool = False,
+    verbose: bool = False,
+) -> ConstantsModelSource:
+    try:
+        # SECTION: create thermodb hub
+        try:
+            thermodb_hub = init()
+        except Exception as e:
+            logger.error(f"Error in init thermodb hub: {e}")
+            raise Exception(f"Error in init thermodb hub: {e}")
+
+        # SECTION: extract constants thermodb
+        # NOTE: thermodb
+        thermodb: CompBuilder = constants_thermodb.thermodb
+        # NOTE: reference thermodb
+        # ! reference thermodb is optional
+        reference_thermodb: Optional[ReferenceThermoDB] = constants_thermodb.reference_thermodb
+
+        # check reference thermodb
+        if reference_thermodb:
+            # ! >>> reference configs
+            reference_configs: Dict[
+                str,
+                ComponentConfig
+            ] = reference_thermodb.configs
+
+            # ! >>> reference rules
+            reference_rules: Dict[
+                str,
+                ComponentRule
+            ] = reference_thermodb.rules
+
+            # ! >>> labels
+            labels: List[str] = reference_thermodb.labels if reference_thermodb.labels else [
+            ]
+
+            # ! >>> ignore labels
+            ignore_labels: List[str] = reference_thermodb.ignore_labels if reference_thermodb.ignore_labels else [
+            ]
+
+            # ! >>> ignore props
+            ignore_props: List[str] = reference_thermodb.ignore_props if reference_thermodb.ignore_props else [
+            ]
+
+            # ?? constants ids
+            constants_ids = list(reference_configs.keys())
+        else:
+            # ! set empty
+            reference_configs = {}
+            # >> for the case of no reference (reference_thermodb), set empty rules
+            reference_rules = {}
+            labels = []
+            ignore_labels = []
+            ignore_props = []
+            # constants ids
+            constants_ids = []
+
+        # NOTE: constant rules
+        # create dict to hold constant rules
+        constant_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
+            'Constants': reference_rules
+        }
+
+        # SECTION: check rules
+        if rules:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"Checking rules for constants: using provided rules"
+                )
+
+            # NOTE: overwrite existing rules in the thermodb hub
+            if overwrite_rules:
+                # reset constant_rules_dict
+                constant_rules_dict = {}
+
+                # >> log
+                if verbose:
+                    logger.info(
+                        "Overwriting existing rules in the thermodb hub"
+                    )
+
+            # NOTE: load rules
+            if isinstance(rules, str):
+                try:
+                    rules = create_rules_from_str(rules)
+                except Exception as e:
+                    logger.error(f"Error in load rules from file: {e}")
+                    raise Exception(f"Error in load rules from file: {e}")
+            elif not isinstance(rules, dict):
+                logger.error(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+                raise ValueError(
+                    "Rules must be a dictionary or a file path to a YAML file.")
+
+            # NOTE: check for constant rules if exists
+            # >> iterate over constants ids
+            for constants_id in constants_ids:
+                constant_rules_ = look_up_constants_rules(
+                    constants_id=constants_id,
+                    rules=rules,
+                )
+
+                if constant_rules_:
+                    constant_rules_dict[constants_id] = constant_rules_
+
+            # NOTE: check if `constant_rules_dict` is still empty, then use default rules if exists
+            all_empty = True
+
+            for key in constant_rules_dict:
+                if len(constant_rules_dict[key]) > 0:
+                    all_empty = False
+                    break
+
+            if all_empty:
+                # ! >> by default rules key
+                default_rules_ = look_up_constants_rules(
+                    constants_id='ALL',
+                    rules=rules,
+                )
+
+                if default_rules_:
+                    constant_rules_dict['Constants'] = default_rules_
+                else:
+                    # log
+                    logger.warning(
+                        f"No rules found for constants in the provided rules."
+                    )
+
+            # SECTION: extract labels
+            constants_rules_labels = extract_labels_from_rules(
+                constant_rules_dict['Constants']
+            ) if constant_rules_dict['Constants'] else []
+
+            # SECTION: check labels
+            # check label results
+            label_link = True
+
+            # NOTE: check labels
+            if (
+                check_labels and
+                len(labels) > 0 and
+                len(constants_rules_labels) > 0
+            ):
+                # check if all labels in constants_rules_labels are in labels
+                for label in constants_rules_labels:
+                    if label not in labels:
+                        # set
+                        label_link = False
+                        # log
+                        logger.error(
+                            f"Label '{label}' in rules not found in rules labels"
+                        )
+
+        else:
+            # NOTE: verbose
+            if verbose:
+                logger.info(
+                    f"No rules provided, using reference rules for constants")
+
+            # no rules provided, use reference rules
+            # check label results
+            label_link = False
+
+        # SECTION: add constants thermodb to thermodb hub
+        # >> set rule
+        rule_ = constant_rules_dict.get(
+            'Constants',
+            None
+        )
+
+        # ! >> check rule
+        if not rule_:
+            rule_ = None
+        # >> if empty, set to None
+        if rule_ and len(rule_) == 0:
+            rule_ = None
+
+        # >> add
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name='Constants',
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(f"Added thermodb for constants")
+            else:
+                logger.warning(f"Failed to add thermodb for constants")
+
+        # SECTION: build constant model source
+        datasource, _ = thermodb_hub.build()
+
+        # NOTE: create constant model source
+        constant_model_source = ConstantsModelSource(
+            constants_source=datasource,
+        )
+
+        # return
+        return constant_model_source
+    except Exception as e:
+        logger.error(f"Error in build_constants_model_source: {e}")
+        raise Exception(f"Error in build_constants_model_source: {e}")
 
 # SECTION: build model source for multiple components/mixtures
 
