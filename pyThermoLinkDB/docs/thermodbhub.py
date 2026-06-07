@@ -19,8 +19,59 @@ logger = logging.getLogger(__name__)
 
 
 class ThermoDBHub(ThermoLink, ThermoUtils):
-    """ThermoDBHub class used to manage thermodynamic databases."""
-    # vars
+    """
+    Manager for registered thermodynamic databases and their model-source links.
+
+    ``ThermoDBHub`` stores one or more :class:`pyThermoDB.CompBuilder`
+    objects under user-defined record names, applies optional mapping rules,
+    and builds the linked data and equation sources consumed by
+    :class:`pyThermoLinkDB.models.ModelSource`.
+
+    The class combines two lower-level helpers:
+
+    - :class:`ThermoLink` extracts data/equation objects from each registered
+      thermodb and renames their exposed symbols according to ``DATA`` and
+      ``EQUATIONS`` rules.
+    - :class:`ThermoUtils` extracts metadata for data and equation symbols
+      when creating a ``ModelSource``.
+
+    Attributes
+    ----------
+    thermodb : dict
+        Registered thermodynamic databases keyed by record name. Each value is
+        expected to be a :class:`pyThermoDB.CompBuilder` instance.
+    thermodb_rule : dict
+        Mapping rules keyed by record name. Rules may contain ``DATA`` and
+        ``EQUATIONS`` sections whose keys are thermodb labels and whose values
+        are the symbols exposed in the generated sources.
+    hub : dict
+        Combined source built by :meth:`build`, keyed by record name and then
+        by mapped data/equation symbol.
+
+    Notes
+    -----
+    Use :meth:`add_thermodb` to register a thermodb, optionally with rules, or
+    use :meth:`config_thermodb_rule` / :meth:`add_thermodb_rule` to configure
+    rules after registration. Calling :meth:`build` returns ``datasource`` and
+    ``equationsource`` dictionaries and refreshes ``hub``. Calling
+    :meth:`build_model_source` wraps those dictionaries in a
+    :class:`pyThermoLinkDB.models.ModelSource`.
+
+    Rule dictionaries use the following structure:
+
+    .. code-block:: python
+
+        rules = {
+            "DATA": {
+                "critical-pressure": "Pc",
+                "critical-temperature": "Tc",
+            },
+            "EQUATIONS": {
+                "CUSTOM-REF-1::vapor-pressure": "VaPr",
+            },
+        }
+    """
+    # NOTE: attributes
     _thermodb = {}
     _thermodb_rule = {}
     _hub = {}
@@ -278,7 +329,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         Parameters
         ----------
         item: str
-            name of the record
+            name of the record (e.g., component name)
         rules: dict
             thermodb rule dict for all components
 
@@ -292,7 +343,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         - A dictionary file with the following format:
 
         ```python
-        # example of thermodb rule
+        # example of thermodb rule for a component (e.g., CO2)
         thermodb_rule_CO2 = {
             'DATA': {
                 'Pc': 'Pc1',
@@ -305,8 +356,21 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
             }
         }
 
+        # example of thermodb rule for a group of constants (e.g., CONSTANTS)
+        thermodb_rule_constants = {
+            'CONSTANTS': {
+                'Universal gas constant': 'R1',
+                'Enthalpy of vaporization': 'EnVap1',
+                'EnFus': 'EnFus1',
+                'EnSub': 'EnSub1'
+            }
+        }
+
         # add thermodb rule for CO2
         thub1.add_thermodb_rule('CO2', thermodb_rule_CO2)
+
+        # add thermodb rule for constants group
+        thub1.add_thermodb_rule('CONSTANTS', thermodb_rule_constants)
         ```
         '''
         try:
@@ -582,6 +646,8 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         except Exception as e:
             raise Exception('Getting info of record failed!, ', e)
 
+    # SECTION: Build methods
+    # NOTE: build data/equation source
     def build(self):
         '''
         Builds `datasource` and `equationsource` for each component registered in thermodb
@@ -663,6 +729,28 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         except Exception as e:
             raise Exception('Building data/equation source failed!, ', e)
 
+    # NOTE: build data source
+    def _build_d(self):
+        '''
+        Build data source for each component registered in thermodb
+        '''
+
+    # NOTE: build equation source
+    def _build_e(self):
+        '''
+        '''
+
+    # NOTE: build constants source
+    def _build_c(self):
+        '''
+        '''
+
+    # NOTE: build all source
+    def _build_all(self):
+        '''
+        '''
+
+    # SECTION: build model source
     def build_model_source(self) -> ModelSource:
         '''
         Builds model source containing data source and equation source for multiple components
