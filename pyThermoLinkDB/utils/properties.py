@@ -3,7 +3,12 @@ import logging
 from typing import List, Dict, Literal, Optional
 from pythermodb_settings.models import Component, ComponentRule
 # local
-from ..config import DEFAULT_RULES_KEY, DATA_KEY, EQUATIONS_KEY
+from ..config import (
+    DEFAULT_RULES_KEY,
+    DATA_KEY,
+    EQUATIONS_KEY,
+    CONSTANTS_KEY
+)
 
 
 # NOTE: logger
@@ -111,6 +116,8 @@ def extract_labels_from_rules(
         logger.error(f"Error in extract_labels_from_rules: {e}")
         raise Exception(f"Error in extract_labels_from_rules: {e}")
 
+# SECTION: look up component rules
+
 
 def look_up_component_rules(
         component: Component,
@@ -200,7 +207,79 @@ def look_up_component_rules(
         raise Exception(f"Error in look_up_component_rules: {e}")
 
 
+# SECTION: look up constants rules
+def look_up_constants_rules(
+        constants_id: str,
+        rules: Dict[str, Dict[str, ComponentRule]],
+) -> Dict[str, ComponentRule] | None:
+    '''
+    Look up constants rules from rules dictionary based on constants id.
+
+    Parameters
+    ----------
+    constants_id: str
+        Constants id
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary
+
+    Returns
+    -------
+    Dict[str, Dict[str, str]] | None
+        Constants rules dictionary
+
+    Notes
+    -----
+    The rules dictionary is defined as:
+
+    ```python
+    rules = {
+        "Constants-id1": {
+            "CONSTANTS":
+                {
+                    "property3": "label3",
+                    "property4": "label4"
+                }
+            },
+        "Constants-id2": {
+            ...
+        }
+    }
+    '''
+    try:
+        # rules keys (case insensitive)
+        rules_keys_lower = {key.lower(): key for key in rules.keys()}
+
+        # reference rules
+        reference_rules = None
+
+        # NOTE: look up rules (case insensitive)
+        if constants_id.lower() in rules_keys_lower:
+            reference_rules = rules[rules_keys_lower[constants_id.lower()]]
+        elif DEFAULT_RULES_KEY.lower() in rules_keys_lower:
+            reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
+        else:
+            reference_rules = None
+
+        # NOTE: check if reference_rules contains CONSTANTS_KEY
+        if (
+            reference_rules is not None and
+            CONSTANTS_KEY not in reference_rules
+        ):
+            reference_rules = None
+            # log
+            logger.warning(
+                f"Reference rules for constants_id '{constants_id}' does not contain 'CONSTANTS' key. Ignoring the rules."
+            )
+
+        # return
+        return reference_rules
+    except Exception as e:
+        logger.error(f"Error in look_up_constants_rules: {e}")
+        raise Exception(f"Error in look_up_constants_rules: {e}")
+
 # SECTION: look up default rules
+
+
 def look_up_default_rules(
     rules: Dict[str, Dict[str, ComponentRule]]
 ) -> Dict[str, ComponentRule] | None:
