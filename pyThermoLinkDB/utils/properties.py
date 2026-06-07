@@ -200,6 +200,69 @@ def look_up_component_rules(
         raise Exception(f"Error in look_up_component_rules: {e}")
 
 
+# SECTION: look up default rules
+def look_up_default_rules(
+    rules: Dict[str, Dict[str, ComponentRule]]
+) -> Dict[str, ComponentRule] | None:
+    '''
+    Look up default rules from rules dictionary based on DEFAULT_RULES_KEY.
+
+    Parameters
+    ----------
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary
+
+    Returns
+    -------
+    Dict[str, ComponentRule] | None
+        Default rules dictionary
+
+    Notes
+    -----
+    The rules dictionary is defined as:
+
+    ```python
+    rules = {
+        "ALL": {
+            "DATA":
+                {
+                    "property1": "label1",
+                    "property2": "label2"
+                },
+            "EQUATIONS":
+                {
+                    "property3": "label3",
+                    "property4": "label4"
+                }
+            },
+            "CONSTANTS": {
+                "property5": "label5",
+                "property6": "label6"
+            }
+        },
+    }
+    ```
+    '''
+    try:
+        # rules keys (case insensitive)
+        rules_keys_lower = {key.lower(): key for key in rules.keys()}
+
+        # reference rules
+        reference_rules = None
+
+        # NOTE: look up default rules (case insensitive)
+        if DEFAULT_RULES_KEY.lower() in rules_keys_lower:
+            reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
+        else:
+            reference_rules = None
+
+        # return
+        return reference_rules
+    except Exception as e:
+        logger.error(f"Error in look_up_default_rules: {e}")
+        raise Exception(f"Error in look_up_default_rules: {e}")
+
+
 def find_mixture_ids_in_rules(
     rules: Dict[str, Dict[str, ComponentRule]],
     delimiter: str = '|'
