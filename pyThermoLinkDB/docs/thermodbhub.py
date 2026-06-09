@@ -72,8 +72,14 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         }
     """
     # NOTE: attributes
+    # ! thermodb dict: {record_name: CompBuilder}
     _thermodb = {}
+    # ?? for components
+    # ! thermodb rule dict: {record_name: {'DATA': {thermodb_label: symbol}, 'EQUATIONS': {thermodb_label: symbol}}}
+    # ?? for constants
+    # ! thermodb rule dict: {constants: {'CONSTANTS': {thermodb_label: symbol}}}
     _thermodb_rule = {}
+    # ! hub dict: {record_name: {symbol: data/equation object}}
     _hub = {}
 
     def __init__(self):
@@ -291,7 +297,8 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
                         if name in self._thermodb.keys():
                             # looping through
                             self._thermodb_rule[name].update(
-                                record_thermodb_rule)
+                                record_thermodb_rule
+                            )
 
                             # check disp
                             _log = f'{name} thermodb rule successfully registered.'
@@ -318,6 +325,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         except Exception as e:
             raise Exception('Configuration failed!, ', e)
 
+    # SECTION: add thermodb rule
     def add_thermodb_rule(
         self,
         item: str,
@@ -370,7 +378,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         thub1.add_thermodb_rule('CO2', thermodb_rule_CO2)
 
         # add thermodb rule for constants group
-        thub1.add_thermodb_rule('CONSTANTS', thermodb_rule_constants)
+        thub1.add_thermodb_rule('constants', thermodb_rule_constants)
         ```
         '''
         try:
@@ -407,6 +415,17 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
                 log_ = f"{item} EQUATIONS successfully set."
                 # log warning
                 log_info.append(log_)
+
+            # NOTE: check for constants
+            if item.lower() == 'constants':
+                if 'CONSTANTS' not in self._thermodb_rule[item].keys():
+                    # add CONSTANTS
+                    self._thermodb_rule[item]['CONSTANTS'] = {}
+
+                    # log
+                    log_ = f"{item} CONSTANTS successfully set."
+                    # log warning
+                    log_info.append(log_)
 
             # SECTION: check item exist
             if item not in self._thermodb_rule.keys():
@@ -466,6 +485,33 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
 
                     # add equations (update record)
                     self._thermodb_rule[item]['EQUATIONS'][k] = v
+                    # log
+                    log_ = f"{item} {k} successfully set."
+                    # log warning
+                    log_info.append(log_)
+
+            # LINK: add CONSTANTS
+            if item.lower() == 'constants':
+                # constants
+                constants_ = rules['CONSTANTS']
+                # check constants
+                if not isinstance(constants_, dict):
+                    raise Exception('CONSTANTS should be a dictionary!')
+
+                # check constants exist
+                if not constants_.keys():
+                    raise Exception('CONSTANTS is empty!')
+
+                # looping through constants
+                for k, v in constants_.items():
+                    # initialize
+                    if k not in self._thermodb_rule[item].keys():
+                        # add constants (new record)
+                        self._thermodb_rule[item]['CONSTANTS'][k] = {}
+
+                    # add constants (update record)
+                    self._thermodb_rule[item]['CONSTANTS'][k] = v
+
                     # log
                     log_ = f"{item} {k} successfully set."
                     # log warning
