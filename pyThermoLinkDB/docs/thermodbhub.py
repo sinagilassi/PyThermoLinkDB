@@ -73,14 +73,14 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
     """
     # NOTE: attributes
     # ! thermodb dict: {record_name: CompBuilder}
-    _thermodb = {}
+    # _thermodb = {}
     # ?? for components
     # ! thermodb rule dict: {record_name: {'DATA': {thermodb_label: symbol}, 'EQUATIONS': {thermodb_label: symbol}}}
     # ?? for constants
     # ! thermodb rule dict: {constants: {'CONSTANTS': {thermodb_label: symbol}}}
-    _thermodb_rule = {}
+    # _thermodb_rule = {}
     # ! hub dict: {record_name: {symbol: data/equation object}}
-    _hub = {}
+    # _hub = {}
 
     def __init__(self):
         # LINK: init thermolink
@@ -88,6 +88,12 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
 
         # LINK: init thermoutils
         ThermoUtils.__init__(self)
+
+        # Instance-local storage; class-level dicts caused fresh hubs to
+        # inherit records and rules from previous ThermoDBHub instances.
+        self._thermodb = {}
+        self._thermodb_rule = {}
+        self._hub = {}
 
     @property
     def thermodb(self):
