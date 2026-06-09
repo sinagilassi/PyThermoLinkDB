@@ -7,11 +7,12 @@ import pyThermoLinkDB as ptdblink
 from pyThermoLinkDB import (
     build_component_model_source,
     build_components_model_source,
+    build_constants_model_source,
     build_model_source
 )
-from pyThermoLinkDB.models import ComponentModelSource, ModelSource
+from pyThermoLinkDB.models import ComponentModelSource, ModelSource, ConstantsModelSource
 from pythermodb_settings.models import Component, Pressure, Temperature, CustomProp, Volume, CustomProperty
-from pyThermoDB import ComponentThermoDB
+from pyThermoDB import ComponentThermoDB, ConstantsThermoDB
 from pyThermoDB import (
     build_component_thermodb_from_reference,
     build_constants_thermodb_from_reference
@@ -177,10 +178,23 @@ print(component_model_source)
 # ====================================================
 # SECTION: build constants thermodb
 # ====================================================
-constants_thermodb = build_constants_thermodb_from_reference(
+# NOTE: build constants thermodb from reference
+constants_thermodb: ConstantsThermoDB | None = build_constants_thermodb_from_reference(
     reference_content=REFERENCE_CONTENT,
 )
+# >> check
+if constants_thermodb is None:
+    raise ValueError("constants_thermodb is None")
+# log
 print(constants_thermodb)
+
+# NOTE: build model source with constants thermodb
+constants_model_source: ConstantsModelSource = build_constants_model_source(
+    constants_thermodb=constants_thermodb,
+    rules=None,
+)
+# >> log
+print(constants_model_source)
 
 # ====================================================
 # SECTION: build model source
