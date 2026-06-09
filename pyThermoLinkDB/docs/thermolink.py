@@ -331,3 +331,9 @@ class ThermoLink:
             return datasource
         except Exception as e:
             raise Exception('Building datasource failed!, ', e)
+
+    # SECTION: set constants source
+    def _set_constantssource(
+            self
+    ):
+        pass
