@@ -153,7 +153,7 @@ ignore_state_props = ['MW', 'VaPr', 'Cp_IG', 'Cp_LIQ']
 thermodb_components: List[ComponentThermoDB] = []
 
 for comp in components:
-    thermodb_component = build_component_thermodb_from_reference(
+    thermodb_component: ComponentThermoDB | None = build_component_thermodb_from_reference(
         component_name=comp.name,
         component_formula=comp.formula,
         component_state=comp.state,
