@@ -828,9 +828,36 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
             return {}
 
     # NOTE: build constants source
-    def _build_cte_src(self):
+    def _build_cte_src(
+            self,
+            constants_id: Optional[str] = 'Constants'
+    ):
         '''
+        Build constants source for the constants group registered in thermodb
+
+        Parameters
+        ----------
+        constants_id: str
+            name of the constants group, default is 'Constants'
+
+        Returns
+        -------
+        constantssource: dict
+            A dictionary mapping constant symbols to their corresponding constant tables.
         '''
+        try:
+            # ! constants source
+            constantssource = self._set_constantssource(
+                self._thermodb,
+                self._thermodb_rule,
+                constants_id
+            )
+
+            # res
+            return constantssource
+        except Exception as e:
+            logger.warning(f'Building constants source failed!, {e}')
+            return {}
 
     # NOTE: build all source
     def build_all(self):
