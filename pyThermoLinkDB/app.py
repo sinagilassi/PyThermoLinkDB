@@ -887,7 +887,7 @@ def build_constants_model_source(
     try:
         # SECTION: create thermodb hub
         try:
-            thermodb_hub = init()
+            thermodb_hub: ThermoDBHub = init()
         except Exception as e:
             logger.error(f"Error in init thermodb hub: {e}")
             raise Exception(f"Error in init thermodb hub: {e}")
@@ -1034,7 +1034,6 @@ def build_constants_model_source(
                         logger.error(
                             f"Label '{label}' in rules not found in rules labels"
                         )
-
         else:
             # NOTE: verbose
             if verbose:
@@ -1060,6 +1059,7 @@ def build_constants_model_source(
         if rule_ and len(rule_) == 0:
             rule_ = None
 
+        # NOTE: thermodb_hub contains methods to define thermodb items with the provided rules, and build the model source.
         # >> add
         add_thermodb_res_ = thermodb_hub.add_thermodb(
             name='Constants',
@@ -1075,11 +1075,11 @@ def build_constants_model_source(
                 logger.warning(f"Failed to add thermodb for constants")
 
         # SECTION: build constant model source
-        datasource, _ = thermodb_hub.build()
+        constantssource = thermodb_hub._build_cte_src()
 
         # NOTE: create constant model source
         constant_model_source = ConstantsModelSource(
-            constants_source=datasource,
+            constants_source=constantssource,
         )
 
         # return
