@@ -1,10 +1,11 @@
 # import packages/modules
 import logging
+from typing import Dict, Optional, Union, List, Any
 from pyThermoDB import (
     TableMatrixData,
     TableData,
     TableEquation,
-    TableConstants
+    TableConstants,
 )
 # local
 # ! deps
@@ -487,6 +488,62 @@ class ThermoLink:
 
     # SECTION: set constants source
     def _set_constantssource(
-            self
+        self,
+        thermodb: dict,
+        thermodb_rule: dict,
+        constants_id: Optional[str] = 'Constants'
     ):
+        '''
+        Extracts and constructs a constants source from thermodb components.
+
+        Parameters
+        ----------
+        thermodb: dict[str, CompBuilder]
+            A dictionary representing the thermodynamic database, where keys are component
+            identifiers and values are CompBuilder objects containing properties and equations.
+        thermodb_rule: dict
+            A dictionary containing rules for renaming symbols and properties.
+        constants_id: str, optional
+            The identifier used to locate constants in the thermodb. Default is 'Constants'.
+
+        Returns
+        -------
+
+
+
+        Notes
+        -----
+        - The thermodb_rule should contain appropriate mappings for constants and defined as follows:
+
+        structured as:
+            {
+                'Custom-id-1: {
+                    'CONSTANTS: {
+                        'description-1': 'symbol-1',
+                        'description-2': 'symbol-2',
+                        ...
+                    },
+                'Custom-id-2: {
+                    'CONSTANTS: {}
+                    },
+                ...
+            }
+        '''
+        # NOTE: extract constants from thermodb
+
+        # constants thermodb src
+        constants_thermodb_src = None
+
+        # >> check if constants_id is in thermodb
+        if constants_id in thermodb.keys():
+            # select constants
+            _val = thermodb[constants_id].select(constants_id)
+
+            # check
+            if isinstance(_val, TableConstants):
+                constants_thermodb_src = _val
+            else:
+                logger.warning(
+                    f'Unknown constants type {type(_val)} for component {constants_id}'
+                )
         pass
