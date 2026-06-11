@@ -106,7 +106,7 @@ def build_component_model_source(
     try:
         # SECTION: create thermodb hub
         try:
-            thermodb_hub = init()
+            thermodb_hub: ThermoDBHub = init()
         except Exception as e:
             logger.error(f"Error in init thermodb hub: {e}")
             raise Exception(f"Error in init thermodb hub: {e}")
@@ -339,6 +339,7 @@ def build_component_model_source(
             rule_ = None
 
         # NOTE: name state as id
+        # ! thermodb_hub contains methods to transform the thermodb data and equations based on the provided rules, and build the model source data source and equation source
         # >> add
         add_thermodb_res_ = thermodb_hub.add_thermodb(
             name=name_state,
@@ -387,6 +388,7 @@ def build_component_model_source(
                     f"Failed to add thermodb for component: {name_formula}")
 
         # SECTION: build component model source
+        # ! thermodb_hub builds the data source and equation source based on the added thermodb and rules, and the built data source and equation source are used to create the component model source
         datasource, equationsource = thermodb_hub.build()
 
         # NOTE: create component model source
