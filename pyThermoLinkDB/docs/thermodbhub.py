@@ -30,10 +30,10 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
     The class combines two lower-level helpers:
 
     - :class:`ThermoLink` extracts data/equation objects from each registered
-      thermodb and renames their exposed symbols according to ``DATA`` and
-      ``EQUATIONS`` rules.
+    thermodb and renames their exposed symbols according to ``DATA`` and
+    ``EQUATIONS`` rules.
     - :class:`ThermoUtils` extracts metadata for data and equation symbols
-      when creating a ``ModelSource``.
+    when creating a ``ModelSource``.
 
     Attributes
     ----------
@@ -751,15 +751,17 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         ```
         '''
         try:
-            # components
+            # ! components
             components = list(self._thermodb.keys())
-            # datasource
+
+            # ! datasource
             datasource = self._set_datasource(
                 self._thermodb,
                 self._thermodb_rule,
                 components
             )
-            # equationsource
+
+            # ! equationsource
             equationsource = self._set_equationsource(
                 self._thermodb,
                 self._thermodb_rule,
@@ -782,23 +784,56 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
             raise Exception('Building data/equation source failed!, ', e)
 
     # NOTE: build data source
-    def _build_d(self):
+    def _build_dt_src(self):
         '''
         Build data source for each component registered in thermodb
         '''
+        try:
+            # ! components
+            components = list(self._thermodb.keys())
+
+            # ! datasource
+            datasource = self._set_datasource(
+                self._thermodb,
+                self._thermodb_rule,
+                components
+            )
+
+            # res
+            return datasource
+        except Exception as e:
+            logger.warning(f'Building data source failed!, {e}')
+            return {}
 
     # NOTE: build equation source
-    def _build_e(self):
+    def _build_eq_src(self):
         '''
+        Build equation source for each component registered in thermodb
         '''
+        try:
+            # ! components
+            components = list(self._thermodb.keys())
+
+            # ! equationsource
+            equationsource = self._set_equationsource(
+                self._thermodb,
+                self._thermodb_rule,
+                components
+            )
+
+            # res
+            return equationsource
+        except Exception as e:
+            logger.warning(f'Building equation source failed!, {e}')
+            return {}
 
     # NOTE: build constants source
-    def _build_c(self):
+    def _build_cte_src(self):
         '''
         '''
 
     # NOTE: build all source
-    def _build_all(self):
+    def build_all(self):
         '''
         '''
 
