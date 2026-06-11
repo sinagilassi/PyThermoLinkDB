@@ -6,6 +6,7 @@ from pyThermoDB import (
     TableData,
     TableEquation,
     TableConstants,
+    CompBuilder
 )
 # local
 # ! deps
@@ -492,7 +493,7 @@ class ThermoLink:
         thermodb: dict,
         thermodb_rule: dict,
         constants_id: Optional[str] = 'Constants'
-    ):
+    ) -> dict:
         '''
         Extracts and constructs a constants source from thermodb components.
 
@@ -508,8 +509,8 @@ class ThermoLink:
 
         Returns
         -------
-
-
+        constantssource: dict
+            A dictionary mapping constant symbols to their corresponding constant tables.
 
         Notes
         -----
@@ -517,33 +518,108 @@ class ThermoLink:
 
         structured as:
             {
-                'Custom-id-1: {
+                'Constants: {
                     'CONSTANTS: {
                         'description-1': 'symbol-1',
                         'description-2': 'symbol-2',
                         ...
-                    },
-                'Custom-id-2: {
-                    'CONSTANTS: {}
-                    },
-                ...
+                    }
             }
         '''
-        # NOTE: extract constants from thermodb
+        try:
+            # NOTE: init constants source
+            constantssource = {}
 
-        # constants thermodb src
-        constants_thermodb_src = None
+            # constants thermodb src
+            constants_thermodb: Optional[Any] = None
 
-        # >> check if constants_id is in thermodb
-        if constants_id in thermodb.keys():
+            # >> check if constants_id is in thermodb
+            if constants_id not in thermodb.keys():
+                logger.warning(
+                    f'Constants id {constants_id} not found in thermodb, skipping constants source extraction.'
+                )
+                return {}
+
+            # NOTE: select constants thermodb (CompBuilder object)
             # select constants
-            _val = thermodb[constants_id].select(constants_id)
+            constants_thermodb: Optional[Any] = thermodb.get(
+                constants_id, None
+            )
 
-            # check
-            if isinstance(_val, TableConstants):
-                constants_thermodb_src = _val
+            # NOTE: check if constants_thermodb is CompBuilder object
+            if isinstance(constants_thermodb, CompBuilder):
+                # ! get constants ids
+                constants_src = constants_thermodb.check_constants()
+
+                # ! get constants labels
+                constants_labels: List[
+                    Dict[str, str]
+                ] | None = constants_thermodb.all_constants_id_labels()
+                # >> check
+                if constants_labels is None:
+                    logger.warning(
+                        f'No constants labels found in thermodb for {constants_id}, skipping constants source extraction.'
+                    )
+                    return {}
+
+                # check if constants_ids is not empty
+                if len(constants_src) == 0:
+                    logger.warning(
+                        f'No constants found in thermodb for {constants_id}, skipping constants source extraction.'
+                    )
+                    return {}
+
+                # NOTE: get thermodb rule for constants
+                _rules = thermodb_rule[constants_id].get(
+                    'CONSTANTS',
+                    None
+                )
+
+                # ! iterate through constants source
+                for index, (lbs, const_tb) in enumerate(zip(constants_labels, constants_src.values())):
+                    # load all labels
+                    labels_ = list(lbs.values())
+
+                    # check
+                    if _rules:
+                        # looping through each label
+                        for label in labels_:
+                            # check if label is in rules values
+                            if label in _rules.values():
+                                # find key by value
+                                keys_ = list(_rules.keys())
+                                values_ = list(_rules.values())
+                                idx_ = values_.index(label)
+                                # set symbol
+                                symbol = str(_rules[keys_[idx_]])
+
+                                # LINK: update constantssource with symbol and constant table
+                                constantssource[symbol] = const_tb.get_constant(
+                                    constant=label,
+                                    strict=False
+                                )
+                            else:
+                                logger.warning(
+                                    f'No matching rule found for constant label {label} in constants source, skipping this constant.'
+                                )
+                    else:
+                        logger.warning(
+                            f'No rules found for constants in thermodb, skipping symbol mapping for constants source.'
+                        )
+                        # LINK: update constantssource with original label and constant table
+                        for label in labels_:
+                            constantssource[label] = const_tb.get_constant(
+                                constant=label,
+                                strict=False
+                            )
             else:
                 logger.warning(
-                    f'Unknown constants type {type(_val)} for component {constants_id}'
+                    f'Constants thermodb for {constants_id} is not a CompBuilder object, skipping constants source extraction.'
                 )
-        pass
+                return {}
+
+            # res
+            return constantssource
+        except Exception as e:
+            logger.error(f'Building constants source failed: {e}')
+            return {}
