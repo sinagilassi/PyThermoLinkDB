@@ -16,10 +16,64 @@ logger = logging.getLogger(__name__)
 
 class ThermoLink:
     """
-    ThermoLink class for linking thermodynamic data and equations from thermodb to a unified datasource with symbol mapping based on rules defined in config.
+    ThermoLink class for linking thermodynamic data and equations from thermodb to a unified datasource.
+
+    This class manages the integration of thermodynamic data and equations from a thermodb
+    (thermodynamic database) into a unified data source. It provides functionality to:
+
+    - Extract thermodynamic properties (data sources) from thermodb components
+    - Extract thermodynamic equations from thermodb components
+    - Extract thermodynamic constants from thermodb components
+    - Apply symbol mapping and renaming based on rules defined in configuration files
+    - Map components with custom naming conventions through rule-based transformations
+
+    The class uses configuration-based rules to rename symbols and properties, allowing for
+    flexible integration with different thermodb formats and naming conventions. It supports
+    various data types including TableData, TableMatrixData, and TableEquation objects from
+    the pyThermoDB library.
+
+    Attributes
+    ----------
+    config : dict
+        Configuration object loaded from config dependencies containing settings for
+        symbol mapping rules and equation labeling behavior.
+    original_equation_label : bool
+        Flag indicating whether to use original equation labels or custom identifiers
+        for equation symbols. Retrieved from the loaded configuration.
+
+    Examples
+    --------
+    >>> # Create a ThermoLink instance and extract data sources
+    >>> link = ThermoLink()
+    >>> datasource = link._set_datasource(thermodb, rules, components)
+    >>> equation_source = link._set_equationsource(thermodb, rules, components)
+
+    Notes
+    -----
+    - This class is designed to work with thermodb objects from the pyThermoDB library
+    - Rules for symbol renaming should follow the structure:
+      {'COMPONENT_ID': {'DATA': {...}, 'EQUATIONS': {...}}}
+    - Components must be present in the thermodb before attempting to extract data
     """
 
     def __init__(self):
+        """
+        Initialize the ThermoLink instance.
+
+        Loads the configuration from dependencies and sets up the original_equation_label
+        flag which controls whether equations use their original identifiers or custom
+        return-based identifiers for symbol naming.
+
+        Raises
+        ------
+        Exception
+            If configuration loading fails or required configuration parameters are missing.
+
+        Notes
+        -----
+        The configuration is loaded once during initialization and stored as an instance
+        attribute for use throughout the object's lifetime.
+        """
         # load reference
         # NOTE: get config
         self.config = get_config()
@@ -35,21 +89,67 @@ class ThermoLink:
         components: list
     ) -> dict:
         '''
-        Sets a datasource
+        Extracts and constructs a unified data source from thermodb components.
+
+        This method processes thermodynamic properties from specified components in the
+        thermodb, applies symbol renaming rules, and returns a unified data structure.
+        It handles multiple data types (TableData and TableMatrixData) and applies
+        component-specific rules for symbol mapping.
 
         Parameters
         ----------
         thermodb : dict
-            thermodb
+            Dictionary containing thermodynamic database components. Each component
+            should be a thermodb object with properties accessible via check_properties()
+            and select() methods.
         thermodb_rule : dict
-            thermodb rule
+            Dictionary of rules for symbol renaming, structured as:
+            {
+                'COMPONENT_ID': {
+                    'DATA': {
+                        'old_symbol': 'new_symbol',
+                        ...
+                    }
+                },
+                ...
+            }
+            If a component is not in this dictionary, no renaming is applied.
         components : list
-            list of components
+            List of component identifiers (strings) to process from thermodb.
+            Only components present in both thermodb and this list are processed.
 
         Returns
         -------
         datasource : dict
-            datasource
+            A nested dictionary with structure:
+            {
+                'COMPONENT_ID': {
+                    'symbol': property_object,
+                    ...
+                },
+                ...
+            }
+            Where property_object is a TableData or TableMatrixData object from pyThermoDB.
+
+        Raises
+        ------
+        Exception
+            If building the datasource fails, including cases where:
+            - Matrix symbol is None when processing TableMatrixData
+            - Unknown data types are encountered (logged as warning)
+
+        Notes
+        -----
+        - Components not present in thermodb are silently skipped
+        - Symbol renaming is applied based on both direct symbol names and column headers
+        - None and 'None' string values are filtered out during processing
+        - Logging is used to track warnings and informational messages
+        - This is a private method intended for internal use within ThermoLink
+
+        See Also
+        --------
+        _set_equationsource : For extracting equation sources
+        _set_constantssource : For extracting constant sources
         '''
         try:
             # datasource
@@ -118,7 +218,10 @@ class ThermoLink:
                             # SECTION: looking through each symbol
                             for symbol in symbols:
                                 # check
-                                if symbol is not None and symbol != 'None':
+                                if (
+                                    symbol is not None and
+                                    symbol != 'None'
+                                ):
                                     # ! symbol
                                     symbol = str(symbol).strip()
 
@@ -214,21 +317,71 @@ class ThermoLink:
         components: list
     ) -> dict:
         '''
-        Sets equation source
+        Extracts and constructs a unified equation source from thermodb components.
+
+        This method processes thermodynamic equations from specified components in the
+        thermodb, applies symbol renaming rules, and returns a unified equation structure.
+        It handles equation identification, symbol extraction, and rule-based transformations
+        to map equations to their appropriate symbolic representations.
 
         Parameters
         ----------
         thermodb : dict
-            thermodb
+            Dictionary containing thermodynamic database components. Each component
+            should be a thermodb object with equations accessible via check_functions()
+            and select() methods.
         thermodb_rule : dict
-            thermodb rule
+            Dictionary of rules for equation symbol renaming, structured as:
+            {
+                'COMPONENT_ID': {
+                    'EQUATIONS': {
+                        'equation_identifier': 'new_symbol',
+                        ...
+                    }
+                },
+                ...
+            }
+            If a component is not in this dictionary, original equation identifiers
+            are used (unless modified by return_identifier logic).
         components : list
-            list of components
+            List of component identifiers (strings) to process from thermodb.
+            Only components present in both thermodb and this list are processed.
 
         Returns
         -------
         datasource : dict
-            datasource
+            A nested dictionary with structure:
+            {
+                'COMPONENT_ID': {
+                    'symbol': equation_object,
+                    ...
+                },
+                ...
+            }
+            Where equation_object is a TableEquation object from pyThermoDB.
+
+        Raises
+        ------
+        Exception
+            If building the equation source fails during processing.
+
+        Notes
+        -----
+        - Equations are identified using equation identifiers from thermodb
+        - Symbol mapping follows this priority:
+          1. Direct equation_identifier match in rules
+          2. Returned symbol match in rule values
+          3. Return identifier (if original_equation_label is False and single return)
+          4. Original equation identifier (if no rules apply)
+        - Only TableEquation objects are processed; other types trigger warnings
+        - Components not present in thermodb are silently skipped
+        - This is a private method intended for internal use within ThermoLink
+        - original_equation_label attribute controls symbol naming behavior
+
+        See Also
+        --------
+        _set_datasource : For extracting data sources
+        _set_constantssource : For extracting constant sources
         '''
         try:
             # datasource
