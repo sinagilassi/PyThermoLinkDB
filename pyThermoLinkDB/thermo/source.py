@@ -96,6 +96,7 @@ class Source:
 
         # NOTE: source
         if model_source is None:
+            # >>> set to None
             self._datasource = None
             self._equationsource = None
             self._constantssource = None
@@ -104,19 +105,19 @@ class Source:
             self._equationsource_symbol = None
             self._constantssource_symbol = None
         else:
-            # >> extract
+            # >>> extract
             model_source_dict = {
                 DATASOURCE: model_source.data_source,
                 EQUATIONSOURCE: model_source.equation_source,
                 CONSTANTSSOURCE: model_source.constants_source or {}
             }
 
-            # set symbols
+            # ! set symbols
             self._datasource_symbol = model_source.data_symbols
             self._equationsource_symbol = model_source.equation_symbols
             self._constantssource_symbol = model_source.constants_symbols
 
-            # set source
+            # ! set source
             (
                 self._datasource,
                 self._equationsource,
