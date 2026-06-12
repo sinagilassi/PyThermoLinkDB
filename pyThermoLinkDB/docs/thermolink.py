@@ -550,6 +550,12 @@ class ThermoLink:
             if isinstance(constants_thermodb, CompBuilder):
                 # ! get constants ids
                 constants_src = constants_thermodb.check_constants()
+                # >> check
+                if len(constants_src) == 0:
+                    logger.warning(
+                        f'No constants found in thermodb for {constants_id}, skipping constants source extraction.'
+                    )
+                    return {}
 
                 # ! get constants labels
                 constants_labels: List[
@@ -562,10 +568,14 @@ class ThermoLink:
                     )
                     return {}
 
-                # check if constants_ids is not empty
-                if len(constants_src) == 0:
+                # ! get constants identifiers
+                constants_identifiers: List[
+                    Dict[str, List[str]]
+                ] | None = constants_thermodb.all_constants_identifiers()
+                # >> check
+                if constants_identifiers is None:
                     logger.warning(
-                        f'No constants found in thermodb for {constants_id}, skipping constants source extraction.'
+                        f'No constants identifiers found in thermodb for {constants_id}, skipping constants source extraction.'
                     )
                     return {}
 
@@ -578,7 +588,11 @@ class ThermoLink:
                 # ! iterate through constants source
                 for index, const_tb in enumerate(constants_src.values()):
                     # load all labels
-                    labels_ = constants_labels[index].values()
+                    identifiers_ = constants_identifiers[index]
+                    # get first key of labels_ dict (description)
+                    key_ = list(identifiers_.keys())[0]
+                    # get labels list
+                    labels_ = identifiers_[key_]
 
                     # check
                     if _rules:
