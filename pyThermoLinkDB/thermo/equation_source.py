@@ -318,6 +318,7 @@ class EquationSourceCore:
         """
         return self._return_identifiers
 
+    # SECTION: get equation from source
     def _get_equation_from_source(self) -> ComponentEquationSource:
         """
         Retrieve the component equation for the component from the source.
@@ -334,7 +335,7 @@ class EquationSourceCore:
         """
         try:
             # SECTION: get equations for component
-            equations = self.source.eq_builder(
+            equations: Dict[str, ComponentEquationSource] | None = self.source.eq_builder(
                 components=[self.component],
                 prop_name=self.prop_name,
                 component_key=cast(ComponentKey, self.component_key)
@@ -368,6 +369,7 @@ class EquationSourceCore:
             )
             raise e
 
+    # SECTION: get inputs
     def get_inputs(self):
         """
         Get the input arguments for the equation as dictionary containing variable name and unit.
@@ -391,6 +393,7 @@ class EquationSourceCore:
 
         return res
 
+    # SECTION: calculate
     def calc(
         self,
         **input_args
