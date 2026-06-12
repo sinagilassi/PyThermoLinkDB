@@ -18,6 +18,7 @@ from pythermodb_settings.models import (
 )
 # local
 from .docs import ThermoDBHub
+from .docs.thermoutils import ThermoUtils
 from .models import (
     ModelSource,
     ComponentModelSource,
@@ -1115,7 +1116,7 @@ def build_model_source(
             constants_source={}
         )
 
-        # iterate over components model source
+        # NOTE: iterate over components model source
         for component_model_source in source:
             # >> check type
             if (
@@ -1149,6 +1150,27 @@ def build_model_source(
                     "Each item in source must be a ComponentModelSource, MixtureModelSource, or ConstantsModelSource object.")
                 raise ValueError(
                     "Each item in source must be a ComponentModelSource, MixtureModelSource, or ConstantsModelSource object.")
+
+        # NOTE: symbol configurations
+        # ! datasource symbol configs
+        data_symbols = ThermoUtils().extract_data_symbols(
+            model_source.data_source
+        )
+
+        # ! equationsource symbol configs
+        equation_symbols = ThermoUtils().extract_equation_symbols(
+            model_source.equation_source
+        )
+
+        # ! constants source symbol configs
+        constants_symbols = ThermoUtils().extract_constants_symbols(
+            model_source.constants_source or {}
+        )
+
+        # >>> update model source symbol configs
+        model_source.data_symbols = data_symbols
+        model_source.equation_symbols = equation_symbols
+        model_source.constants_symbols = constants_symbols
 
         return model_source
     except Exception as e:
