@@ -183,16 +183,3 @@ model_source: ModelSource = build_model_source(
 # build datasource & equationsource
 datasource = model_source.data_source
 equationsource = model_source.equation_source
-datasource_symbol = model_source.data_symbols
-equationsource_symbol = model_source.equation_symbols
-
-# ====================================================
-# SECTION: model source
-# ====================================================
-model_source: ModelSource = ModelSource(
-    data_source=datasource,
-    equation_source=equationsource,
-    data_symbols=datasource_symbol,
-    equation_symbols=equationsource_symbol,
-)
-print(model_source)
