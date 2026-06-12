@@ -576,9 +576,9 @@ class ThermoLink:
                 )
 
                 # ! iterate through constants source
-                for index, (lbs, const_tb) in enumerate(zip(constants_labels, constants_src.values())):
+                for index, const_tb in enumerate(constants_src.values()):
                     # load all labels
-                    labels_ = list(lbs.values())
+                    labels_ = constants_labels[index].values()
 
                     # check
                     if _rules:
@@ -586,12 +586,8 @@ class ThermoLink:
                         for label in labels_:
                             # check if label is in rules values
                             if label in _rules.values():
-                                # find key by value
-                                keys_ = list(_rules.keys())
-                                values_ = list(_rules.values())
-                                idx_ = values_.index(label)
                                 # set symbol
-                                symbol = str(_rules[keys_[idx_]])
+                                symbol = label
 
                                 # LINK: update constantssource with symbol and constant table
                                 constantssource[symbol] = const_tb.get_constant(
