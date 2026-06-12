@@ -1,6 +1,6 @@
 # import libs
 import logging
-from typing import Literal, Optional, Tuple
+from typing import Optional
 from pyThermoLinkDB.models import ModelSource
 from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import set_component_id
@@ -64,6 +64,8 @@ def mkeqs(
     except Exception as e:
         logger.error(f"Error creating equation: {e}")
         return None
+
+# NOTE: Single Equation Maker
 
 
 def mkeq(
