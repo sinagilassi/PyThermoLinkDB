@@ -1100,7 +1100,7 @@ def build_model_source(
     Parameters
     ----------
     source: List[ComponentModelSource] | List[MixtureModelSource] | List[ConstantsModelSource]
-        List of ComponentModelSource/MixtureModelSource object containing data source and equation source
+        List of ComponentModelSource/MixtureModelSource object containing data source, equation source, and constants source
 
     Returns
     -------
