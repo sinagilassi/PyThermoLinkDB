@@ -56,6 +56,12 @@ ConstantsSource = Dict[str, Any]
 # NOTE: symbol
 # ?? data source symbol
 DataSymbol = Dict[str, Dict[str, str]]
+# ?? defines as:
+data_symbol_example = {
+    'CO2-g': {
+
+    }
+}
 
 
 # NOTE: equation symbol model
@@ -71,7 +77,7 @@ EquationSymbol = Dict[str, EqSym]
 # ?? constants source symbol
 ConstantsSymbol = Dict[str, Dict[str, Any]]
 
-# NOTE: component model source
+# SECTION: component model source
 
 
 class ComponentModelSource(BaseModel):
@@ -112,7 +118,7 @@ class ComponentModelSource(BaseModel):
     )
 
 
-# NOTE: mixture model source
+# SECTION: mixture model source
 class MixtureModelSource(BaseModel):
     '''
     Mixture model source containing data source and equation source for multiple components
@@ -151,7 +157,7 @@ class MixtureModelSource(BaseModel):
         extra="allow"
     )
 
-# NOTE: Constants model source
+# SECTION: Constants model source
 
 
 class ConstantsModelSource(BaseModel):
@@ -174,7 +180,7 @@ class ConstantsModelSource(BaseModel):
     )
 
 
-# NOTE: model source
+# SECTION: model source
 class ModelSource(BaseModel):
     '''
     Model source containing data source and equation source for multiple components
