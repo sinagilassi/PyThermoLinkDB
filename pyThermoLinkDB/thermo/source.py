@@ -253,6 +253,7 @@ class Source:
             logger.error(f"Setting source failed: {e}")
             return None, None, None
 
+    # SECTION: Extractors and helpers
     def eq_extractor(
         self,
         component_id: str,
@@ -295,6 +296,7 @@ class Source:
             logger.error(f"Equation extraction failed: {e}")
             return None
 
+    # SECTION: component equation extractor
     def component_eq_extractor(
         self,
         component_id: str
@@ -327,6 +329,7 @@ class Source:
             logger.error(f"Component equation extraction failed: {e}")
             return None
 
+    # SECTION: data extractor
     def data_extractor(
             self,
             component_id: str,
@@ -377,6 +380,40 @@ class Source:
             logger.error(f"Data extraction failed: {e}")
             return None
 
+    # SECTION: constants extractor
+    def constants_extractor(
+            self,
+            constant_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts the constant from the model source.
+
+        Parameters
+        ----------
+        constant_name : str
+            The name of the constant to extract.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted constant.
+        '''
+        try:
+            if self.constantssource is None:
+                return None
+
+            # NOTE: check constant
+            if constant_name not in self.constantssource.keys():
+                logger.error(
+                    f"Constant '{constant_name}' not found in model constants source.")
+                return None
+
+            return self.constantssource[constant_name]
+        except Exception as e:
+            logger.error(f"Constant extraction failed: {e}")
+            return None
+
+    # SECTION: component data extractor
     def component_data_extractor(
             self,
             component_id: str
@@ -409,6 +446,7 @@ class Source:
             logger.error(f"Component data extraction failed: {e}")
             return None
 
+    # SECTION: args checker and builder
     def check_args(
         self,
         component_id: str,
@@ -464,6 +502,7 @@ class Source:
         except Exception as e:
             raise Exception('Finding args failed!, ', e)
 
+    # SECTION: args builder
     def build_args(
         self,
         component_id: str,
@@ -574,6 +613,7 @@ class Source:
         except Exception as e:
             raise Exception('Building args failed!, ', e)
 
+    # SECTION: equation builder
     def eq_builder(
         self,
         components: List[Component],
@@ -737,6 +777,7 @@ class Source:
         # res
         return eq_src_comp
 
+    # SECTION: equation executor
     def exec_eq(
         self,
         components: List[Component],
@@ -873,6 +914,7 @@ class Source:
             logger.error(f"Executing equation failed: {e}")
             return None
 
+    # SECTION: get component data
     def get_component_data(
         self,
         component_id: str,
@@ -954,6 +996,7 @@ class Source:
             logger.error(f"Getting component data failed: {e}")
             return None
 
+    # SECTION: check property availability
     def is_prop_available(
         self,
         component_id: str,
@@ -1002,6 +1045,7 @@ class Source:
             logger.error(f"Checking property availability failed: {e}")
             return False
 
+    # SECTION: check property equation availability
     def is_prop_eq_available(
         self,
         component_id: str,
@@ -1040,6 +1084,7 @@ class Source:
                 f"Checking property equation availability failed: {e}")
             return False
 
+    # SECTION: check property data availability
     def is_prop_data_available(
         self,
         component_id: str,
@@ -1075,4 +1120,37 @@ class Source:
             return False
         except Exception as e:
             logger.error(f"Checking property data availability failed: {e}")
+            return False
+
+    # SECTION: check constants availability
+    def is_constant_available(
+        self,
+        constant_name: str
+    ) -> bool:
+        '''
+        Check if the constant is available in the constantssource.
+
+        Parameters
+        ----------
+        constant_name : str
+            The name of the constant to check.
+
+        Returns
+        -------
+        bool
+            True if the constant is available, False otherwise.
+        '''
+        try:
+            # SECTION: check constantssource
+            if (
+                self.constantssource is not None and
+                isinstance(self.constantssource, dict)
+            ):
+                # ! check constant in constantssource
+                if constant_name in self.constantssource.keys():
+                    return True
+
+            return False
+        except Exception as e:
+            logger.error(f"Checking constant availability failed: {e}")
             return False
