@@ -34,7 +34,9 @@ from .utils import (
     normalize_rules,
     look_up_mixture_rules,
     look_up_constants_rules,
-    look_up_default_rules
+    look_up_default_rules,
+    combine_rules_into_constants_key,
+    extract_labels_from_constants_rules
 )
 from .config import DEFAULT_RULES_KEY
 # ! deps
@@ -941,9 +943,14 @@ def build_constants_model_source(
 
         # NOTE: constant rules
         # create dict to hold constant rules
-        constant_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
-            'Constants': reference_rules
-        }
+        if rules is None:
+            constant_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
+                'Constants': reference_rules
+            }
+        else:
+            constant_rules_dict: Dict[str, Dict[str, ComponentRule]] = {
+                'Constants': {}
+            }
 
         # SECTION: check rules
         if rules:
@@ -992,11 +999,30 @@ def build_constants_model_source(
             all_empty = True
 
             for key in constant_rules_dict:
+                # skip 'Constants' key
+                if key == 'Constants':
+                    continue
+
+                # check if rules for this constants id is not empty
                 if len(constant_rules_dict[key]) > 0:
                     all_empty = False
                     break
 
-            if all_empty:
+            # ! combine all rules into 'Constants' key if all other keys are empty
+            combined_rules = combine_rules_into_constants_key(
+                rules=constant_rules_dict
+            )
+
+            # >> set combined rules to 'Constants' key
+            if combined_rules:
+                constant_rules_dict = {
+                    'Constants': combined_rules['Constants']
+                }
+
+            if (
+                all_empty is True and
+                combined_rules is None
+            ):
                 # ! >> by default rules key
                 default_rules_ = look_up_constants_rules(
                     constants_id='ALL',
@@ -1004,7 +1030,9 @@ def build_constants_model_source(
                 )
 
                 if default_rules_:
-                    constant_rules_dict['Constants'] = default_rules_
+                    constant_rules_dict = {
+                        'Constants': default_rules_
+                    }
                 else:
                     # log
                     logger.warning(
@@ -1012,9 +1040,9 @@ def build_constants_model_source(
                     )
 
             # SECTION: extract labels
-            constants_rules_labels = extract_labels_from_rules(
+            constants_rules_labels = extract_labels_from_constants_rules(
                 constant_rules_dict['Constants']
-            ) if constant_rules_dict['Constants'] else []
+            ) if constant_rules_dict['Constants'] else {}
 
             # SECTION: check labels
             # check label results
