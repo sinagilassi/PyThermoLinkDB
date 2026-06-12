@@ -7,7 +7,7 @@ from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import set_component_id, build_component_mapper, is_component_key
 from pyThermoLinkDB.models import ModelSource
 # local
-from ..config.constants import DATASOURCE, EQUATIONSOURCE
+from ..config.constants import DATASOURCE, EQUATIONSOURCE, CONSTANTSSOURCE
 from ..models.component_models import ComponentEquationSource
 
 # logger
@@ -98,24 +98,29 @@ class Source:
         if model_source is None:
             self._datasource = None
             self._equationsource = None
+            self._constantssource = None
             # symbols
             self._datasource_symbol = None
             self._equationsource_symbol = None
+            self._constantssource_symbol = None
         else:
             # >> extract
             model_source_dict = {
                 DATASOURCE: model_source.data_source,
-                EQUATIONSOURCE: model_source.equation_source
+                EQUATIONSOURCE: model_source.equation_source,
+                CONSTANTSSOURCE: model_source.constants_source or {}
             }
 
             # set symbols
             self._datasource_symbol = model_source.data_symbols
             self._equationsource_symbol = model_source.equation_symbols
+            self._constantssource_symbol = model_source.constants_symbols
 
-            # reset
+            # set source
             (
                 self._datasource,
-                self._equationsource
+                self._equationsource,
+                self._constantssource
             ) = self.set_source(
                 model_source=model_source_dict
             )
@@ -156,6 +161,22 @@ class Source:
             return {}
         return self._equationsource
 
+    # ! constantssource
+    @property
+    def constantssource(self) -> Dict[str, Any]:
+        '''
+        Get the constantssource property.
+
+        Returns
+        -------
+        dict
+            The constantssource dictionary.
+        '''
+        # NOTE: check if model source is valid
+        if self._constantssource is None:
+            return {}
+        return self._constantssource
+
     # ! component keys
     @property
     def component_keys(self) -> List[ComponentKey]:
@@ -191,7 +212,10 @@ class Source:
         self._component_keys = keys
 
     # SECTION: Methods
-    def set_source(self, model_source: Dict[str, Any]):
+    def set_source(
+            self,
+            model_source: Dict[str, Any]
+    ):
         '''
         Set the model source.
 
@@ -206,22 +230,27 @@ class Source:
             A tuple containing the datasource and equationsource dictionaries.
             - datasource : dict
             - equationsource : dict
+            - constantssource : dict
         '''
         try:
             # NOTE: source
-            # datasource
+            # ! datasource
             _datasource = {
             } if model_source is None else model_source[DATASOURCE]
 
-            # equationsource
+            # ! equationsource
             _equationsource = {
             } if model_source is None else model_source[EQUATIONSOURCE]
 
+            # ! constantssource
+            _constantssource = {
+            } if model_source is None else model_source[CONSTANTSSOURCE]
+
             # res
-            return _datasource, _equationsource
+            return _datasource, _equationsource, _constantssource
         except Exception as e:
             logger.error(f"Setting source failed: {e}")
-            return None, None
+            return None, None, None
 
     def eq_extractor(
         self,
