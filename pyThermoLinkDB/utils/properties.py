@@ -77,7 +77,7 @@ def extract_labels_from_rules(
     The rules dictionary is defined as:
 
     ```python
-    component_rules = {
+    custom_rules = {
         "DATA":
             {
                 "property1": "label1",
@@ -87,8 +87,12 @@ def extract_labels_from_rules(
             {
                 "property3": "label3",
                 "property4": "label4"
-            }
-        "}
+            },
+        "CONSTANTS": {
+            "property5": "label5",
+            "property6": "label6"
+        }
+    }
     ```
     '''
     labels = set()
@@ -115,6 +119,75 @@ def extract_labels_from_rules(
     except Exception as e:
         logger.error(f"Error in extract_labels_from_rules: {e}")
         raise Exception(f"Error in extract_labels_from_rules: {e}")
+
+# NOTE: extract label from constants rules
+
+
+def extract_labels_from_constants_rules(
+    rules: Dict[str, ComponentRule]
+) -> List[str]:
+    '''
+    Extract labels from constants rules
+
+    Parameters
+    ----------
+    rules: Dict[str, ComponentRule]
+        Rules dictionary
+
+    Returns
+    -------
+    List[str]
+        List of labels
+
+    Notes
+    -----
+    The rules dictionary is defined as:
+    custom_rules = {
+        "CONSTANTS": {
+            "property5": "label5",
+            "property6": "label6"
+        }
+    }
+    '''
+    labels = set()
+
+    # NOTE: validation
+    # check if rules is empty
+    if not rules:
+        logger.warning(
+            "Rules is empty. Cannot extract labels from constants rules.")
+        return []
+
+    # check if rules contains CONSTANTS_KEY
+    if CONSTANTS_KEY not in rules:
+        logger.warning(
+            f"Rules does not contain '{CONSTANTS_KEY}' key. Cannot extract labels from constants rules.")
+        return []
+
+    try:
+        for prop, label in rules.items():
+            # prop should be in CONSTANTS_KEY
+            if prop != CONSTANTS_KEY:
+                logger.warning(
+                    f"Invalid prop in constants rules: {prop}. It should be 'CONSTANTS'.")
+                continue
+
+            # iterate over label
+            if isinstance(label, dict):
+                for prop_, label_ in label.items():
+                    # check label
+                    if isinstance(label_, str) and label_.strip():
+                        # save label
+                        labels.add(label_.strip())
+            else:
+                logger.warning(
+                    f"Invalid label for property '{prop}': {label}. It should be a non-empty string.")
+
+        return list(labels)
+    except Exception as e:
+        logger.error(f"Error in extract_labels_from_constants_rules: {e}")
+        raise Exception(f"Error in extract_labels_from_constants_rules: {e}")
+
 
 # SECTION: look up component rules
 
@@ -255,8 +328,8 @@ def look_up_constants_rules(
         # NOTE: look up rules (case insensitive)
         if constants_id.lower() in rules_keys_lower:
             reference_rules = rules[rules_keys_lower[constants_id.lower()]]
-        elif DEFAULT_RULES_KEY.lower() in rules_keys_lower:
-            reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
+        # elif DEFAULT_RULES_KEY.lower() in rules_keys_lower:
+        #     reference_rules = rules[rules_keys_lower[DEFAULT_RULES_KEY.lower()]]
         else:
             reference_rules = None
 
@@ -276,6 +349,119 @@ def look_up_constants_rules(
     except Exception as e:
         logger.error(f"Error in look_up_constants_rules: {e}")
         raise Exception(f"Error in look_up_constants_rules: {e}")
+
+# NOTE: combine all rules into 'Constants' key taken from other keys if all other keys are empty
+
+
+def combine_rules_into_constants_key(
+    rules: Dict[str, Dict[str, ComponentRule]]
+) -> Dict[str, Dict[str, ComponentRule]] | None:
+    '''
+    Combine all rules into 'Constants' key if all other keys are empty.
+
+    Parameters
+    ----------
+    rules: Dict[str, Dict[str, ComponentRule]]
+        Rules dictionary
+
+
+    Returns
+    -------
+    Dict[str, Dict[str, ComponentRule]] | None
+        New rules dictionary with only 'Constants' key if all other keys are empty, otherwise None
+
+    Notes
+    -----
+    The rules dictionary is defined as:
+
+    ```python
+
+    rules = {
+        "ALL": {
+            "DATA":
+                {
+                    "property1": "label1",
+                    "property2": "label2"
+                },
+            "EQUATIONS":
+                {
+                    "property3": "label3",
+                    "property4": "label4"
+                }
+            },
+            "CONSTANTS": {
+                "property5": "label5",
+                "property6": "label6"
+            }
+        },
+        "Constants-id1": {
+            "CONSTANTS":
+                {
+                    "property5": "label5",
+                    "property6": "label6"
+                }
+            },
+        "Constants-id2": {
+            ...
+        }
+    }
+    ```
+
+    ```'''
+    try:
+        # check if rules is empty
+        if not rules:
+            return None
+
+        # check if all keys except 'Constants' are not empty
+        all_empty = False
+
+        for key in rules:
+            if key == 'Constants':
+                continue
+
+            if len(rules[key]) == 0:
+                all_empty = True
+                break
+
+        # ! combine all rules into 'Constants' key if all other keys are not empty
+        if not all_empty:
+            # create new rules dictionary with only 'Constants' key
+            new_rules = {
+                'Constants': {}
+            }
+
+            # rules
+            rules_collection = {}
+
+            for key in rules:
+                if key == 'Constants':
+                    continue
+
+                # set
+                rule_ = rules[key]
+
+                for prop, label in rule_.items():
+                    # >> only CONSTANTS_KEY
+                    if prop == CONSTANTS_KEY:
+                        # iterate over label
+                        for prop_, label_ in rule_[prop].items():
+                            # add to rules_collection
+                            rules_collection[prop_] = label_
+
+            # add to new rules (overwrite if already exists)
+            new_rules['Constants'] = {
+                'CONSTANTS': rules_collection
+            }
+
+            return new_rules
+
+        # return None if not all_empty
+        return None
+    except Exception as e:
+        logger.error(f"Error in combine_rules_into_constants_key: {e}")
+        raise Exception(f"Error in combine_rules_into_constants_key: {e}")
+
 
 # SECTION: look up default rules
 
