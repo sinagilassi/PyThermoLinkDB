@@ -34,6 +34,15 @@ class ThermoUtils:
             The extracted data symbols.
         '''
         try:
+            # NOTE: validation
+            if (
+                not datasource or
+                len(datasource) == 0
+            ):
+                logger.warning(
+                    "No data source provided for extracting symbols.")
+                return None
+
             # NOTE: extract symbols
             data_symbols = {}
             for comp, prop_dict in datasource.items():
@@ -75,6 +84,15 @@ class ThermoUtils:
             The extracted equation symbols.
         '''
         try:
+            # NOTE: validation
+            if (
+                not equationsource or
+                len(equationsource) == 0
+            ):
+                logger.warning(
+                    "No equation source provided for extracting symbols.")
+                return None
+
             # NOTE: extract symbols
             equation_symbols = {}
             for comp, eq_dict in equationsource.items():
@@ -113,4 +131,63 @@ class ThermoUtils:
             return equation_symbols
         except Exception as e:
             raise Exception(
-                f"Error in extracting equation symbols: {e}") from e
+                f"Error in extracting equation symbols: {e}"
+            ) from e
+
+    def extract_constants_symbols(
+            self,
+            constants_source: Dict
+    ) -> Optional[Dict[str, DataSymbol]]:
+        '''
+        Extract constants symbols from the constants source.
+
+        Parameters
+        ----------
+        constants_source : dict
+            The constants source dictionary.
+
+        Returns
+        -------
+        constants_symbols : Optional[Dict[str, DataSymbol]]
+            The extracted constants symbols.
+        '''
+        try:
+            # NOTE: validation
+            if (
+                not constants_source or
+                len(constants_source) == 0
+            ):
+                logger.warning(
+                    "No constants source provided for extracting symbols.")
+                return None
+
+            # NOTE: extract symbols
+            constants_symbols = {}
+            for const_name, const_info in constants_source.items():
+                # >> check const info type
+                if (
+                    isinstance(const_info, dict) and
+                    'symbol' in const_info
+                ):
+                    # set
+                    constants_symbols[const_name] = {
+                        'name': const_info.get('name', None) or const_info.get('constant_name', None) or 'not found',
+                        'symbol': const_info['symbol'],
+                        'unit': const_info.get('unit', '-')
+                    }
+
+            # >> check
+            if (
+                not constants_symbols or
+                len(constants_symbols) == 0
+            ):
+                logger.warning(
+                    "No constants symbols found in the constants source.")
+                return None
+
+            # res
+            return constants_symbols
+        except Exception as e:
+            raise Exception(
+                f"Error in extracting constants symbols: {e}"
+            ) from e
