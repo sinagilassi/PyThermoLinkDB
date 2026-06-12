@@ -1092,14 +1092,14 @@ def build_constants_model_source(
 
 
 def build_model_source(
-    source: List[ComponentModelSource] | List[MixtureModelSource]
+    source: List[ComponentModelSource] | List[MixtureModelSource] | List[ConstantsModelSource]
 ) -> ModelSource:
     '''
     Build model source from list of component model source
 
     Parameters
     ----------
-    source: List[ComponentModelSource] | List[MixtureModelSource]
+    source: List[ComponentModelSource] | List[MixtureModelSource] | List[ConstantsModelSource]
         List of ComponentModelSource/MixtureModelSource object containing data source and equation source
 
     Returns
@@ -1112,19 +1112,43 @@ def build_model_source(
         model_source = ModelSource(
             data_source={},
             equation_source={},
+            constants_source={}
         )
 
         # iterate over components model source
         for component_model_source in source:
-            # add to model source
-            # >> data source
-            model_source.data_source.update(
-                component_model_source.data_source
-            )
-            # >> equation source
-            model_source.equation_source.update(
-                component_model_source.equation_source
-            )
+            # >> check type
+            if (
+                isinstance(component_model_source, ComponentModelSource) or
+                isinstance(component_model_source, MixtureModelSource)
+            ):
+                # ! for ComponentModelSource and MixtureModelSource
+                # add to model source
+                # >> data source
+                model_source.data_source.update(
+                    component_model_source.data_source
+                )
+                # >> equation source
+                model_source.equation_source.update(
+                    component_model_source.equation_source
+                )
+            elif isinstance(component_model_source, ConstantsModelSource):
+                # ! for ConstantsModelSource
+                # >> check if constants source is not empty
+                if (
+                    model_source.constants_source is not None and
+                    isinstance(model_source.constants_source, dict)
+                ):
+                    # add to model source
+                    # >> constants source
+                    model_source.constants_source.update(
+                        component_model_source.constants_source
+                    )
+            else:
+                logger.error(
+                    "Each item in source must be a ComponentModelSource, MixtureModelSource, or ConstantsModelSource object.")
+                raise ValueError(
+                    "Each item in source must be a ComponentModelSource, MixtureModelSource, or ConstantsModelSource object.")
 
         return model_source
     except Exception as e:
