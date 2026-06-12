@@ -9,6 +9,7 @@ from ..thermo import Source
 from .equation_sources import EquationSourcesCore
 from .equation_source import EquationSourceCore
 from .data_source import DataSourceCore
+from .constants_source import ConstantsSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -190,4 +191,42 @@ def mkdt(
         )
     except Exception as e:
         logger.error(f"Error creating data source: {e}")
+        return None
+
+# SECTION: Constants Source Maker
+
+
+def mkct(
+    model_source: ModelSource,
+) -> Optional[ConstantsSourceCore]:
+    """
+    Make a constants source core.
+
+    Parameters
+    ----------
+    model_source : ModelSource
+        The source containing data for calculations.
+
+    Returns
+    -------
+    Optional[ConstantsSourceCore]
+        A ConstantsSourceCore object if the component constants are found; otherwise, None.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+
+        # SECTION: Prepare source
+        Source_ = Source(
+            model_source=model_source,
+        )
+
+        # SECTION: Create ConstantsSourceCore object
+        return ConstantsSourceCore(
+            source=Source_,
+        )
+    except Exception as e:
+        logger.error(f"Error creating constants source: {e}")
         return None
