@@ -11,7 +11,7 @@ from pyThermoLinkDB import (
     build_model_source
 )
 from pyThermoLinkDB.models import ComponentModelSource, ModelSource, ConstantsModelSource
-from pythermodb_settings.models import Component, Pressure, Temperature, CustomProp, Volume, CustomProperty
+from pythermodb_settings.models import Component, Pressure, Temperature, CustomProp, Volume, CustomProperty, ComponentRule
 from pyThermoDB import ComponentThermoDB, ConstantsThermoDB
 from pyThermoDB import (
     build_component_thermodb_from_reference,
@@ -189,6 +189,7 @@ if constants_thermodb is None:
 print(constants_thermodb)
 
 # NOTE: build model source with constants thermodb
+# ! no rules
 constants_model_source: ConstantsModelSource = build_constants_model_source(
     constants_thermodb=constants_thermodb,
     rules=None,
@@ -196,16 +197,66 @@ constants_model_source: ConstantsModelSource = build_constants_model_source(
 # >> log
 print(constants_model_source)
 
+# ! define custom rules
+thermodb_rules: Dict[str, Dict[str, ComponentRule]] = {
+    'ALL': {
+        'CONSTANTS': {
+            'Universal Gas Constant': 'R',
+            'Constant1': 'C1',
+            'total heat capacity of ideal gas': 'Cp_IG',
+            'enthalpy of reaction': 'dH_rxn',
+            'binary parameter': 'Xb',
+            'custom constants': 'X'
+        }
+    },
+    'CUSTOM-REF-1::Custom-Constants': {
+        'CONSTANTS': {
+            'Universal Gas Constant': 'R',
+            'Constant1': 'C1',
+        }
+    },
+    'CUSTOM-REF-1::Custom-Constants-2': {
+        'CONSTANTS': {
+            'total heat capacity of ideal gas': 'Cp_IG',
+            'enthalpy of reaction': 'dH_rxn',
+        }
+    }
+
+}
+# ! with rules
+constants_model_source_with_rules: ConstantsModelSource = build_constants_model_source(
+    constants_thermodb=constants_thermodb,
+    rules=thermodb_rules
+)
+# >> log
+print(constants_model_source_with_rules)
+
 # ====================================================
 # SECTION: build model source
 # ====================================================
 # NOTE: all model source
+# ! with rules
 sources: list = [constants_model_source] + component_model_source
 
 # model source
 model_source: ModelSource = build_model_source(
     source=sources,
 )
+# >> log
+print(model_source)
+
+# ! with rules
+sources_with_rules: list = [
+    constants_model_source_with_rules
+] + component_model_source
+
+# model source
+model_source_with_rules: ModelSource = build_model_source(
+    source=sources_with_rules,
+)
+# >> log
+print(model_source_with_rules)
+
 # ====================================================
 # SECTION: THERMODB LINK CONFIGURATION
 # ====================================================
@@ -213,8 +264,3 @@ model_source: ModelSource = build_model_source(
 # build datasource & equationsource
 datasource = model_source.data_source
 equationsource = model_source.equation_source
-
-# ====================================================
-# SECTION: model source
-# ====================================================
-print(model_source)
