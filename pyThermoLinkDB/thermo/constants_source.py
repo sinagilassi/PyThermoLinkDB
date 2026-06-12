@@ -12,4 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 class ConstantsSourceCore:
-    pass
+
+    def __init__(
+            self,
+            source: Source,
+    ) -> None:
+        """
+        Initialize ConstantsSourceCore with a source.
+
+        Parameters
+        ----------
+        source : Source
+            The source containing data for calculations.
+        """
+        # NOTE: source
+        self.source = source
