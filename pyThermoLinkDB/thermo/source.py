@@ -65,6 +65,7 @@ class Source:
     - eq_builder(components, prop_name, component_key, **kwargs): construct a mapping of component_id -> ComponentEquationSource ready for execution.
     - exec_eq(components, eq_src_comp, args_values=None, component_key, **kwargs): execute previously built equations and return results.
     - eval_eq(components, eq_src_comp, args_values=None, **kwargs): alias for exec_eq.
+    - eq_eval(components, eq_src_comp, args_values=None, **kwargs): alias for exec_eq.
     - get_component_data(component_id, components, component_key): aggregate datasource and equationsource entries for a component.
     - is_prop_available / is_prop_eq_available / is_prop_data_available: availability checks across datasource and equationsource.
     - is_constant_available(constant_name): availability check across constantssource.
@@ -976,6 +977,26 @@ class Source:
 
     # SECTION: equation evaluator alias
     def eval_eq(
+        self,
+        components: List[Component],
+        eq_src_comp: Dict[str, ComponentEquationSource],
+        args_values: Optional[Dict[str, float]] = None,
+        **kwargs
+    ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
+        '''
+        Evaluate a previously built equation source.
+
+        Alias for exec_eq.
+        '''
+        return self.exec_eq(
+            components=components,
+            eq_src_comp=eq_src_comp,
+            args_values=args_values,
+            **kwargs
+        )
+
+    # SECTION: equation evaluator alias
+    def eq_eval(
         self,
         components: List[Component],
         eq_src_comp: Dict[str, ComponentEquationSource],
