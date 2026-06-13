@@ -18,47 +18,61 @@ logger = logging.getLogger(__name__)
 
 class Source:
     """
-    Manager for model "datasource" and "equationsource" payloads used by PyThermoDB and pyThermoLinkDB.
+    Manager for model "datasource", "equationsource", and "constantssource"
+    payloads used by PyThermoDB and pyThermoLinkDB.
 
     This class wraps an optional ModelSource and exposes a small API to:
-    - access datasource and equationsource dictionaries,
-    - extract individual records for components and properties,
+    - access datasource, equationsource, and constantssource dictionaries,
+    - extract individual records for components, properties, and constants,
     - validate/build runtime argument dictionaries for equation execution,
     - construct and execute equation callables (via eq_builder and exec_eq).
 
     Responsibilities
-    - Store and expose the parsed model_source payload (ModelSource.data_source and ModelSource.equation_source).
-    - Provide safe extractors for component/property-level data and equations.
+    - Store and expose the parsed model_source payload (ModelSource.data_source, ModelSource.equation_source, and ModelSource.constants_source).
+    - Provide safe extractors for component/property-level data, equations, and constants.
     - Provide helpers to build argument dictionaries from datasource entries and to validate argument requirements of TableEquation instances.
     - Provide higher-level equation-building (eq_builder) and execution (exec_eq) helpers that orchestrate TableEquation usage across components.
 
     Expected input structures (contracts)
-    - model_source.equation_source: dict mapping component_id -> prop_name -> TableEquation-like object (must expose .args, .arg_symbols, .returns .return_symbols, .eq_num, .body, .cal).
     - model_source.data_source: dict mapping component_id -> symbol -> value (basic property values used to populate equation inputs).
+    - model_source.equation_source: dict mapping component_id -> prop_name -> TableEquation-like object (must expose .args, .arg_symbols, .returns .return_symbols, .eq_num, .body, .cal).
+    - model_source.constants_source: dict mapping constant_name -> value (or metadata dict) for source-level constants.
 
     Attributes
     - model_source (Optional[ModelSource]): Original model source object passed to the constructor.
+    - component_key (ComponentKey): Default key format used to identify components.
     - _datasource (Optional[Dict[str, Any]]): Internal datasource dictionary or None when not provided.
     - _equationsource (Optional[Dict[str, Any]]): Internal equationsource dictionary or None when not provided.
+    - _constantssource (Optional[Dict[str, Any]]): Internal constantssource dictionary or None when not provided.
+    - _datasource_symbol (Optional[Dict[str, Any]]): Datasource symbol metadata from the model source.
+    - _equationsource_symbol (Optional[Dict[str, Any]]): Equationsource symbol metadata from the model source.
+    - _constantssource_symbol (Optional[Dict[str, Any]]): Constantssource symbol metadata from the model source.
 
     Public methods (high level)
-    - datasource / equationsource: properties returning the respective dict or an empty dict when not set.
-    - set_source(model_source): parse/assign internal datastructures.
+    - datasource / equationsource / constantssource: properties returning the respective dict or an empty dict when not set.
+    - component_keys: property returning the supported component key formats.
+    - set_source(model_source): parse/assign internal data, equation, and constants source dictionaries.
     - eq_extractor(component_id, prop_name): return a TableEquation for a component/property or None.
     - component_eq_extractor(component_id): return all equations for a component or None.
     - data_extractor(component_id, prop_name): return a datasource property dict or None.
+    - get_prop(component_id, prop_name): alias for data_extractor.
+    - constants_extractor(constant_name): return a constants source entry or None.
     - component_data_extractor(component_id): return datasource for a component or None.
+    - get_dt(component_id): alias for component_data_extractor.
+    - const(constant_name): alias for constants_extractor.
     - check_args(component_id, args): validate that required args exist in the datasource and return the subset used for building inputs.
     - build_args(component_id, args, ignore_symbols=None): construct an input mapping for an equation using the datasource and optional ignored symbols.
     - eq_builder(components, prop_name, component_key, **kwargs): construct a mapping of component_id -> ComponentEquationSource ready for execution.
     - exec_eq(components, eq_src_comp, args_values=None, component_key, **kwargs): execute previously built equations and return results.
+    - eval_eq(components, eq_src_comp, args_values=None, **kwargs): alias for exec_eq.
     - get_component_data(component_id, components, component_key): aggregate datasource and equationsource entries for a component.
     - is_prop_available / is_prop_eq_available / is_prop_data_available: availability checks across datasource and equationsource.
+    - is_constant_available(constant_name): availability check across constantssource.
 
     Notes
     - The Source class is an adapter/utility and does not perform unit conversions or semantic harmonization of values between different sources.
     - Many methods return None on error and log via the module logger; callers should check for None and handle errors appropriately.
-    - The class assumes a consistent structure for TableEquation-like objects and for datasource/equationsource dictionaries as described above.
+    - The class assumes a consistent structure for TableEquation-like objects and for datasource/equationsource/constantssource dictionaries as described above.
     """
 
     # NOTE: Attributes
@@ -382,6 +396,22 @@ class Source:
             logger.error(f"Data extraction failed: {e}")
             return None
 
+    # SECTION: get property alias
+    def get_prop(
+            self,
+            component_id: str,
+            prop_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get a specific component property from the datasource.
+
+        Alias for data_extractor.
+        '''
+        return self.data_extractor(
+            component_id=component_id,
+            prop_name=prop_name
+        )
+
     # SECTION: constants extractor
     def constants_extractor(
             self,
@@ -415,6 +445,20 @@ class Source:
             logger.error(f"Constant extraction failed: {e}")
             return None
 
+    # SECTION: const alias
+    def const(
+            self,
+            constant_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get a constant from the constants source.
+
+        Alias for constants_extractor.
+        '''
+        return self.constants_extractor(
+            constant_name=constant_name
+        )
+
     # SECTION: component data extractor
     def component_data_extractor(
             self,
@@ -447,6 +491,20 @@ class Source:
         except Exception as e:
             logger.error(f"Component data extraction failed: {e}")
             return None
+
+    # SECTION: get data alias
+    def get_dt(
+            self,
+            component_id: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get all datasource entries for a component.
+
+        Alias for component_data_extractor.
+        '''
+        return self.component_data_extractor(
+            component_id=component_id
+        )
 
     # SECTION: args checker and builder
     def check_args(
@@ -915,6 +973,26 @@ class Source:
         except Exception as e:
             logger.error(f"Executing equation failed: {e}")
             return None
+
+    # SECTION: equation evaluator alias
+    def eval_eq(
+        self,
+        components: List[Component],
+        eq_src_comp: Dict[str, ComponentEquationSource],
+        args_values: Optional[Dict[str, float]] = None,
+        **kwargs
+    ) -> Optional[Tuple[List[float], Dict[str, Any]]]:
+        '''
+        Evaluate a previously built equation source.
+
+        Alias for exec_eq.
+        '''
+        return self.exec_eq(
+            components=components,
+            eq_src_comp=eq_src_comp,
+            args_values=args_values,
+            **kwargs
+        )
 
     # SECTION: get component data
     def get_component_data(
