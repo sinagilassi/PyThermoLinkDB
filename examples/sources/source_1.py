@@ -33,11 +33,6 @@ print(thermodb_dir)
 datasource = model_source.data_source
 equationsource = model_source.equation_source
 constantssource = model_source.constants_source
-# symbols
-data_symbols = model_source.data_symbols
-equation_symbols = model_source.equation_symbols
-constants_symbols = model_source.constants_symbols
-
 # =======================================
 # SECTION: ✅ MAKE SOURCE
 # =======================================
@@ -50,6 +45,14 @@ source = Source(
 )
 print(source)
 
+# symbols
+data_symbols = source.data_symbols
+equation_symbols = source.equation_symbols
+constants_symbols = source.constants_symbols
+print(data_symbols)
+print(equation_symbols)
+print(constants_symbols)
+
 # NOTE: make equation source core
 eq_src = source.eq_builder(
     components=[CO2],
@@ -58,16 +61,47 @@ eq_src = source.eq_builder(
     component_keys=['Name-State', 'Formula-State', 'Name-Formula-State']
 )
 print(eq_src)
+# >> check
+if eq_src is None:
+    raise
+
+# NOTE: get equation symbols
+eq_symbols = source.component_eq_symbols('CO2-g')
+print("Equation symbols for")
+print(eq_symbols)
+
+# specific equation symbols
+eq_symbols_specific = source.eq_symbol('CO2-g', 'Cp_IG')
+print("Equation symbols for")
+print(eq_symbols_specific)
+
+# NOTE: evaluate equation source
+eq_res = source.eq_eval(
+    components=[CO2],
+    eq_src_comp=eq_src,
+    args_values={'T': 298.15}
+)
+print(eq_res)
 
 # NOTE: get component data
 comp_data = source.get_dt('CO2-g')
 print("Component data for")
 print(comp_data)
 
+# NOTE: get component data symbols
+comp_data_symbols = source.get_dt_symbols('CO2-g')
+print("Component data symbols for")
+print(comp_data_symbols)
+
 # specific data
 comp_data_specific = source.get_prop('CO2-g', 'EnFo_IG')
 print("Component data for")
 print(comp_data_specific)
+
+# specific data symbols
+comp_data_specific_symbol = source.get_prop_symbol('CO2-g', 'EnFo_IG')
+print("Component data symbols for")
+print(comp_data_specific_symbol)
 
 # NOTE: access to constants source
 # ! check availability of constant 'R'
@@ -76,3 +110,7 @@ print(f"Is constant 'R' available? {check_0}")
 # ! get constant 'R'
 const_0 = source.const('R')
 print(const_0)
+
+# ! get constant 'R' symbols
+const_0_symbol = source.const_symbol('R')
+print(const_0_symbol)
