@@ -23,6 +23,7 @@ class Source:
 
     This class wraps an optional ModelSource and exposes a small API to:
     - access datasource, equationsource, and constantssource dictionaries,
+    - access data, equation, and constants symbol metadata,
     - extract individual records for components, properties, and constants,
     - validate/build runtime argument dictionaries for equation execution,
     - construct and execute equation callables (via eq_builder and exec_eq).
@@ -50,16 +51,25 @@ class Source:
 
     Public methods (high level)
     - datasource / equationsource / constantssource: properties returning the respective dict or an empty dict when not set.
+    - datasource_symbols / equationsource_symbols / constantssource_symbols: properties returning source symbol metadata.
     - component_keys: property returning the supported component key formats.
     - set_source(model_source): parse/assign internal data, equation, and constants source dictionaries.
     - eq_extractor(component_id, prop_name): return a TableEquation for a component/property or None.
+    - eq_symbol(component_id, prop_name): return equation symbol metadata for a component/property or None.
     - component_eq_extractor(component_id): return all equations for a component or None.
+    - component_eq_symbols(component_id): return all equation symbol metadata for a component or None.
     - data_extractor(component_id, prop_name): return a datasource property dict or None.
+    - data_symbol(component_id, prop_name): return datasource symbol metadata for a component/property or None.
     - get_prop(component_id, prop_name): alias for data_extractor.
+    - get_prop_symbol(component_id, prop_name): alias for data_symbol.
     - constants_extractor(constant_name): return a constants source entry or None.
+    - constant_symbol(constant_name): return constants source symbol metadata or None.
     - component_data_extractor(component_id): return datasource for a component or None.
+    - component_data_symbols(component_id): return all datasource symbol metadata for a component or None.
     - get_dt(component_id): alias for component_data_extractor.
+    - get_dt_symbols(component_id): alias for component_data_symbols.
     - const(constant_name): alias for constants_extractor.
+    - const_symbol(constant_name): alias for constant_symbol.
     - check_args(component_id, args): validate that required args exist in the datasource and return the subset used for building inputs.
     - build_args(component_id, args, ignore_symbols=None): construct an input mapping for an equation using the datasource and optional ignored symbols.
     - eq_builder(components, prop_name, component_key, **kwargs): construct a mapping of component_id -> ComponentEquationSource ready for execution.
@@ -195,6 +205,81 @@ class Source:
             return {}
         return self._constantssource
 
+    # ! datasource symbols
+    @property
+    def datasource_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the datasource symbols metadata.
+
+        Returns
+        -------
+        dict
+            The datasource symbols dictionary.
+        '''
+        if self._datasource_symbol is None:
+            return {}
+        return self._datasource_symbol
+
+    # ! equationsource symbols
+    @property
+    def equationsource_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the equationsource symbols metadata.
+
+        Returns
+        -------
+        dict
+            The equationsource symbols dictionary.
+        '''
+        if self._equationsource_symbol is None:
+            return {}
+        return self._equationsource_symbol
+
+    # ! constantssource symbols
+    @property
+    def constantssource_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the constantssource symbols metadata.
+
+        Returns
+        -------
+        dict
+            The constantssource symbols dictionary.
+        '''
+        if self._constantssource_symbol is None:
+            return {}
+        return self._constantssource_symbol
+
+    # ! data symbols alias
+    @property
+    def data_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the datasource symbols metadata.
+
+        Alias for datasource_symbols.
+        '''
+        return self.datasource_symbols
+
+    # ! equation symbols alias
+    @property
+    def equation_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the equationsource symbols metadata.
+
+        Alias for equationsource_symbols.
+        '''
+        return self.equationsource_symbols
+
+    # ! constants symbols alias
+    @property
+    def constants_symbols(self) -> Dict[str, Any]:
+        '''
+        Get the constantssource symbols metadata.
+
+        Alias for constantssource_symbols.
+        '''
+        return self.constantssource_symbols
+
     # ! component keys
     @property
     def component_keys(self) -> List[ComponentKey]:
@@ -313,6 +398,43 @@ class Source:
             logger.error(f"Equation extraction failed: {e}")
             return None
 
+    # SECTION: equation symbol extractor
+    def eq_symbol(
+        self,
+        component_id: str,
+        prop_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts equation symbol metadata from the model source.
+
+        Parameters
+        ----------
+        component_id : str
+            The id of the component.
+        prop_name : str
+            The name of the equation property to extract.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted equation symbol metadata.
+        '''
+        try:
+            if component_id not in self.equationsource_symbols.keys():
+                logger.error(
+                    f"Component '{component_id}' not found in equation symbols.")
+                return None
+
+            if prop_name not in self.equationsource_symbols[component_id].keys():
+                logger.error(
+                    f"Property '{prop_name}' not found in equation symbols registered for {component_id}.")
+                return None
+
+            return self.equationsource_symbols[component_id][prop_name]
+        except Exception as e:
+            logger.error(f"Equation symbol extraction failed: {e}")
+            return None
+
     # SECTION: component equation extractor
     def component_eq_extractor(
         self,
@@ -344,6 +466,35 @@ class Source:
             return self.equationsource[component_id]
         except Exception as e:
             logger.error(f"Component equation extraction failed: {e}")
+            return None
+
+    # SECTION: component equation symbols extractor
+    def component_eq_symbols(
+        self,
+        component_id: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts component equation symbol metadata from the model source.
+
+        Parameters
+        ----------
+        component_id : str
+            The id of the component.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted component equation symbol metadata.
+        '''
+        try:
+            if component_id not in self.equationsource_symbols.keys():
+                logger.error(
+                    f"Component '{component_id}' not found in equation symbols.")
+                return None
+
+            return self.equationsource_symbols[component_id]
+        except Exception as e:
+            logger.error(f"Component equation symbol extraction failed: {e}")
             return None
 
     # SECTION: data extractor
@@ -397,6 +548,43 @@ class Source:
             logger.error(f"Data extraction failed: {e}")
             return None
 
+    # SECTION: data symbol extractor
+    def data_symbol(
+            self,
+            component_id: str,
+            prop_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts data symbol metadata from the model source.
+
+        Parameters
+        ----------
+        component_id : str
+            The id of the component.
+        prop_name : str
+            The name of the property to extract.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted data symbol metadata.
+        '''
+        try:
+            if component_id not in self.datasource_symbols.keys():
+                logger.error(
+                    f"Component '{component_id}' not found in data symbols.")
+                return None
+
+            if prop_name not in self.datasource_symbols[component_id].keys():
+                logger.error(
+                    f"Property '{prop_name}' not found in data symbols registered for {component_id}.")
+                return None
+
+            return self.datasource_symbols[component_id][prop_name]
+        except Exception as e:
+            logger.error(f"Data symbol extraction failed: {e}")
+            return None
+
     # SECTION: get property alias
     def get_prop(
             self,
@@ -409,6 +597,22 @@ class Source:
         Alias for data_extractor.
         '''
         return self.data_extractor(
+            component_id=component_id,
+            prop_name=prop_name
+        )
+
+    # SECTION: get property symbol alias
+    def get_prop_symbol(
+            self,
+            component_id: str,
+            prop_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get a specific component property symbol from the datasource symbols.
+
+        Alias for data_symbol.
+        '''
+        return self.data_symbol(
             component_id=component_id,
             prop_name=prop_name
         )
@@ -446,6 +650,35 @@ class Source:
             logger.error(f"Constant extraction failed: {e}")
             return None
 
+    # SECTION: constant symbol extractor
+    def constant_symbol(
+            self,
+            constant_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts constant symbol metadata from the model source.
+
+        Parameters
+        ----------
+        constant_name : str
+            The name of the constant to extract.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted constant symbol metadata.
+        '''
+        try:
+            if constant_name not in self.constantssource_symbols.keys():
+                logger.error(
+                    f"Constant '{constant_name}' not found in constants symbols.")
+                return None
+
+            return self.constantssource_symbols[constant_name]
+        except Exception as e:
+            logger.error(f"Constant symbol extraction failed: {e}")
+            return None
+
     # SECTION: const alias
     def const(
             self,
@@ -457,6 +690,20 @@ class Source:
         Alias for constants_extractor.
         '''
         return self.constants_extractor(
+            constant_name=constant_name
+        )
+
+    # SECTION: const symbol alias
+    def const_symbol(
+            self,
+            constant_name: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get a constant symbol from the constants source symbols.
+
+        Alias for constant_symbol.
+        '''
+        return self.constant_symbol(
             constant_name=constant_name
         )
 
@@ -493,6 +740,35 @@ class Source:
             logger.error(f"Component data extraction failed: {e}")
             return None
 
+    # SECTION: component data symbols extractor
+    def component_data_symbols(
+            self,
+            component_id: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extracts component data symbol metadata from the datasource symbols.
+
+        Parameters
+        ----------
+        component_id : str
+            The id of the component.
+
+        Returns
+        -------
+        Dict[str, Any] or None
+            The extracted component data symbol metadata.
+        '''
+        try:
+            if component_id not in self.datasource_symbols.keys():
+                logger.error(
+                    f"Component '{component_id}' not found in data symbols.")
+                return None
+
+            return self.datasource_symbols[component_id]
+        except Exception as e:
+            logger.error(f"Component data symbol extraction failed: {e}")
+            return None
+
     # SECTION: get data alias
     def get_dt(
             self,
@@ -504,6 +780,20 @@ class Source:
         Alias for component_data_extractor.
         '''
         return self.component_data_extractor(
+            component_id=component_id
+        )
+
+    # SECTION: get data symbols alias
+    def get_dt_symbols(
+            self,
+            component_id: str
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Get all datasource symbol metadata for a component.
+
+        Alias for component_data_symbols.
+        '''
+        return self.component_data_symbols(
             component_id=component_id
         )
 
