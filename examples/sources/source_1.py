@@ -60,12 +60,12 @@ eq_src = source.eq_builder(
 print(eq_src)
 
 # NOTE: get component data
-comp_data = source.component_data_extractor('CO2-g')
+comp_data = source.get_dt('CO2-g')
 print("Component data for")
 print(comp_data)
 
 # specific data
-comp_data_specific = source.data_extractor('CO2-g', 'EnFo_IG')
+comp_data_specific = source.get_prop('CO2-g', 'EnFo_IG')
 print("Component data for")
 print(comp_data_specific)
 
@@ -74,5 +74,5 @@ print(comp_data_specific)
 check_0 = source.is_constant_available('R')
 print(f"Is constant 'R' available? {check_0}")
 # ! get constant 'R'
-const_0 = source.constants_extractor('R')
+const_0 = source.const('R')
 print(const_0)
