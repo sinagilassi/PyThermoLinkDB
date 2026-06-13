@@ -264,3 +264,8 @@ print(model_source_with_rules)
 # build datasource & equationsource
 datasource = model_source.data_source
 equationsource = model_source.equation_source
+constantssource = model_source.constants_source
+# symbols
+data_symbols = model_source.data_symbols
+equation_symbols = model_source.equation_symbols
+constants_symbols = model_source.constants_symbols
