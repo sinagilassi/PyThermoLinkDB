@@ -162,7 +162,7 @@ class MixtureModelSource(BaseModel):
 
 class ConstantsModelSource(BaseModel):
     '''
-    Constants model source containing constants source
+    Constants model source containing constants source.
 
     Attributes
     ----------
@@ -183,7 +183,7 @@ class ConstantsModelSource(BaseModel):
 # SECTION: model source
 class ModelSource(BaseModel):
     '''
-    Model source containing data source and equation source for multiple components
+    Model source containing data source, equation source, and constants source.
 
     Attributes
     ----------
@@ -192,11 +192,13 @@ class ModelSource(BaseModel):
     equation_source: Dict[str, Dict[str, EquationSource]]
         Equation source dictionary for multiple components
     constants_source: Optional[Dict[str, TableConstants]]
-        Optional constants source dictionary for multiple components
+        Optional constants source dictionary
     data_symbols: Optional[Dict[str, Dict[str, DataSymbol]]] = None
         Optional data symbol dictionary for multiple components
     equation_symbols: Optional[Dict[str, Dict[str, EquationSymbol]]] = None
         Optional equation symbol dictionary for multiple components
+    constants_symbols: Optional[Dict[str, Dict[str, ConstantsSymbol]]] = None
+        Optional constants symbol dictionary
     '''
     data_source: Dict[str, DataSource] = Field(
         ...,
