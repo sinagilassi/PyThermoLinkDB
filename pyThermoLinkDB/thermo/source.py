@@ -83,7 +83,7 @@ class Source:
         Parameters
         ----------
         model_source : Optional[ModelSource]
-            The model source object containing datasource and equationsource.
+            The model source object containing datasource, equationsource, and constantssource dictionaries.
         component_key : Literal['Name-State', 'Formula-State', 'Name-Formula', 'Name', 'Formula', 'Name-Formula-State', 'Formula-Name-State']
             The key to identify the component, default is 'Name-State'.
         component_keys : Optional[List[ComponentKey]]
@@ -126,8 +126,10 @@ class Source:
                 model_source=model_source_dict
             )
 
+    # NOTE: repr
     def __repr__(self):
-        return f"Source(datasource={self.datasource}, equationsource={self.equationsource})"
+        '''String representation of the Source object.'''
+        return f"Source(datasource={self.datasource}, equationsource={self.equationsource}, constantssource={self.constantssource}, component_keys={self.component_keys})"
 
     # SECTION: Properties
     # ! datasource
