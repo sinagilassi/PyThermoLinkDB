@@ -1,0 +1,134 @@
+# import packages/modules
+from typing import Dict
+import os
+from rich import print
+import pycuc
+import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB import load_and_build_model_source
+from pyThermoLinkDB.models import ModelSource
+import pyThermoDB as ptdb
+from pythermodb_settings.models import (
+    Component,
+    ComponentRule,
+    ComponentThermoDBSource,
+)
+# ! pyThermoLinkDB
+from pyThermoLinkDB import (
+    mkdt,
+    mkeq,
+    mkeqs,
+    EquationSourceCore,
+    DataSourceCore,
+    EquationSourcesCore
+)
+from pyThermoLinkDB.utils.input_builder import (
+    check_inputs_availability,
+    check_unit_availability,
+    UnitAvailabilityFn,
+    build_inputs,
+    UnitConversionFn
+)
+# ! model source & components
+from examples.model_source_1 import model_source, CO2, C2H5OH
+
+
+# version
+print(ptdblink.__version__)
+print(ptdb.__version__)
+
+# =======================================
+# 🌍 LOAD THERMODB
+# =======================================
+# current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"current dir: {current_dir}")
+
+# =======================================
+# 🏗️ LOAD & BUILD
+# =======================================
+
+# get data source and equation source
+datasource = model_source.data_source
+equationsource = model_source.equation_source
+
+# =======================================
+# ✅ unit conversion settings
+# =======================================
+# NOTE: create unit conversion function using pycuc
+unit_conversion_fn = pycuc.convert_from_to
+
+# =======================================
+# ✅ inputs
+# =======================================
+# NOTE: universal inputs
+inputs = {
+    "T": {"value": 25.0, "unit": "C"},
+    "P": {"value": 101325.0, "unit": "Pa"},
+    "Tc": {"value": 302.0, "unit": "K"},
+}
+
+# =======================================
+# ✅ make equation source for ethanol
+# =======================================
+# SECTION: Build equations
+# ! make equation source
+ethanol_eqs: EquationSourcesCore | None = mkeqs(
+    component=C2H5OH,
+    model_source=model_source,
+    component_key='Name-State',
+    build_all=True,  # build all equations for the component
+)
+# print
+print(ethanol_eqs)
+
+# NOTE: >> check ethane equations
+if ethanol_eqs is not None:
+    # ! all available equations
+    print(ethanol_eqs.all_available_equations())
+
+    # ! source all equations for the component
+    print(ethanol_eqs.src)
+
+    # ? select Cp_IG equation source
+    Cp_IG_eq_: EquationSourceCore | None = ethanol_eqs.select(name='Cp_IG')
+    print(Cp_IG_eq_)
+    if Cp_IG_eq_ is not None:
+        # inputs
+        print(Cp_IG_eq_.inputs)
+
+        # ! check inputs availability
+        inputs_available, inputs_availability_details = check_inputs_availability(
+            Cp_IG_eq_.inputs,
+            inputs
+        )
+
+        # ! build inputs
+        input_args = build_inputs(
+            Cp_IG_eq_.inputs,
+            inputs,
+            unit_conversion_fn=unit_conversion_fn
+        )
+        # >> log
+        print(input_args)
+
+        # calc
+        if input_args is not None:
+            print(Cp_IG_eq_.calc(**input_args))
+
+    # ? make Cp_LIQ equation source
+    Cp_LIQ_eq: EquationSourceCore | None = ethanol_eqs.select(name='Cp_LIQ')
+    print(Cp_LIQ_eq)
+    if Cp_LIQ_eq is not None:
+        # inputs
+        print(Cp_LIQ_eq.args)
+        print(Cp_LIQ_eq.inputs)
+        print(Cp_LIQ_eq.arg_mappings)
+
+        # calc
+        print(Cp_LIQ_eq.calc(T=298.15, Tc=302))
+
+    # >> unknown equation
+    unknown_eq: EquationSourceCore | None = ethanol_eqs.select(
+        name='Unknown_Prop'
+    )
+    print(unknown_eq)
