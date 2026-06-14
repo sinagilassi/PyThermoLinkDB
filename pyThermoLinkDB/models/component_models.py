@@ -19,6 +19,8 @@ class ComponentEquationSource(BaseModel):
         The equation inputs
     num: int
         The equation number
+    fn: Callable[..., EquationResult]
+        The equation function
     body: str
         The equation body
     args: Dict[str, Any]
