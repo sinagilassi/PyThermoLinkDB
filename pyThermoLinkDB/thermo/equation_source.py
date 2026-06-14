@@ -104,6 +104,9 @@ class EquationSourceCore:
         # NOTE: component key
         self.component_key = component_key
 
+        # SECTION: settings
+        self._status: bool = False
+
         # SECTION: set component id
         self.component_id = set_component_id(
             component=self.component,
@@ -160,7 +163,12 @@ class EquationSourceCore:
         self._return_unit: Optional[str] = None
         self._return_symbol: Optional[str] = None
 
+        # NOTE: if equation source is found, extract details
         if self.component_equation is not None:
+            # >> update status
+            self._status = True
+
+            # >>> set equation details
             self._eq = self.component_equation.source
             self._num = self.component_equation.num
             self._fn = self.component_equation.fn
@@ -182,6 +190,19 @@ class EquationSourceCore:
                 returns_inner = next(iter(self._returns.values()))
                 self._return_unit = returns_inner.get('unit')
                 self._return_symbol = returns_inner.get('symbol')
+
+    # SECTION: properties
+    @property
+    def status(self) -> bool:
+        """
+        Get the status of the equation source.
+
+        Returns
+        -------
+        bool
+            True if the equation source is available, False otherwise.
+        """
+        return self._status
 
     @property
     def eq(self) -> Optional[TableEquation]:
