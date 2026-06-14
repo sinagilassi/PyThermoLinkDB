@@ -102,7 +102,7 @@ print(ethanol_eqs)
 
 # NOTE: >> check CO2 equations
 if CO2_eqs is not None:
-    print(CO2_eqs.equations())
+    print(CO2_eqs.all_available_equations())
 
     # >> make Cp_IG equation source
     Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
@@ -128,7 +128,7 @@ if CO2_eqs is not None:
 
 # NOTE: >> check ethane equations
 if ethanol_eqs is not None:
-    print(ethanol_eqs.equations())
+    print(ethanol_eqs.all_available_equations())
 
     # >> make Cp_IG equation source
     Cp_IG_eq = ethanol_eqs.eq(name='Cp_IG')
