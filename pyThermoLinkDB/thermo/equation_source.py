@@ -65,8 +65,9 @@ class EquationSourceCore:
     - The class focuses on locating and preparing equation metadata and
         dispatching the equation callable; it does not perform unit conversions
         or attempt to harmonize differing units across sources.
-    - If no matching equation is found for the component and ``prop_name``, a
-        ``ValueError`` is raised and the event is logged.
+    - If no matching equation is found for the component and ``prop_name``, the
+        equation-related attributes are initialized with empty values and
+        ``calc()`` returns ``None``.
     """
 
     def __init__(
@@ -109,92 +110,112 @@ class EquationSourceCore:
             component_key=self.component_key
         )
 
-        # SECTION: get vapor pressure equation source
-        self.component_equation: ComponentEquationSource = self._get_equation_from_source()
+        # SECTION: get equation source
+        self.component_equation: Optional[
+            ComponentEquationSource
+        ] = self._get_equation_from_source()
 
         # NOTE: extract equation details
         # ! equation
-        self._eq: TableEquation = self.component_equation.source
+        self._eq: Optional[TableEquation] = None
         # ! num
-        self._num: int = self.component_equation.num
+        self._num: Optional[int] = None
         # ! fn
-        self._fn = self.component_equation.fn
+        self._fn: Optional[Callable[..., EquationResult]] = None
         # ! inputs
-        self._inputs: Dict[str, Any] = self.component_equation.inputs or {}
+        self._inputs: Dict[str, Any] = {}
         # ! args
         self._args: Dict[
             str,
             Any
-        ] = self.component_equation.args or {}
+        ] = {}
         # ! arg symbols
         self._arg_symbols: Dict[
             str,
             Any
-        ] = self.component_equation.arg_symbols or {}
+        ] = {}
         # ! arg identifiers
         self._arg_identifiers: List[
             str
-        ] = self.component_equation.arg_identifiers or []
+        ] = []
         # ! arg mappings
         self._arg_mappings: Dict[
             str,
             Any
-        ] = self.component_equation.arg_mappings or {}
+        ] = {}
         # ! returns
         self._returns: Dict[
             str,
             Any
-        ] = self.component_equation.returns or {}
+        ] = {}
         # ! return symbols
         self._return_symbols: Dict[
             str,
             Any
-        ] = self.component_equation.return_symbols or {}
+        ] = {}
         # ! return identifiers
         self._return_identifiers: List[
             str
-        ] = self.component_equation.return_identifiers or []
+        ] = []
+        self._return_unit: Optional[str] = None
+        self._return_symbol: Optional[str] = None
 
-        # NOTE: units and symbols for return
-        # >> get return units
-        returns_outer_key, returns_inner = next(
-            iter(self._returns.items()))
-        self._return_unit: str = returns_inner['unit']
-        self._return_symbol: str = returns_inner['symbol']
+        if self.component_equation is not None:
+            self._eq = self.component_equation.source
+            self._num = self.component_equation.num
+            self._fn = self.component_equation.fn
+            self._inputs = self.component_equation.inputs or {}
+            self._args = self.component_equation.args or {}
+            self._arg_symbols = self.component_equation.arg_symbols or {}
+            self._arg_identifiers = (
+                self.component_equation.arg_identifiers or []
+            )
+            self._arg_mappings = self.component_equation.arg_mappings or {}
+            self._returns = self.component_equation.returns or {}
+            self._return_symbols = self.component_equation.return_symbols or {}
+            self._return_identifiers = (
+                self.component_equation.return_identifiers or []
+            )
+
+            # NOTE: units and symbols for return
+            if self._returns:
+                returns_inner = next(iter(self._returns.values()))
+                self._return_unit = returns_inner.get('unit')
+                self._return_symbol = returns_inner.get('symbol')
 
     @property
-    def eq(self) -> TableEquation:
+    def eq(self) -> Optional[TableEquation]:
         """
         Get the equation object.
 
         Returns
         -------
-        TableEquation
-            The equation object.
+        TableEquation | None
+            The equation object, or None if no equation was found.
         """
         return self._eq
 
     @property
-    def num(self) -> int:
+    def num(self) -> Optional[int]:
         """
         Get the equation number.
 
         Returns
         -------
-        int
-            The equation number.
+        int | None
+            The equation number, or None if no equation was found.
         """
         return self._num
 
     @property
-    def fn(self) -> Callable[..., EquationResult]:
+    def fn(self) -> Optional[Callable[..., EquationResult]]:
         """
         Get the equation function.
 
         Returns
         -------
-        Callable[..., EquationResult]
-            The equation function.
+        Callable[..., EquationResult] | None
+            The equation function, or None if no equation was found.
         """
         return self._fn
 
@@ -220,6 +241,9 @@ class EquationSourceCore:
         str
             The body of the equation.
         """
+        if self._eq is None:
+            return ''
+
         return self._eq.body
 
     @property
@@ -283,26 +307,26 @@ class EquationSourceCore:
         return self._returns
 
     @property
-    def return_symbol(self) -> str:
+    def return_symbol(self) -> Optional[str]:
         """
         Get the symbol for the equation return values.
 
         Returns
         -------
-        str
-            The symbol for the return value.
+        str | None
+            The symbol for the return value, or None if no equation was found.
         """
         return self._return_symbol
 
     @property
-    def return_unit(self) -> str:
+    def return_unit(self) -> Optional[str]:
         """
         Get the unit for the equation return values.
 
         Returns
         -------
-        str
-            The unit for the return value.
+        str | None
+            The unit for the return value, or None if no equation was found.
         """
         return self._return_unit
 
@@ -318,20 +342,29 @@ class EquationSourceCore:
         """
         return self._return_identifiers
 
+    @property
+    def component_equation_source(self) -> Optional[ComponentEquationSource]:
+        """
+        Get the component equation source.
+
+        Returns
+        -------
+        ComponentEquationSource | None
+            The component equation source for the specified component and
+            property, or None if no equation was found.
+        """
+        return self.component_equation
+
     # SECTION: get equation from source
-    def _get_equation_from_source(self) -> ComponentEquationSource:
+    def _get_equation_from_source(self) -> Optional[ComponentEquationSource]:
         """
         Retrieve the component equation for the component from the source.
 
         Returns
         -------
-        ComponentEquationSource
-            The component equation source for the specified component and equation ID.
+        ComponentEquationSource | None
+            The component equation source for the specified component and equation ID, or None if not found.
 
-        Raises
-        ------
-        ValueError
-            If no equation is found for the specified component ID.
         """
         try:
             # SECTION: get equations for component
@@ -345,9 +378,7 @@ class EquationSourceCore:
                 logger.warning(
                     f'No {self.prop_name} equation found for component ID: {self.component_id}'
                 )
-                raise ValueError(
-                    f'No {self.prop_name} equation found for component ID: {self.component_id}'
-                )
+                return None
 
             # SECTION: select for component
             eq: ComponentEquationSource | None = equations.get(
@@ -359,15 +390,14 @@ class EquationSourceCore:
                 logger.warning(
                     f'No {self.prop_name} equation found for component ID: {self.component_id}'
                 )
-                raise ValueError(
-                    f'No {self.prop_name} equation found for component ID: {self.component_id}')
+                return None
 
             return eq
         except Exception as e:
             logger.error(
                 f'Error retrieving {self.prop_name} equation for component ID: {self.component_id} - {e}'
             )
-            raise e
+            return None
 
     # SECTION: get inputs
     def get_inputs(self):
@@ -415,6 +445,12 @@ class EquationSourceCore:
             - symbol: str
         """
         try:
+            if self._fn is None:
+                logger.warning(
+                    f"No {self.prop_name} equation available for component ID: {self.component_id}"
+                )
+                return None
+
             # SECTION: variables
             if not input_args:
                 logger.error(
