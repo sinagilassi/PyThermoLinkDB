@@ -52,6 +52,7 @@ class EquationSourcesCore:
         component: Component,
         source: Source,
         component_key: ComponentKey = 'Name-State',
+        build_all: bool = False,
     ) -> None:
         """
         Initialize EquationSource with a component and source.
@@ -68,6 +69,8 @@ class EquationSourcesCore:
             The source containing data for calculations.
         component_key : Literal
             The key to identify the component in the source data. Defaults to 'Name-State'.
+        build_all : bool
+            Whether to build all available equations for the component. Defaults to False.
         """
         # NOTE: component
         self.component = component
@@ -92,20 +95,45 @@ class EquationSourcesCore:
                 f"Component equations not found for component ID: {self.component_id}"
             )
 
-    def equations(self) -> List[str]:
+        # SECTION: build all equations if requested
+        if (
+            build_all is True and
+            self.component_equations is not None
+        ):
+            self._src = self.build()
+        else:
+            self._src = {}
+
+    # SECTION: properties
+    @property
+    def src(self) -> Dict[str, Optional[EquationSourceCore]]:
         """
-        Get the list of equation IDs available for the component.
+        Get the source dictionary of all equation sources.
+
+        Returns
+        -------
+        Dict[str, Optional[EquationSourceCore]]
+            The source dictionary.
+        """
+        return self._src
+
+    # SECTION: list available equations
+
+    def all_available_equations(self) -> List[str]:
+        """
+        Get the list of equation IDs available for the component before building sources.
 
         Returns
         -------
         List[str]
-            A list of equation IDs.
+            A list of equation IDs (symbols).
         """
         if self.component_equations is None:
             return []
 
         return list(self.component_equations.keys())
 
+    # SECTION: make equation source for a specific property
     def eq(
         self,
         name: str
@@ -146,4 +174,67 @@ class EquationSourcesCore:
             )
         except Exception as e:
             logger.error(f"Error creating equation: {e}")
+            return None
+
+    # SECTION: Build all equation sources
+    def build(self) -> Dict[str, Optional[EquationSourceCore]]:
+        """
+        Make all equation sources available for the component.
+
+        Returns
+        -------
+        Dict[str, Optional[EquationSourceCore]]
+            A dictionary of equation IDs to EquationSourceCore objects, where the value is None if the equation could not be created.
+        """
+        try:
+            # NOTE: build equation sources for all available equations
+            eq_sources = {}
+
+            # >> check if component equations are available
+            if self.component_equations is None:
+                logger.error("Component equations are not available.")
+                return eq_sources
+
+            # NOTE: loop through available equations and create sources
+            for eq_id in self.component_equations.keys():
+                eq_sources[eq_id] = self.eq(name=eq_id)
+
+            return eq_sources
+        except Exception as e:
+            logger.error(f"Error creating equation sources: {e}")
+            return {}
+
+    # SECTION: Select equation source for a specific property
+
+    def select(
+        self,
+        name: str
+    ) -> Optional[EquationSourceCore]:
+        """
+        Select an equation source for a given property from the built sources.
+
+        Parameters
+        ----------
+        name : str
+            The ID of the equation to be selected.
+
+        Returns
+        -------
+        Optional[EquationSourceCore]
+            An EquationSourceCore object if the equation is found in the built sources; otherwise, None.
+        """
+        try:
+            if not self._src:
+                logger.error(
+                    "Equation sources have not been built. Please build sources before selecting.")
+                return None
+
+            if name not in self._src.keys():
+                logger.error(
+                    f"Equation ID '{name}' not found in built sources.")
+                return None
+
+            return self._src[name]
+        except Exception as e:
+            logger.error(f"Error selecting equation: {e}")
             return None
