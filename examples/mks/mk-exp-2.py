@@ -98,8 +98,8 @@ if ethanol_eqs is None:
 print(ethanol_eqs.all_available_equations())
 
 # ! all available equation symbols
-print(ethanol_eqs.all_equations_available(names=['Cp_IG', 'Cp_LIQ']))
-print(ethanol_eqs.all_equations_available(
+print(ethanol_eqs.all_available(names=['Cp_IG', 'Cp_LIQ']))
+print(ethanol_eqs.all_available(
     names=['Cp_IG', 'Cp_LIQ', 'Unknown_Prop'])
 )
 

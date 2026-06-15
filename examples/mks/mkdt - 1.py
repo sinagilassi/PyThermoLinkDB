@@ -73,8 +73,8 @@ print(CO2_dt.is_prop_available('Unknown_Prop'))
 print(CO2_dt.check_props_availability(['EnFo_IG', 'Cp_IG']))
 
 # ! all properties available
-print(CO2_dt.all_props_available(['EnFo_IG', 'Tc', 'Vc']))
-print(CO2_dt.all_props_available(['EnFo_IG', 'Cp_IG']))
+print(CO2_dt.all_available(['EnFo_IG', 'Tc', 'Vc']))
+print(CO2_dt.all_available(['EnFo_IG', 'Cp_IG']))
 
 # ! specific property
 print(CO2_dt.prop(name='EnFo_IG'))
