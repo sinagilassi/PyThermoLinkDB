@@ -69,7 +69,7 @@ unit_availability_fn = pycuc.is_unit_available
 runtime_inputs = {
     "T": {"value": 25.0, "unit": "C"},
     "P": {"value": 101325.0, "unit": "Pa"},
-    # "Tc": {"value": 302.0, "unit": "K"},
+    "Tc": {"value": 302.0, "unit": "K"},
 }
 
 runtime_inputs_symbols = list(runtime_inputs.keys())
@@ -84,7 +84,8 @@ ethanol_eqs: EquationSourcesCore | None = mkeqs(
     model_source=model_source,
     component_key='Name-State',
     build_all=True,  # build all equations for the component
-    build_list=["Cp_IG"]
+    # optional list of specific equations to build, if None or empty, all equations will be built
+    build_list=["Cp_IG", "Cp_LIQ"]
 )
 # print the equation source object
 print(ethanol_eqs)
