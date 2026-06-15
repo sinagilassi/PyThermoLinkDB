@@ -137,6 +137,6 @@ constants_symbols = model_source.constants_symbols
 if not constantssource:
     raise ValueError("No constants source found in model source.")
 
-const_tb_1: Any | None = constantssource.get('R')
+const_tb_1: Dict[str, Any] | None = constantssource.get('R')
 # >> log
 print(const_tb_1)
