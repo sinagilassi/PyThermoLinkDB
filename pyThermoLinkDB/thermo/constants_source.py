@@ -333,7 +333,7 @@ class ConstantsSourceCore:
             return None
 
     # SECTION: select a constant
-    def select(
+    def select_scalar(
         self,
         symbol: str
     ) -> Optional[CustomProperty]:
@@ -366,7 +366,7 @@ class ConstantsSourceCore:
             return None
 
     # SECTION: select any constant
-    def select_wise(
+    def select(
         self,
         symbol: str
     ) -> Optional[ConstantResult]:
