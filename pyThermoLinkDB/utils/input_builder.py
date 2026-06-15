@@ -169,10 +169,12 @@ def check_inputs_availability(
 # SECTION: check all eq_inputs are available in inputs and check required units are available before building inputs
 
 
+@measure_time
 def validate_inputs_availability_and_units(
         eq_inputs: Dict[str, Any],
         inputs: List[str],
         unit_availability_fn: UnitAvailabilityFn,
+        **kwargs
 ) -> Tuple[bool, Dict[str, bool], bool, Dict[str, bool]]:
     """
     Validate that all expected equation inputs are provided in the runtime inputs and that all required units are available.
@@ -185,6 +187,10 @@ def validate_inputs_availability_and_units(
         Runtime inputs provided as a list of input symbols. Each symbol should correspond to an expected input defined in ``eq_inputs``.
     unit_availability_fn : UnitAvailabilityFn
         Function used to check if a unit is recognized and supported for conversion.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
 
     Returns
     -------
@@ -238,10 +244,12 @@ class UnitConversionFn(Protocol):
 # NOTE: build_inputs function
 
 
+@measure_time
 def build_inputs(
         eq_inputs: Dict[str, Any],
         inputs: Dict[str, Any],
-        unit_conversion_fn: UnitConversionFn
+        unit_conversion_fn: UnitConversionFn,
+        **kwargs
 ) -> Dict[str, float] | None:
     """
     Build equation input values from defaults and provided runtime inputs.
@@ -258,6 +266,10 @@ def build_inputs(
         Function used to convert runtime input values to the units required by
         ``eq_inputs``. For example, ``pycuc.convert_from_to`` may be passed
         directly.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
 
     Returns
     -------
