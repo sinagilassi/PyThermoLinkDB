@@ -22,6 +22,7 @@ def mkeqs(
     model_source: ModelSource,
     component_key: ComponentKey = 'Name-State',
     build_all: bool = False,
+    build_list: Optional[list[str]] = None,
 ) -> Optional[EquationSourcesCore]:
     """
     Make an equation source core for a given property and component.
@@ -36,6 +37,8 @@ def mkeqs(
         The key to identify the component in the source data. Defaults to 'Name-State'.
     build_all : bool
         Whether to build all available equations for the component. Defaults to False.
+    build_list : Optional[list[str]]
+        A list of specific equation names to build. If provided, only these equations will be built. Defaults to None.
 
     Returns
     -------
@@ -64,6 +67,7 @@ def mkeqs(
             source=Source_,
             component_key=component_key,
             build_all=build_all,
+            build_list=build_list,
         )
     except Exception as e:
         logger.error(f"Error creating equation: {e}")
