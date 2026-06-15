@@ -8,7 +8,8 @@ from pyThermoLinkDB.utils.input_builder import (
     check_unit_availability,
     UnitAvailabilityFn,
     build_inputs,
-    UnitConversionFn
+    UnitConversionFn,
+    validate_and_build_inputs
 )
 
 # NOTE: logger
@@ -44,7 +45,6 @@ eq_inputs = {
     "T": {"value": 0, "unit": "K"},
     "P": {"value": 0, "unit": "bar"},
     "V": {"value": 0, "unit": "L"},
-    "Q": {"value": 0, "unit": "kJ"},
 }
 
 # NOTE: create runtime inputs
@@ -52,6 +52,7 @@ inputs = {
     "T": {"value": 25.0, "unit": "C"},
     "P": {"value": 101325.0, "unit": "Pa"},
     "V": {"value": 0.001, "unit": "m3"},
+    "Q": {"value": 500.0, "unit": "J"},
 }
 
 # NOTE: check inputs availability
@@ -67,3 +68,15 @@ print(inputs_availability_details)
 built_inputs = build_inputs(eq_inputs, inputs, unit_conversion_fn)
 # >> log
 print(built_inputs)
+
+# SECTION: check and build inputs with a single function
+# NOTE: check unit availability, check inputs availability, and build inputs in one step
+validated_and_built_inputs = validate_and_build_inputs(
+    eq_inputs=eq_inputs,
+    inputs=inputs,
+    unit_availability_fn=unit_availability_fn,
+    unit_conversion_fn=unit_conversion_fn,
+    mode="log"  # log time taken for validation and building
+)
+# >> log
+print(validated_and_built_inputs)
