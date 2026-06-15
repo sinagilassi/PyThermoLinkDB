@@ -1,7 +1,7 @@
 # import libs
 import logging
 from typing import Dict, Any, Optional, List
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty
 from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
@@ -91,6 +91,11 @@ class DataSourceCore:
                 f"Component data not found for component ID: {self.component_id}"
             )
 
+        # SECTION: all properties
+        self._props: List[str] = self.all_props()
+
+    # SECTION: Properties
+    @property
     def props(self) -> List[str]:
         """
         Get the list of property names available for the component.
@@ -110,6 +115,85 @@ class DataSourceCore:
             logger.error(f"Error retrieving property names: {e}")
             return []
 
+    # SECTION: properties
+    def all_props(self) -> List[str]:
+        """
+        Get the list of property names available for the component.
+
+        Returns
+        -------
+        List[str]
+            A list of property names.
+        """
+        try:
+            if self.component_data is None:
+                logger.error("Component data is not available.")
+                return []
+
+            return list(self.component_data.keys())
+        except Exception as e:
+            logger.error(f"Error retrieving property names: {e}")
+            return []
+
+    # SECTION: Property's availability
+    def is_prop_available(self, name: str) -> bool:
+        """
+        Check if a specific property is available for the component.
+
+        Parameters
+        ----------
+        name : str
+            The name of the property to check.
+
+        Returns
+        -------
+        bool
+            True if the property is available, False otherwise.
+        """
+        try:
+            if self.component_data is None:
+                logger.error("Component data is not available.")
+                return False
+
+            return name in self.component_data
+        except Exception as e:
+            logger.error(f"Error checking property availability: {e}")
+            return False
+
+    # NOTE: Check properties availability
+    def check_props_availability(self, names: List[str]) -> Dict[str, bool]:
+        """
+        Check the availability of multiple properties for the component.
+
+        Parameters
+        ----------
+        names : List[str]
+            A list of property names to check.
+
+        Returns
+        -------
+        Dict[str, bool]
+            A dictionary mapping property names to their availability.
+        """
+        try:
+            # ! all props
+            all_props = self.all_props()
+
+            # >> check
+            if not all_props:
+                logger.error("No properties available to check.")
+                return {}
+
+            # ! check availability for each name
+            availability = {name: name in all_props for name in names}
+
+            # res
+            return availability
+        except Exception as e:
+            logger.error(f"Error checking properties availability: {e}")
+            return {name: False for name in names}
+
+    # SECTION: get property
     def prop(
         self,
         name: str
@@ -155,4 +239,37 @@ class DataSourceCore:
             )
         except Exception as e:
             logger.error(f"Error retrieving property '{name}': {e}")
+            return None
+
+    # SECTION: select a property
+    def select(
+        self,
+        symbol: str
+    ) -> Optional[CustomProperty]:
+        """
+        Select a specific property of the component and return it as a CustomProperty.
+
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the property to select.
+
+        Returns
+        -------
+        Optional[CustomProperty]
+            A CustomProperty object containing the property's value, unit, and symbol,
+            or None if the property is not found or an error occurs.
+        """
+        try:
+            prop_result = self.prop(symbol)
+            if prop_result is None:
+                return None
+
+            return CustomProperty(
+                value=prop_result.value,
+                unit=prop_result.unit,
+                symbol=prop_result.symbol
+            )
+        except Exception as e:
+            logger.error(f"Error selecting property '{symbol}': {e}")
             return None
