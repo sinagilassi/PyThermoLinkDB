@@ -1,17 +1,16 @@
 # import packages/modules
-from examples.model_source_2 import model_source
 from pyThermoLinkDB import mkct, ConstantsSourceCore
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
 from rich import print
 import sys
 from pathlib import Path
+# ! model source
+from examples.model_source_2 import model_source
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
-
-# ! model source
 
 # version
 print(ptdblink.__version__)
@@ -69,9 +68,19 @@ print(constants_src.const_symbol(name='R'))
 # NOTE: property-like constant, works when the constant entry has
 # value/unit/symbol fields
 print(constants_src.prop(name='R'))
-print(constants_src.select(symbol='R'))
+print(constants_src.select_scalar(symbol='R'))
 print(constants_src.select(symbol='dH_rxn'))
 
 # NOTE: constants may also be nested dictionaries, lists, or any other source
 # value. Use constant()/const() for those raw values.
 print(constants_src.constant(name='dH_rxn'))
+
+# NOTE: select wise
+# ! select wise
+print(constants_src.select(symbol='R'))
+print(constants_src.select(symbol='C1'))
+print(constants_src.select(symbol='Cp_IG'))
+print(constants_src.select(symbol='dH_rxn'))
+print(constants_src.select(symbol='Xb'))
+print(constants_src.select(symbol='X'))
+print(constants_src.select(symbol='Unknown_Constant'))
