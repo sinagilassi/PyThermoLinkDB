@@ -331,10 +331,10 @@ class EquationSourcesCore:
             return {}, {}
 
     # SECTION: Check inputs availability and units for a specific equation source
-    def validate_inputs_availability_and_units(
+    def validate_inputs(
             self,
             eq_symbol: str,
-            inputs: Dict[str, Any],
+            inputs: List[str],
             unit_availability_fn: UnitAvailabilityFn
     ) -> Tuple[bool, Optional[Dict[str, bool]], bool, Optional[Dict[str, bool]]]:
         """
@@ -344,8 +344,8 @@ class EquationSourcesCore:
         ----------
         eq_symbol : str
             The ID of the equation for which to validate inputs.
-        inputs : Dict[str, Any]
-            A dictionary of input values provided at runtime, where keys are input symbols and values are the corresponding input values.
+        inputs : List[str]
+            A list of input values provided at runtime as strings, where each string corresponds to an input symbol expected by the equation source.
         unit_conversion_fn : UnitConversionFn
             A function that takes an input value, its current unit, and a target unit, and returns the converted value.
         unit_availability_fn : UnitAvailabilityFn
@@ -383,7 +383,7 @@ class EquationSourcesCore:
     # NOTE: validate all
     def validate_all_inputs(
             self,
-            inputs: Dict[str, Any],
+            inputs: List[str],
             unit_availability_fn: UnitAvailabilityFn
     ):
         """
@@ -391,8 +391,8 @@ class EquationSourcesCore:
 
         Parameters
         ----------
-        inputs : Dict[str, Any]
-            A dictionary of input values provided at runtime, where keys are input symbols and values are the corresponding input values.
+        inputs : List[str]
+            A list of input values provided at runtime as strings, where each string corresponds to an input symbol expected by the equation sources.
         unit_availability_fn : UnitAvailabilityFn
             A function that takes a unit string and returns a boolean indicating whether the unit is available in the system.
 
@@ -409,7 +409,7 @@ class EquationSourcesCore:
 
             # iterate through all equation sources and validate their inputs
             for eq_id in self._src.keys():
-                valid_inputs_, _, valid_units_, _ = self.validate_inputs_availability_and_units(
+                valid_inputs_, _, valid_units_, _ = self.validate_inputs(
                     eq_symbol=eq_id,
                     inputs=inputs,
                     unit_availability_fn=unit_availability_fn
