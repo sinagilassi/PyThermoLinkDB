@@ -41,7 +41,6 @@ print(eq1_)
 print(eq1_.args)
 print(eq1_.cal(T=298.15))
 
-
 # =======================================
 # ✅ MAKE EQUATION/DATA SOURCE DIRECTLY
 # =======================================
@@ -55,6 +54,21 @@ CO2_dt = mkdt(
 print(CO2_dt)
 
 # >> check
-if CO2_dt is not None:
-    print(CO2_dt.props())
-    print(CO2_dt.prop(name='EnFo'))
+if CO2_dt is None:
+    raise ValueError("Failed to create data source for CO2.")
+
+# results
+# ! all properties
+print(CO2_dt.props)
+print(CO2_dt.all_props())
+
+# ! available properties
+print(CO2_dt.is_prop_available('EnFo_IG'))
+print(CO2_dt.is_prop_available('Unknown_Prop'))
+
+# ! check a list of properties
+print(CO2_dt.check_props_availability(['EnFo_IG', 'Cp_IG']))
+
+# ! specific property
+print(CO2_dt.prop(name='EnFo_IG'))
+print(CO2_dt.select(symbol='EnFo_IG'))
