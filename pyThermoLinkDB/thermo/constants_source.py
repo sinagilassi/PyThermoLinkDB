@@ -1,6 +1,7 @@
 # import libs
 import logging
-from typing import Dict, Literal, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List
+from pythermodb_settings.models import CustomProperty
 # local
 from ..thermo import Source
 from ..models.component_models import PropResult
@@ -10,6 +11,15 @@ logger = logging.getLogger(__name__)
 
 
 class ConstantsSourceCore:
+    """
+    Core adapter for retrieving constants from a :class:`Source`.
+
+    This helper mirrors :class:`DataSourceCore` for source-level constants. It
+    exposes convenience methods to list constants, inspect symbol metadata,
+    check availability, and retrieve constants either as raw source entries or
+    as ``PropResult``/``CustomProperty`` when the entry follows the common
+    ``value``/``unit``/``symbol`` dictionary shape.
+    """
 
     def __init__(
             self,
@@ -25,3 +35,329 @@ class ConstantsSourceCore:
         """
         # NOTE: source
         self.source = source
+
+        # SECTION: retrieve constants
+        self.constants_data: Dict[str, Any] = self.source.constantssource
+        self.constants_symbols_data: Dict[str, Any] = self.source.constantssource_symbols
+
+        if not self.constants_data:
+            logger.warning("No constants data found in source.")
+
+        # SECTION: all constants
+        self._constants: List[str] = self.all_constants()
+        self._constants_symbols: List[str] = self._all_constants_symbols()
+
+    # SECTION: Properties
+    @property
+    def constants(self) -> List[str]:
+        """
+        Get the list of constant names available in the source.
+
+        Returns
+        -------
+        List[str]
+            A list of constant names.
+        """
+        return self.all_constants()
+
+    @property
+    def props(self) -> List[str]:
+        """
+        Alias for ``constants`` to match the DataSourceCore listing API.
+        """
+        return self.constants
+
+    @property
+    def constants_symbols(self) -> List[str]:
+        """
+        Get the list of constant symbols available in the source.
+
+        Returns
+        -------
+        List[str]
+            A list of constant symbols.
+        """
+        return self._all_constants_symbols()
+
+    @property
+    def props_symbols(self) -> List[str]:
+        """
+        Alias for ``constants_symbols`` to match the DataSourceCore API.
+        """
+        return self.constants_symbols
+
+    # SECTION: constants
+    def all_constants(self) -> List[str]:
+        """
+        Get the list of constant names available in the source.
+
+        Returns
+        -------
+        List[str]
+            A list of constant names.
+        """
+        try:
+            if not self.constants_data:
+                logger.error("Constants data is not available.")
+                return []
+
+            return list(self.constants_data.keys())
+        except Exception as e:
+            logger.error(f"Error retrieving constant names: {e}")
+            return []
+
+    # SECTION: all constant symbols
+    def _all_constants_symbols(self) -> List[str]:
+        """
+        Get the list of constant symbols available in the source.
+
+        Returns
+        -------
+        List[str]
+            A list of constant symbols.
+        """
+        try:
+            if not self.constants_data:
+                logger.error("Constants data is not available.")
+                return []
+
+            symbols: List[str] = []
+
+            for constant_name, constant_value in self.constants_data.items():
+                if isinstance(constant_value, dict):
+                    symbol = constant_value.get("symbol", "")
+                    if symbol:
+                        symbols.append(symbol)
+                        continue
+
+                symbol_info = self.constants_symbols_data.get(
+                    constant_name,
+                    {}
+                )
+                if isinstance(symbol_info, dict):
+                    symbol = symbol_info.get("symbol", "")
+                    if symbol:
+                        symbols.append(symbol)
+
+            return symbols
+        except Exception as e:
+            logger.error(f"Error retrieving constant symbols: {e}")
+            return []
+
+    # SECTION: Constant availability
+    def is_constant_available(self, name: str) -> bool:
+        """
+        Check if a specific constant is available.
+
+        Parameters
+        ----------
+        name : str
+            The name of the constant to check.
+
+        Returns
+        -------
+        bool
+            True if the constant is available, False otherwise.
+        """
+        try:
+            return self.source.is_constant_available(
+                constant_name=name
+            )
+        except Exception as e:
+            logger.error(f"Error checking constant availability: {e}")
+            return False
+
+    def is_prop_available(self, name: str) -> bool:
+        """
+        Alias for ``is_constant_available`` to match the DataSourceCore API.
+        """
+        return self.is_constant_available(name=name)
+
+    # NOTE: Check constants availability
+    def check_constants_availability(self, names: List[str]) -> Dict[str, bool]:
+        """
+        Check the availability of multiple constants.
+
+        Parameters
+        ----------
+        names : List[str]
+            A list of constant names to check.
+
+        Returns
+        -------
+        Dict[str, bool]
+            A dictionary mapping constant names to their availability.
+        """
+        try:
+            all_constants = self.all_constants()
+
+            if not all_constants:
+                logger.error("No constants available to check.")
+                return {}
+
+            return {name: name in all_constants for name in names}
+        except Exception as e:
+            logger.error(f"Error checking constants availability: {e}")
+            return {name: False for name in names}
+
+    def check_props_availability(self, names: List[str]) -> Dict[str, bool]:
+        """
+        Alias for ``check_constants_availability``.
+        """
+        return self.check_constants_availability(names=names)
+
+    # SECTION: get constant
+    def constant(
+        self,
+        name: str
+    ) -> Optional[Any]:
+        """
+        Get the raw data for a specific constant.
+
+        Parameters
+        ----------
+        name : str
+            The name of the constant to retrieve.
+
+        Returns
+        -------
+        Optional[Any]
+            The constant source entry, or None if not found.
+        """
+        try:
+            res = self.source.constants_extractor(
+                constant_name=name
+            )
+
+            if res is None:
+                logger.warning(f"Constant '{name}' not found.")
+                return None
+
+            return res
+        except Exception as e:
+            logger.error(f"Error retrieving constant '{name}': {e}")
+            return None
+
+    def const(
+        self,
+        name: str
+    ) -> Optional[Any]:
+        """
+        Alias for ``constant``.
+        """
+        return self.constant(name=name)
+
+    # SECTION: get constant symbol metadata
+    def symbol(
+        self,
+        name: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get symbol metadata for a specific constant.
+
+        Parameters
+        ----------
+        name : str
+            The name of the constant symbol metadata to retrieve.
+
+        Returns
+        -------
+        Optional[Dict[str, Any]]
+            The constant symbol metadata, or None if not found.
+        """
+        try:
+            return self.source.constant_symbol(
+                constant_name=name
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving constant symbol '{name}': {e}")
+            return None
+
+    def const_symbol(
+        self,
+        name: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Alias for ``symbol``.
+        """
+        return self.symbol(name=name)
+
+    # SECTION: get property-like constant
+    def prop(
+        self,
+        name: str
+    ) -> Optional[PropResult]:
+        """
+        Get a property-like constant as a ``PropResult``.
+
+        This method expects the constant entry to be a dictionary containing a
+        ``value`` key. Plain constants are available through ``constant``.
+
+        Parameters
+        ----------
+        name : str
+            The name of the constant to retrieve.
+
+        Returns
+        -------
+        Optional[PropResult]
+            The constant value, unit and symbol, or None if the constant cannot
+            be represented as a ``PropResult``.
+        """
+        try:
+            res = self.constant(name=name)
+
+            if res is None:
+                return None
+
+            if not isinstance(res, dict) or "value" not in res:
+                logger.warning(
+                    f"Constant '{name}' is not a property-like dictionary."
+                )
+                return None
+
+            value = res.get("value", 0)
+            unit = res.get("unit", "")
+            symbol = res.get("symbol", "")
+
+            return PropResult(
+                value=float(value),
+                unit=unit,
+                symbol=symbol
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving property-like constant '{name}': {e}")
+            return None
+
+    # SECTION: select a constant
+    def select(
+        self,
+        symbol: str
+    ) -> Optional[CustomProperty]:
+        """
+        Select a property-like constant and return it as a ``CustomProperty``.
+
+        Parameters
+        ----------
+        symbol : str
+            The name of the constant to select.
+
+        Returns
+        -------
+        Optional[CustomProperty]
+            A CustomProperty object containing the constant's value, unit, and
+            symbol, or None if the constant is not property-like.
+        """
+        try:
+            prop_result = self.prop(symbol)
+            if prop_result is None:
+                return None
+
+            return CustomProperty(
+                value=prop_result.value,
+                unit=prop_result.unit,
+                symbol=prop_result.symbol
+            )
+        except Exception as e:
+            logger.error(f"Error selecting constant '{symbol}': {e}")
+            return None
