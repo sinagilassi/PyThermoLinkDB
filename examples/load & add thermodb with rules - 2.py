@@ -152,7 +152,7 @@ print(CO2_dt)
 
 # >> check
 if CO2_dt is not None:
-    print(CO2_dt.props())
+    print(CO2_dt.props)
     print(CO2_dt.prop(name='EnFo'))
 
 
@@ -172,7 +172,9 @@ print(CO2_Cp_IG_eq)
 if CO2_Cp_IG_eq is not None and isinstance(CO2_Cp_IG_eq, EquationSourceCore):
     print(CO2_Cp_IG_eq.inputs)
     print(CO2_Cp_IG_eq.args)
-    print(CO2_Cp_IG_eq.fn(T=298.15))
+    # fn
+    if CO2_Cp_IG_eq.fn is not None:
+        print(CO2_Cp_IG_eq.fn(T=298.15))
     print(CO2_Cp_IG_eq.calc(T=298.15, P=12))
 
 # ! make equation source for a component including all equations
@@ -195,7 +197,7 @@ print(ethanol_eqs)
 
 # NOTE: >> check CO2 equations
 if CO2_eqs is not None:
-    print(CO2_eqs.equations())
+    print(CO2_eqs.all_available_equations())
 
     # >> make Cp_IG equation source
     Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
@@ -204,7 +206,8 @@ if CO2_eqs is not None:
         # inputs
         print(Cp_IG_eq.inputs)
         # fn
-        print(Cp_IG_eq.fn(T=298.15))
+        if Cp_IG_eq.fn is not None:
+            print(Cp_IG_eq.fn(T=298.15))
         # calc
         print(Cp_IG_eq.calc(T=298.15, P=12))
 
@@ -212,13 +215,15 @@ if CO2_eqs is not None:
     VaPr_eq = CO2_eqs.eq(name='VaPr')
     print(VaPr_eq)
     if VaPr_eq is not None:
-        print(VaPr_eq.fn(T=220))
+        # fn
+        if VaPr_eq.fn is not None:
+            print(VaPr_eq.fn(T=220))
         # calc
         print(VaPr_eq.calc(T=220))
 
 # NOTE: >> check ethane equations
 if ethanol_eqs is not None:
-    print(ethanol_eqs.equations())
+    print(ethanol_eqs.all_available_equations())
 
     # >> make Cp_IG equation source
     Cp_IG_eq = ethanol_eqs.eq(name='Cp_IG')
@@ -227,7 +232,8 @@ if ethanol_eqs is not None:
         # inputs
         print(Cp_IG_eq.inputs)
         # fn
-        print(Cp_IG_eq.fn(T=298.15))
+        if Cp_IG_eq.fn is not None:
+            print(Cp_IG_eq.fn(T=298.15))
         # calc
         print(Cp_IG_eq.calc(T=298.15, P=12))
 
@@ -239,6 +245,8 @@ if ethanol_eqs is not None:
         print(Cp_LIQ_eq.args)
         print(Cp_LIQ_eq.inputs)
         print(Cp_LIQ_eq.arg_mappings)
-        print(Cp_LIQ_eq.fn(T=298.15, Tc=302))
+        # fn
+        if Cp_LIQ_eq.fn is not None:
+            print(Cp_LIQ_eq.fn(T=298.15, Tc=302))
         # calc
         print(Cp_LIQ_eq.calc(T=298.15, Tc=302))
