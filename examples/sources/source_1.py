@@ -53,6 +53,9 @@ print(data_symbols)
 print(equation_symbols)
 print(constants_symbols)
 
+# ========================================
+# SECTION: EQUATION SOURCE
+# ========================================
 # NOTE: make equation source core
 eq_src = source.eq_builder(
     components=[CO2],
@@ -83,6 +86,9 @@ eq_res = source.eq_eval(
 )
 print(eq_res)
 
+# ========================================
+# SECTION: DATA SOURCE
+# ========================================
 # NOTE: get component data
 comp_data = source.get_dt('CO2-g')
 print("Component data for")
@@ -103,6 +109,9 @@ comp_data_specific_symbol = source.get_prop_symbol('CO2-g', 'EnFo_IG')
 print("Component data symbols for")
 print(comp_data_specific_symbol)
 
+# ========================================
+# SECTION: CONSTANTS SOURCE
+# ========================================
 # NOTE: access to constants source
 # ! check availability of constant 'R'
 check_0 = source.is_constant_available('R')
