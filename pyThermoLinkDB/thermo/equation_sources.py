@@ -175,6 +175,25 @@ class EquationSourcesCore:
 
         return list(self.component_equations.keys())
 
+    def all_equations_available(self, names: List[str]) -> bool:
+        """
+        Check if all specified equation IDs are available for the component before building sources.
+
+        Parameters
+        ----------
+        names : List[str]
+            A list of equation IDs (symbols) to check for availability.
+
+        Returns
+        -------
+        bool
+            True if all specified equation IDs are available; False otherwise.
+        """
+        if self.component_equations is None:
+            return False
+
+        return all(name in self.component_equations.keys() for name in names)
+
     # SECTION: make equation source for a specific property
     def eq(
         self,
