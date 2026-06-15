@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 from pythermodb_settings.models import CustomProperty
 # local
 from ..thermo import Source
-from ..models.component_models import PropResult
+from ..models.component_models import ConstantResult, PropResult
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -38,7 +38,9 @@ class ConstantsSourceCore:
 
         # SECTION: retrieve constants
         self.constants_data: Dict[str, Any] = self.source.constantssource
-        self.constants_symbols_data: Dict[str, Any] = self.source.constantssource_symbols
+        self.constants_symbols_data: Dict[
+            str, Any
+        ] = self.source.constantssource_symbols
 
         if not self.constants_data:
             logger.warning("No constants data found in source.")
@@ -326,7 +328,8 @@ class ConstantsSourceCore:
                 symbol=symbol
             )
         except Exception as e:
-            logger.error(f"Error retrieving property-like constant '{name}': {e}")
+            logger.error(
+                f"Error retrieving property-like constant '{name}': {e}")
             return None
 
     # SECTION: select a constant
@@ -360,4 +363,62 @@ class ConstantsSourceCore:
             )
         except Exception as e:
             logger.error(f"Error selecting constant '{symbol}': {e}")
+            return None
+
+    # SECTION: select any constant
+    def select_wise(
+        self,
+        symbol: str
+    ) -> Optional[ConstantResult]:
+        """
+        Select any constant value shape and return it as a ``ConstantResult``.
+
+        Unlike ``select``, this method does not coerce the constant value to a
+        numeric ``CustomProperty``. It supports scalar, string, dictionary,
+        list, and ``None`` values. If the constant entry is a metadata
+        dictionary containing ``value``, ``unit``, or ``symbol`` keys, those
+        fields are unpacked; otherwise the full source entry is returned as the
+        value.
+
+        Parameters
+        ----------
+        symbol : str
+            The name of the constant to select.
+
+        Returns
+        -------
+        Optional[ConstantResult]
+            A ConstantResult object containing the constant's raw value, unit,
+            and symbol, or None if the constant is not found.
+        """
+        try:
+            # NOTE: check availability first to avoid unnecessary processing and provide a clear warning
+            if not self.is_constant_available(name=symbol):
+                logger.warning(f"Constant '{symbol}' not found.")
+                return None
+
+            # NOTE: retrieve the raw constant entry from the source
+            res = self.const(symbol)
+
+            # >> check
+            if not res:
+                logger.warning(f"Constant '{symbol}' not found in source.")
+                return None
+
+            selected_symbol = symbol
+            symbol_info = self.constants_symbols_data.get(symbol)
+
+            # NOTE: if the constant entry is a dictionary with symbol metadata, use that symbol; otherwise fall back to the input symbol
+            if isinstance(symbol_info, dict):
+                selected_symbol = symbol_info.get("symbol", symbol)
+
+            # NOTE: constant entry
+            return ConstantResult(
+                value=res.get("value", res),
+                unit=res.get("unit", None),
+                symbol=res.get("symbol", selected_symbol)
+            )
+
+        except Exception as e:
+            logger.error(f"Error selecting constant '{symbol}' wisely: {e}")
             return None
