@@ -57,7 +57,7 @@ print(CO2_dt)
 
 # >> check
 if CO2_dt is not None:
-    print(CO2_dt.props())
+    print(CO2_dt.props)
     print(CO2_dt.prop(name='EnFo'))
 
 
