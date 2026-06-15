@@ -191,7 +191,7 @@ class ModelSource(BaseModel):
         Data source dictionary for multiple components
     equation_source: Dict[str, Dict[str, EquationSource]]
         Equation source dictionary for multiple components
-    constants_source: Optional[Dict[str, TableConstants]]
+    constants_source: Optional[Dict[str, ConstantsSource]]
         Optional constants source dictionary
     data_symbols: Optional[Dict[str, Dict[str, DataSymbol]]] = None
         Optional data symbol dictionary for multiple components
@@ -208,7 +208,7 @@ class ModelSource(BaseModel):
         ...,
         description="Equation source dictionary for multiple components"
     )
-    constants_source: Optional[Dict[str, TableConstants]] = Field(
+    constants_source: Optional[Dict[str, ConstantsSource]] = Field(
         default_factory=dict,
         description="Constants source dictionary for multiple components"
     )
