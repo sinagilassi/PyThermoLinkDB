@@ -62,6 +62,9 @@ if CO2_dt is None:
 print(CO2_dt.props)
 print(CO2_dt.all_props())
 
+# ! all property symbols
+print(CO2_dt.props_symbols)
+
 # ! available properties
 print(CO2_dt.is_prop_available('EnFo_IG'))
 print(CO2_dt.is_prop_available('Unknown_Prop'))
