@@ -54,7 +54,7 @@ print(constants_src.is_constant_available('Unknown_Constant'))
 
 # ! check a list of constants
 print(constants_src.check_constants_availability(['R', 'dH_rxn']))
-print(constants_src.check_props_availability(['R', 'Unknown_Constant']))
+print(constants_src.check_availability(['R', 'Unknown_Constant']))
 
 # ! all constants available
 print(constants_src.all_available(['R', 'dH_rxn']))
