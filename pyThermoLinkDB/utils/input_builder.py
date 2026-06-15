@@ -32,14 +32,18 @@ def _extract_input_symbols(inputs: Dict[str, Any]) -> List[str]:
     try:
         symbols = []
         for input_key, input_value in inputs.items():
+            # extract symbol
             symbol = input_value.get('symbol')
+
+            # >> check
             if isinstance(symbol, str):
+                # add to symbols list
                 symbols.append(symbol)
             else:
-                logger.error(
-                    f"Input '{input_key}' is missing a valid 'symbol' key or it is not a string."
-                )
-                return []
+                # get key as fallback
+                symbols.append(input_key)
+
+        # res
         return symbols
     except Exception as e:
         logger.error(f"Error extracting input symbols: {e}")
@@ -167,7 +171,7 @@ def check_inputs_availability(
 
 def validate_inputs_availability_and_units(
         eq_inputs: Dict[str, Any],
-        inputs: Dict[str, Any],
+        inputs: List[str],
         unit_availability_fn: UnitAvailabilityFn,
 ) -> Tuple[bool, Dict[str, bool], bool, Dict[str, bool]]:
     """
@@ -177,8 +181,8 @@ def validate_inputs_availability_and_units(
     ----------
     eq_inputs : Dict[str, Any]
         Expected equation inputs keyed by input symbol. Each entry may define an expected ``unit``.
-    inputs : Dict[str, Any]
-        Runtime input values keyed by input symbol. Each entry should define a ``value`` and ``unit``.
+    inputs : List[str]
+        Runtime inputs provided as a list of input symbols. Each symbol should correspond to an expected input defined in ``eq_inputs``.
     unit_availability_fn : UnitAvailabilityFn
         Function used to check if a unit is recognized and supported for conversion.
 
@@ -192,13 +196,10 @@ def validate_inputs_availability_and_units(
             - A dictionary detailing the availability of each required unit.
     """
     try:
-        # input symbols
-        inputs_symbols = _extract_input_symbols(inputs)
-
         # check inputs availability
         inputs_available, inputs_availability_details = check_inputs_availability(
             eq_inputs,
-            inputs_symbols
+            inputs
         )
 
         # check unit availability
