@@ -50,7 +50,7 @@ print(CO2_dt)
 
 # >> check
 if CO2_dt is not None:
-    print(CO2_dt.props())
+    print(CO2_dt.props)
     print(CO2_dt.prop(name='EnFo'))
 
 
@@ -102,61 +102,66 @@ ethanol_eqs = mkeqs(
 print(ethanol_eqs)
 
 # NOTE: >> check CO2 equations
-if CO2_eqs is not None:
-    # equations
-    print(CO2_eqs.all_available_equations())
+if CO2_eqs is None:
+    raise ValueError("No equation source found for CO2.")
 
-    # >> make Cp_IG equation source
-    Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
-    print(Cp_IG_eq)
-    if Cp_IG_eq is not None:
-        # inputs
-        print(Cp_IG_eq.inputs)
+# equations
+print(CO2_eqs.all_available_equations())
 
-        # fn
-        if Cp_IG_eq.fn is not None:
-            print(Cp_IG_eq.fn(T=298.15))
-        # calc
-        print(Cp_IG_eq.calc(T=298.15, P=12))
+# >> make Cp_IG equation source
+Cp_IG_eq = CO2_eqs.eq(name='Cp_IG')
+print(Cp_IG_eq)
+if Cp_IG_eq is not None:
+    # inputs
+    print(Cp_IG_eq.inputs)
 
-    # >> make VaPr equation source
-    VaPr_eq = CO2_eqs.eq(name='VaPr')
-    print(VaPr_eq)
-    if VaPr_eq is not None:
-        # inputs
-        print(VaPr_eq.inputs)
-        # fn
-        if VaPr_eq.fn is not None:
-            print(VaPr_eq.fn(T=220))
-        # calc
-        print(VaPr_eq.calc(T=220))
+    # fn
+    if Cp_IG_eq.fn is not None:
+        print(Cp_IG_eq.fn(T=298.15))
+    # calc
+    print(Cp_IG_eq.calc(T=298.15, P=12))
+
+# >> make VaPr equation source
+VaPr_eq = CO2_eqs.eq(name='VaPr')
+print(VaPr_eq)
+if VaPr_eq is not None:
+    # inputs
+    print(VaPr_eq.inputs)
+    # fn
+    if VaPr_eq.fn is not None:
+        print(VaPr_eq.fn(T=220))
+    # calc
+    print(VaPr_eq.calc(T=220))
 
 # NOTE: >> check ethane equations
-if ethanol_eqs is not None:
-    print(ethanol_eqs.all_available_equations())
+if ethanol_eqs is None:
+    raise ValueError("No equation source found for ethanol.")
 
-    # >> make Cp_IG equation source
-    Cp_IG_eq = ethanol_eqs.eq(name='Cp_IG')
-    print(Cp_IG_eq)
-    if Cp_IG_eq is not None:
-        # inputs
-        print(Cp_IG_eq.inputs)
-        # fn
-        if Cp_IG_eq.fn is not None:
-            print(Cp_IG_eq.fn(T=298.15))
-        # calc
-        print(Cp_IG_eq.calc(T=298.15, P=12))
+# equations
+print(ethanol_eqs.all_available_equations())
 
-    # >> make Cp_LIQ equation source
-    Cp_LIQ_eq = ethanol_eqs.eq(name='Cp_LIQ')
-    print(Cp_LIQ_eq)
-    if Cp_LIQ_eq is not None:
-        # inputs
-        print(Cp_LIQ_eq.args)
-        print(Cp_LIQ_eq.inputs)
-        print(Cp_LIQ_eq.arg_mappings)
-        # fn
-        if Cp_LIQ_eq.fn is not None:
-            print(Cp_LIQ_eq.fn(T=298.15, Tc=302))
-        # calc
-        print(Cp_LIQ_eq.calc(T=298.15, Tc=302))
+# >> make Cp_IG equation source
+Cp_IG_eq = ethanol_eqs.eq(name='Cp_IG')
+print(Cp_IG_eq)
+if Cp_IG_eq is not None:
+    # inputs
+    print(Cp_IG_eq.inputs)
+    # fn
+    if Cp_IG_eq.fn is not None:
+        print(Cp_IG_eq.fn(T=298.15))
+    # calc
+    print(Cp_IG_eq.calc(T=298.15, P=12))
+
+# >> make Cp_LIQ equation source
+Cp_LIQ_eq = ethanol_eqs.eq(name='Cp_LIQ')
+print(Cp_LIQ_eq)
+if Cp_LIQ_eq is not None:
+    # inputs
+    print(Cp_LIQ_eq.args)
+    print(Cp_LIQ_eq.inputs)
+    print(Cp_LIQ_eq.arg_mappings)
+    # fn
+    if Cp_LIQ_eq.fn is not None:
+        print(Cp_LIQ_eq.fn(T=298.15, Tc=302))
+    # calc
+    print(Cp_LIQ_eq.calc(T=298.15, Tc=302))
