@@ -214,7 +214,7 @@ class DataSourceCore:
             return False
 
     # NOTE: Check properties availability
-    def check_props_availability(self, names: List[str]) -> Dict[str, bool]:
+    def check_availability(self, names: List[str]) -> Dict[str, bool]:
         """
         Check the availability of multiple properties for the component.
 
@@ -261,7 +261,7 @@ class DataSourceCore:
             True if all properties are available, False otherwise.
         """
         try:
-            availability = self.check_props_availability(names)
+            availability = self.check_availability(names)
             return all(availability.values())
         except Exception as e:
             logger.error(

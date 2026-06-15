@@ -175,6 +175,27 @@ class EquationSourcesCore:
 
         return list(self.component_equations.keys())
 
+    # NOTE: check availability of specific equations
+    def check_availability(self, names: List[str]) -> Dict[str, bool]:
+        """
+        Check the availability of specified equation IDs for the component before building sources.
+
+        Parameters
+        ----------
+        names : List[str]
+            A list of equation IDs (symbols) to check for
+
+        Returns
+        -------
+        Dict[str, bool]
+            A dictionary mapping each specified equation ID to a boolean indicating its availability.
+        """
+        if self.component_equations is None:
+            return {}
+
+        return {name: name in self.component_equations.keys() for name in names}
+
+    # NOTE: check if all specified equations are available
     def all_available(self, names: List[str]) -> bool:
         """
         Check if all specified equation IDs are available for the component before building sources.

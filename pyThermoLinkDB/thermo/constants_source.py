@@ -202,7 +202,7 @@ class ConstantsSourceCore:
             logger.error(f"Error checking constants availability: {e}")
             return {name: False for name in names}
 
-    def check_props_availability(self, names: List[str]) -> Dict[str, bool]:
+    def check_availability(self, names: List[str]) -> Dict[str, bool]:
         """
         Alias for ``check_constants_availability``.
         """
