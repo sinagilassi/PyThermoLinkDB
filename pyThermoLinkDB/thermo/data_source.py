@@ -246,7 +246,7 @@ class DataSourceCore:
             logger.error(f"Error checking properties availability: {e}")
             return {name: False for name in names}
 
-    def all_props_available(self, names: List[str]) -> bool:
+    def all_available(self, names: List[str]) -> bool:
         """
         Check if all specified properties are available for the component.
 

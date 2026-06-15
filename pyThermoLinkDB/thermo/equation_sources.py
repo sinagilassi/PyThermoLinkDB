@@ -175,7 +175,7 @@ class EquationSourcesCore:
 
         return list(self.component_equations.keys())
 
-    def all_equations_available(self, names: List[str]) -> bool:
+    def all_available(self, names: List[str]) -> bool:
         """
         Check if all specified equation IDs are available for the component before building sources.
 
