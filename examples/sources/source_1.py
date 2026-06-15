@@ -5,6 +5,7 @@ from typing import Callable, Dict, Optional, Union, List, Any
 import pyThermoDB as ptdb
 # locals
 import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB.models import DataSource, EquationSource, ConstantsSource
 # ! source
 from pyThermoLinkDB.thermo import Source
 # ! model source
@@ -28,11 +29,14 @@ print(thermodb_dir)
 # ====================================================
 # SECTION: THERMODB LINK CONFIGURATION
 # ====================================================
-
 # build datasource & equationsource
-datasource = model_source.data_source
-equationsource = model_source.equation_source
-constantssource = model_source.constants_source
+datasource: Dict[str, DataSource] = model_source.data_source
+equationsource: Dict[str, EquationSource] = model_source.equation_source
+constantssource: Dict[
+    str,
+    ConstantsSource
+] | None = model_source.constants_source
+
 # =======================================
 # SECTION: ✅ MAKE SOURCE
 # =======================================
