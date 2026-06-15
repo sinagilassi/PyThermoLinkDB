@@ -1,4 +1,9 @@
 # import packages/modules
+from examples.model_source_2 import model_source
+from pyThermoLinkDB import mkct, ConstantsSourceCore
+import pyThermoDB as ptdb
+import pyThermoLinkDB as ptdblink
+from rich import print
 import sys
 from pathlib import Path
 
@@ -6,12 +11,7 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from rich import print
-import pyThermoLinkDB as ptdblink
-import pyThermoDB as ptdb
-from pyThermoLinkDB import mkct, ConstantsSourceCore
 # ! model source
-from examples.model_source_2 import model_source_with_rules
 
 # version
 print(ptdblink.__version__)
@@ -20,8 +20,8 @@ print(ptdb.__version__)
 # =======================================
 # MODEL SOURCE
 # =======================================
-constantssource = model_source_with_rules.constants_source
-constants_symbols = model_source_with_rules.constants_symbols
+constantssource = model_source.constants_source
+constants_symbols = model_source.constants_symbols
 
 print(constantssource)
 print(constants_symbols)
@@ -30,7 +30,7 @@ print(constants_symbols)
 # MAKE CONSTANTS SOURCE DIRECTLY
 # =======================================
 constants_src: ConstantsSourceCore | None = mkct(
-    model_source=model_source_with_rules,
+    model_source=model_source,
 )
 
 # print
@@ -70,6 +70,7 @@ print(constants_src.const_symbol(name='R'))
 # value/unit/symbol fields
 print(constants_src.prop(name='R'))
 print(constants_src.select(symbol='R'))
+print(constants_src.select(symbol='dH_rxn'))
 
 # NOTE: constants may also be nested dictionaries, lists, or any other source
 # value. Use constant()/const() for those raw values.
