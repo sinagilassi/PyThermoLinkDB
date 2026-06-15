@@ -1,12 +1,49 @@
 # import libs
 import logging
-from typing import Dict, Any, Protocol, Tuple
+from typing import Dict, Any, Protocol, Tuple, List
 from pythermodb_settings.utils import measure_time
 
 # locals
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
+
+
+# SECTION: Utils
+def _extract_input_symbols(inputs: Dict[str, Any]) -> List[str]:
+    """
+    Extract input symbols from runtime inputs.
+
+    Parameters
+    ----------
+    inputs : Dict[str, Any]
+        Runtime input values keyed by input symbol. Each entry should define a
+        ``value`` and ``unit``.
+
+    Returns
+    -------
+    List[str]
+        A list of input symbols extracted from the runtime inputs.
+
+    Notes
+    -----
+    This function assumes that each entry in the `inputs` dictionary contains a valid `symbol` key. If any entry is missing the `symbol` key or if the value is not a string, an error will be logged and an empty list will be returned.
+    """
+    try:
+        symbols = []
+        for input_key, input_value in inputs.items():
+            symbol = input_value.get('symbol')
+            if isinstance(symbol, str):
+                symbols.append(symbol)
+            else:
+                logger.error(
+                    f"Input '{input_key}' is missing a valid 'symbol' key or it is not a string."
+                )
+                return []
+        return symbols
+    except Exception as e:
+        logger.error(f"Error extracting input symbols: {e}")
+        return []
 
 # SECTION: Check unit availability
 # NOTE: Protocol for unit availability function used by check_unit_availability
@@ -85,7 +122,7 @@ def check_unit_availability(
 
 def check_inputs_availability(
         eq_inputs: Dict[str, Any],
-        inputs: Dict[str, Any]
+        inputs: List[str]
 ) -> Tuple[bool, Dict[str, bool]]:
     """
     Check that all expected equation inputs are provided in the runtime inputs.
@@ -94,7 +131,7 @@ def check_inputs_availability(
     ----------
     eq_inputs : Dict[str, Any]
         Expected equation inputs keyed by input symbol.
-    inputs : Dict[str, Any]
+    inputs : List[str]
         Runtime input values keyed by input symbol.
 
     Returns
@@ -108,7 +145,7 @@ def check_inputs_availability(
 
         # looping through the expected inputs and check availability
         for input_symbol in eq_inputs.keys():
-            if input_symbol not in inputs.keys():
+            if input_symbol not in inputs:
                 logger.warning(
                     f"Expected input '{input_symbol}' is not provided in runtime inputs."
                 )
@@ -155,10 +192,13 @@ def validate_inputs_availability_and_units(
             - A dictionary detailing the availability of each required unit.
     """
     try:
+        # input symbols
+        inputs_symbols = _extract_input_symbols(inputs)
+
         # check inputs availability
         inputs_available, inputs_availability_details = check_inputs_availability(
             eq_inputs,
-            inputs
+            inputs_symbols
         )
 
         # check unit availability
@@ -343,10 +383,13 @@ def validate_and_build_inputs(
             raise ValueError(
                 "Missing required units for equation input building.")
 
+        # NOTE: inputs symbols
+        inputs_symbols = _extract_input_symbols(inputs)
+
         # NOTE: all expected inputs must be provided before building args
         inputs_available, _ = check_inputs_availability(
             eq_inputs,
-            inputs
+            inputs_symbols
         )
         if not inputs_available:
             logger.error(
