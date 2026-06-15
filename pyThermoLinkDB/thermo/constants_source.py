@@ -208,6 +208,23 @@ class ConstantsSourceCore:
         """
         return self.check_constants_availability(names=names)
 
+    def all_constants_available(self, names: List[str]) -> bool:
+        """
+        Check if all constants in a list are available.
+
+        Parameters
+        ----------
+        names : List[str]
+            A list of constant names to check.
+
+        Returns
+        -------
+        bool
+            True if all constants are available, False otherwise.
+        """
+        availability = self.check_constants_availability(names=names)
+        return all(availability.values())
+
     # SECTION: get constant
     def constant(
         self,
