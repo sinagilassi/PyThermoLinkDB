@@ -26,7 +26,9 @@ from pyThermoLinkDB.utils.input_builder import (
     check_unit_availability,
     UnitAvailabilityFn,
     build_inputs,
-    UnitConversionFn
+    UnitConversionFn,
+    validate_and_build_inputs,
+    validate_inputs_availability_and_units
 )
 # ! model source & components
 from examples.model_source_1 import model_source, CO2, C2H5OH
@@ -57,14 +59,17 @@ equationsource = model_source.equation_source
 # NOTE: create unit conversion function using pycuc
 unit_conversion_fn = pycuc.convert_from_to
 
+# NOTE: create unit availability function using pycuc
+unit_availability_fn = pycuc.is_unit_available
+
 # =======================================
 # ✅ inputs
 # =======================================
 # NOTE: universal inputs
-inputs = {
+runtime_inputs = {
     "T": {"value": 25.0, "unit": "C"},
     "P": {"value": 101325.0, "unit": "Pa"},
-    "Tc": {"value": 302.0, "unit": "K"},
+    # "Tc": {"value": 302.0, "unit": "K"},
 }
 
 # =======================================
@@ -77,8 +82,9 @@ ethanol_eqs: EquationSourcesCore | None = mkeqs(
     model_source=model_source,
     component_key='Name-State',
     build_all=True,  # build all equations for the component
+    build_list=["Cp_IG"]
 )
-# print
+# print the equation source object
 print(ethanol_eqs)
 
 # NOTE: >> check ethane equations
@@ -89,6 +95,19 @@ if ethanol_eqs is not None:
     # ! source all equations for the component
     print(ethanol_eqs.src)
 
+    # ! inputs sources for all equations
+    print(ethanol_eqs.inputs_src)
+
+    # ! input symbols sources for all equations
+    print(ethanol_eqs.inputs_symbols_src)
+
+    # ! validate all inputs availability and units for all equations
+    validation_results = ethanol_eqs.validate_all_inputs(
+        inputs=runtime_inputs,
+        unit_availability_fn=unit_availability_fn
+    )
+    print(validation_results)
+
     # ? select Cp_IG equation source
     Cp_IG_eq_: EquationSourceCore | None = ethanol_eqs.select(name='Cp_IG')
     print(Cp_IG_eq_)
@@ -97,23 +116,32 @@ if ethanol_eqs is not None:
         print(Cp_IG_eq_.inputs)
 
         # ! check inputs availability
-        inputs_available, inputs_availability_details = check_inputs_availability(
-            Cp_IG_eq_.inputs,
-            inputs
-        )
+        # inputs_available, inputs_availability_details = check_inputs_availability(
+        #     Cp_IG_eq_.inputs,
+        #     inputs
+        # )
 
         # ! build inputs
-        input_args = build_inputs(
+        # input_args = build_inputs(
+        #     Cp_IG_eq_.inputs,
+        #     inputs,
+        #     unit_conversion_fn=unit_conversion_fn
+        # )
+        # >> log
+        # print(input_args)
+
+        # ! validate and build inputs
+        input_args = validate_and_build_inputs(
             Cp_IG_eq_.inputs,
-            inputs,
-            unit_conversion_fn=unit_conversion_fn
+            runtime_inputs,
+            unit_conversion_fn=unit_conversion_fn,
+            unit_availability_fn=unit_availability_fn
         )
         # >> log
         print(input_args)
 
         # calc
-        if input_args is not None:
-            print(Cp_IG_eq_.calc(**input_args))
+        print(Cp_IG_eq_.calc(**input_args))
 
     # ? make Cp_LIQ equation source
     Cp_LIQ_eq: EquationSourceCore | None = ethanol_eqs.select(name='Cp_LIQ')
@@ -124,8 +152,18 @@ if ethanol_eqs is not None:
         print(Cp_LIQ_eq.inputs)
         print(Cp_LIQ_eq.arg_mappings)
 
+        # ! validate and build inputs
+        input_args = validate_and_build_inputs(
+            Cp_LIQ_eq.inputs,
+            runtime_inputs,
+            unit_conversion_fn=unit_conversion_fn,
+            unit_availability_fn=unit_availability_fn
+        )
+        # >> log
+        print(input_args)
+
         # calc
-        print(Cp_LIQ_eq.calc(T=298.15, Tc=302))
+        print(Cp_LIQ_eq.calc(**input_args))
 
     # >> unknown equation
     unknown_eq: EquationSourceCore | None = ethanol_eqs.select(
