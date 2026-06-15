@@ -56,6 +56,12 @@ print(constants_src.is_constant_available('Unknown_Constant'))
 print(constants_src.check_constants_availability(['R', 'dH_rxn']))
 print(constants_src.check_props_availability(['R', 'Unknown_Constant']))
 
+# ! all constants available
+print(constants_src.all_constants_available(['R', 'dH_rxn']))
+print(constants_src.all_constants_available(
+    ['R', 'dH_rxn', 'Unknown_Constant'])
+)
+
 # ! specific constants
 # NOTE: raw constant entry, works for any constant value shape
 print(constants_src.constant(name='R'))
