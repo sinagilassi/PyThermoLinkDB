@@ -93,6 +93,7 @@ class DataSourceCore:
 
         # SECTION: all properties
         self._props: List[str] = self.all_props()
+        self._props_symbols: List[str] = self._all_props_symbols()
 
     # SECTION: Properties
     @property
@@ -115,6 +116,32 @@ class DataSourceCore:
             logger.error(f"Error retrieving property names: {e}")
             return []
 
+    @property
+    def props_symbols(self) -> List[str]:
+        """
+        Get the list of property symbols available for the component.
+
+        Returns
+        -------
+        List[str]
+            A list of property symbols.
+        """
+        try:
+            if self.component_data is None:
+                logger.error("Component data is not available.")
+                return []
+
+            symbols = []
+            for prop in self.component_data.values():
+                symbol = prop.get("symbol", "")
+                if symbol:
+                    symbols.append(symbol)
+
+            return symbols
+        except Exception as e:
+            logger.error(f"Error retrieving property symbols: {e}")
+            return []
+
     # SECTION: properties
     def all_props(self) -> List[str]:
         """
@@ -133,6 +160,32 @@ class DataSourceCore:
             return list(self.component_data.keys())
         except Exception as e:
             logger.error(f"Error retrieving property names: {e}")
+            return []
+
+    # SECTION: all property symbols
+    def _all_props_symbols(self) -> List[str]:
+        """
+        Get the list of property symbols available for the component.
+
+        Returns
+        -------
+        List[str]
+            A list of property symbols.
+        """
+        try:
+            if self.component_data is None:
+                logger.error("Component data is not available.")
+                return []
+
+            symbols = []
+            for prop in self.component_data.values():
+                symbol = prop.get("symbol", "")
+                if symbol:
+                    symbols.append(symbol)
+
+            return symbols
+        except Exception as e:
+            logger.error(f"Error retrieving property symbols: {e}")
             return []
 
     # SECTION: Property's availability
