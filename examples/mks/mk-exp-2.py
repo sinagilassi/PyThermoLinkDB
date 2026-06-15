@@ -72,6 +72,8 @@ runtime_inputs = {
     # "Tc": {"value": 302.0, "unit": "K"},
 }
 
+runtime_inputs_symbols = list(runtime_inputs.keys())
+
 # =======================================
 # ✅ make equation source for ethanol
 # =======================================
@@ -88,85 +90,87 @@ ethanol_eqs: EquationSourcesCore | None = mkeqs(
 print(ethanol_eqs)
 
 # NOTE: >> check ethane equations
-if ethanol_eqs is not None:
-    # ! all available equations
-    print(ethanol_eqs.all_available_equations())
+if ethanol_eqs is None:
+    raise ValueError("No equation source found for ethanol.")
 
-    # ! source all equations for the component
-    print(ethanol_eqs.src)
+# ! all available equations
+print(ethanol_eqs.all_available_equations())
 
-    # ! inputs sources for all equations
-    print(ethanol_eqs.inputs_src)
+# ! source all equations for the component
+print(ethanol_eqs.src)
 
-    # ! input symbols sources for all equations
-    print(ethanol_eqs.inputs_symbols_src)
+# ! inputs sources for all equations
+print(ethanol_eqs.inputs_src)
 
-    # ! validate all inputs availability and units for all equations
-    validation_results = ethanol_eqs.validate_all_inputs(
-        inputs=runtime_inputs,
+# ! input symbols sources for all equations
+print(ethanol_eqs.inputs_symbols_src)
+
+# ! validate all inputs availability and units for all equations
+validation_results = ethanol_eqs.validate_all_inputs(
+    inputs=runtime_inputs_symbols,
+    unit_availability_fn=unit_availability_fn
+)
+print(validation_results)
+
+# ? select Cp_IG equation source
+Cp_IG_eq_: EquationSourceCore | None = ethanol_eqs.select(name='Cp_IG')
+print(Cp_IG_eq_)
+if Cp_IG_eq_ is not None:
+    # inputs
+    print(Cp_IG_eq_.inputs)
+
+    # ! check inputs availability
+    # inputs_available, inputs_availability_details = check_inputs_availability(
+    #     Cp_IG_eq_.inputs,
+    #     inputs
+    # )
+
+    # ! build inputs
+    # input_args = build_inputs(
+    #     Cp_IG_eq_.inputs,
+    #     inputs,
+    #     unit_conversion_fn=unit_conversion_fn
+    # )
+    # >> log
+    # print(input_args)
+
+    # ! validate and build inputs
+    input_args = validate_and_build_inputs(
+        Cp_IG_eq_.inputs,
+        runtime_inputs,
+        unit_conversion_fn=unit_conversion_fn,
         unit_availability_fn=unit_availability_fn
     )
-    print(validation_results)
+    # >> log
+    print(input_args)
 
-    # ? select Cp_IG equation source
-    Cp_IG_eq_: EquationSourceCore | None = ethanol_eqs.select(name='Cp_IG')
-    print(Cp_IG_eq_)
-    if Cp_IG_eq_ is not None:
-        # inputs
-        print(Cp_IG_eq_.inputs)
+    # calc
+    print(Cp_IG_eq_.calc(**input_args))
 
-        # ! check inputs availability
-        # inputs_available, inputs_availability_details = check_inputs_availability(
-        #     Cp_IG_eq_.inputs,
-        #     inputs
-        # )
+# ? make Cp_LIQ equation source
+Cp_LIQ_eq: EquationSourceCore | None = ethanol_eqs.select(name='Cp_LIQ')
+print(Cp_LIQ_eq)
+if Cp_LIQ_eq is not None:
+    # inputs
+    print(Cp_LIQ_eq.args)
+    print(Cp_LIQ_eq.inputs)
+    print(Cp_LIQ_eq.arg_mappings)
 
-        # ! build inputs
-        # input_args = build_inputs(
-        #     Cp_IG_eq_.inputs,
-        #     inputs,
-        #     unit_conversion_fn=unit_conversion_fn
-        # )
-        # >> log
-        # print(input_args)
-
-        # ! validate and build inputs
-        input_args = validate_and_build_inputs(
-            Cp_IG_eq_.inputs,
-            runtime_inputs,
-            unit_conversion_fn=unit_conversion_fn,
-            unit_availability_fn=unit_availability_fn
-        )
-        # >> log
-        print(input_args)
-
-        # calc
-        print(Cp_IG_eq_.calc(**input_args))
-
-    # ? make Cp_LIQ equation source
-    Cp_LIQ_eq: EquationSourceCore | None = ethanol_eqs.select(name='Cp_LIQ')
-    print(Cp_LIQ_eq)
-    if Cp_LIQ_eq is not None:
-        # inputs
-        print(Cp_LIQ_eq.args)
-        print(Cp_LIQ_eq.inputs)
-        print(Cp_LIQ_eq.arg_mappings)
-
-        # ! validate and build inputs
-        input_args = validate_and_build_inputs(
-            Cp_LIQ_eq.inputs,
-            runtime_inputs,
-            unit_conversion_fn=unit_conversion_fn,
-            unit_availability_fn=unit_availability_fn
-        )
-        # >> log
-        print(input_args)
-
-        # calc
-        print(Cp_LIQ_eq.calc(**input_args))
-
-    # >> unknown equation
-    unknown_eq: EquationSourceCore | None = ethanol_eqs.select(
-        name='Unknown_Prop'
+    # ! validate and build inputs
+    input_args = validate_and_build_inputs(
+        Cp_LIQ_eq.inputs,
+        runtime_inputs,
+        unit_conversion_fn=unit_conversion_fn,
+        unit_availability_fn=unit_availability_fn
     )
-    print(unknown_eq)
+    # >> log
+    print(input_args)
+
+    # calc
+    print(Cp_LIQ_eq.calc(**input_args))
+
+# >> unknown equation
+unknown_eq: EquationSourceCore | None = ethanol_eqs.select(
+    name='Unknown_Prop'
+)
+print(unknown_eq)
