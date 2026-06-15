@@ -1,6 +1,7 @@
 # import libs
 import logging
 from typing import Dict, Any, Protocol, Tuple
+from pythermodb_settings.utils import measure_time
 
 # locals
 
@@ -124,6 +125,53 @@ def check_inputs_availability(
         logger.error(f"Error checking inputs availability: {e}")
         return False, {}
 
+# SECTION: check all eq_inputs are available in inputs and check required units are available before building inputs
+
+
+def validate_inputs_availability_and_units(
+        eq_inputs: Dict[str, Any],
+        inputs: Dict[str, Any],
+        unit_availability_fn: UnitAvailabilityFn,
+) -> Tuple[bool, Dict[str, bool], bool, Dict[str, bool]]:
+    """
+    Validate that all expected equation inputs are provided in the runtime inputs and that all required units are available.
+
+    Parameters
+    ----------
+    eq_inputs : Dict[str, Any]
+        Expected equation inputs keyed by input symbol. Each entry may define an expected ``unit``.
+    inputs : Dict[str, Any]
+        Runtime input values keyed by input symbol. Each entry should define a ``value`` and ``unit``.
+    unit_availability_fn : UnitAvailabilityFn
+        Function used to check if a unit is recognized and supported for conversion.
+
+    Returns
+    -------
+    Tuple[bool, Dict[str, bool], bool, Dict[str, bool]]
+        A tuple containing:
+            - A boolean indicating if all expected inputs are provided.
+            - A dictionary detailing the availability of each expected input.
+            - A boolean indicating if all required units are available.
+            - A dictionary detailing the availability of each required unit.
+    """
+    try:
+        # check inputs availability
+        inputs_available, inputs_availability_details = check_inputs_availability(
+            eq_inputs,
+            inputs
+        )
+
+        # check unit availability
+        units_available, units_availability_details = check_unit_availability(
+            eq_inputs,
+            unit_availability_fn
+        )
+
+        return inputs_available, inputs_availability_details, units_available, units_availability_details
+    except Exception as e:
+        logger.error(f"Error validating inputs and units availability: {e}")
+        return False, {}, False, {}
+
 # NOTE: Protocol for unit conversion function used by build_inputs
 
 
@@ -236,3 +284,92 @@ def build_inputs(
     except Exception as e:
         logger.error(f"Error building inputs: {e}")
         return None
+
+# SECTION: Build & check inputs
+
+
+@measure_time
+def validate_and_build_inputs(
+        eq_inputs: Dict[str, Any],
+        inputs: Dict[str, Any],
+        unit_conversion_fn: UnitConversionFn,
+        unit_availability_fn: UnitAvailabilityFn,
+        **kwargs
+) -> Dict[str, float]:
+    """
+    Validate equation inputs and build runtime input values.
+
+    All expected equation inputs must be present in the runtime inputs. This
+    makes the returned dictionary suitable for direct use as calculation
+    arguments and avoids silently falling back to default values.
+
+    Parameters
+    ----------
+    eq_inputs : Dict[str, Any]
+        Expected equation inputs keyed by input symbol. Each entry may define a
+        default ``value`` and expected ``unit``.
+    inputs : Dict[str, Any]
+        Runtime input values keyed by input symbol. Each entry should define a
+        ``value`` and ``unit``.
+    unit_conversion_fn : UnitConversionFn
+        Function used to convert runtime input values to the units required by
+        ``eq_inputs``. For example, ``pycuc.convert_from_to`` may be passed
+        directly.
+    unit_availability_fn : UnitAvailabilityFn
+        Function used to check if a unit is recognized and supported for
+        conversion. Expected equation input units are checked before building
+        inputs.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
+
+    Returns
+    -------
+    Dict[str, float] | None
+        Input values in the units required by ``eq_inputs``. Returns ``None`` if
+        a required unit conversion fails or if required inputs are missing.
+    """
+    try:
+        # NOTE: check required target units before building args
+        units_available, _ = check_unit_availability(
+            eq_inputs,
+            unit_availability_fn
+        )
+        if not units_available:
+            logger.error(
+                "One or more required units for equation inputs are not available."
+            )
+            raise ValueError(
+                "Missing required units for equation input building.")
+
+        # NOTE: all expected inputs must be provided before building args
+        inputs_available, _ = check_inputs_availability(
+            eq_inputs,
+            inputs
+        )
+        if not inputs_available:
+            logger.error(
+                "One or more expected inputs for the equation are not provided in runtime inputs."
+            )
+            raise ValueError(
+                "Missing required inputs for equation calculation.")
+
+        # NOTE: build inputs
+        res_ = build_inputs(
+            eq_inputs=eq_inputs,
+            inputs=inputs,
+            unit_conversion_fn=unit_conversion_fn
+        )
+
+        # check build result
+        if res_ is None:
+            logger.error(
+                "Failed to build inputs due to unit conversion error."
+            )
+            raise ValueError("Input building failed.")
+
+        return res_
+    except Exception as e:
+        logger.error(f"Error validating and building inputs: {e}")
+        raise
