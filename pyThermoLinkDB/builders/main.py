@@ -1,0 +1,65 @@
+# import libs
+import logging
+from typing import List, Optional, Dict, Any
+from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.utils import generate_component_references
+# locals
+from .thermo_model_source import ThermoModelSource
+
+# NOTE: logger setup
+logger = logging.getLogger(__name__)
+
+
+def build_thermo_model_source(
+        components: List[Component],
+        component_key: ComponentKey,
+        thermo_properties: List[str],
+        description: Optional[str] = None
+) -> Optional[ThermoModelSource]:
+    """
+    Build a thermodynamic model source.
+
+    Parameters
+    ----------
+    components : List[Component]
+        List of components involved in the thermodynamic model.
+    component_key : ComponentKey
+        The key to determine which identifier to use.
+        Options are:
+            - 'Name-State': Use the name-state identifier.
+            - 'Formula-State': Use the formula-state identifier.
+            - 'Name-Formula': Use the name and formula.
+            - 'Name': Use the component name.
+            - 'Formula': Use the component formula.
+            - 'Name-Formula-State': Use the name, formula, and state.
+            - 'Formula-Name-State': Use the formula, name, and state.
+    thermo_properties : List[str]
+        List of thermodynamic properties to be extracted from the model source.
+    description : Optional[str]
+        Optional description of the thermodynamic model source.
+
+    Returns
+    -------
+    Optional[ThermoModelSource]
+        An instance of ThermoModelSource if successful, None otherwise.
+    """
+    try:
+        # NOTE: generate component references
+        component_references = generate_component_references(
+            components=components,
+            component_key=component_key
+        )
+
+        # NOTE: create ThermoModelSource instance
+        thermo_model_source = ThermoModelSource(
+            components=components,
+            component_key=component_key,
+            thermo_properties=thermo_properties,
+            component_references=component_references,
+            description=description
+        )
+
+        return thermo_model_source
+    except Exception as e:
+        logger.error(f"Error building thermodynamic model source: {e}")
+        return None
