@@ -49,6 +49,7 @@ CO2_dt = mkdt(
     component=CO2,
     model_source=model_source,
     component_key='Name-State',
+    extract_list=['EnFo_IG', 'Cp_IG', 'Tc', 'Vc']
 )
 # print
 print(CO2_dt)
