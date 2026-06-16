@@ -19,7 +19,7 @@ class ThermoModelSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
-            thermo_properties: List[str],
+            thermo_data: List[str],
             thermo_equations: List[str],
             component_references: Dict[str, Any],
             description: Optional[str] = None
@@ -41,10 +41,10 @@ class ThermoModelSource:
                 - 'Formula': Use the component formula.
                 - 'Name-Formula-State': Use the name, formula, and state.
                 - 'Formula-Name-State': Use the formula, name, and state.
-        thermo_properties : List[str]
-            List of thermodynamic properties to be extracted from the model source.
+        thermo_data : List[str]
+            List of thermodynamic data symbol to be extracted from the model source.
         thermo_equations : List[str]
-            List of thermodynamic equations to be extracted from the model source.
+            List of thermodynamic equations symbol to be extracted from the model source.
         component_references : Dict[str, Any]
             Dictionary containing references for each component.
         description : Optional[str]
@@ -53,7 +53,7 @@ class ThermoModelSource:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
-        self.thermo_properties = thermo_properties
+        self.thermo_data = thermo_data
         self.thermo_equations = thermo_equations
         self.component_references = component_references
         self.description = description
