@@ -17,8 +17,10 @@ from .app import (
 # NOTE: thermo
 from .thermo import (
     mkdt,
+    mkdts,
     mkeq,
     mkeqs,
+    mkeqss,
     mkct,
     EquationSourceCore,
     EquationSourcesCore,
@@ -44,8 +46,10 @@ __all__ = [
     "load_and_build_mixture_model_source",
     # thermo
     "mkdt",
+    "mkdts",
     "mkeq",
     "mkeqs",
+    "mkeqss",
     "mkct",
     "EquationSourceCore",
     "EquationSourcesCore",
