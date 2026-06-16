@@ -3,6 +3,7 @@ import logging
 from typing import List, Optional, Dict, Any
 from pythermodb_settings.models import Component, ComponentKey
 # locals
+from ..thermo import mkdts, mkeqss
 
 
 # NOTE: logger setup
@@ -19,6 +20,7 @@ class ThermoModelSource:
             components: List[Component],
             component_key: ComponentKey,
             thermo_properties: List[str],
+            thermo_equations: List[str],
             component_references: Dict[str, Any],
             description: Optional[str] = None
     ):
@@ -41,6 +43,8 @@ class ThermoModelSource:
                 - 'Formula-Name-State': Use the formula, name, and state.
         thermo_properties : List[str]
             List of thermodynamic properties to be extracted from the model source.
+        thermo_equations : List[str]
+            List of thermodynamic equations to be extracted from the model source.
         component_references : Dict[str, Any]
             Dictionary containing references for each component.
         description : Optional[str]
@@ -50,5 +54,6 @@ class ThermoModelSource:
         self.components = components
         self.component_key = component_key
         self.thermo_properties = thermo_properties
+        self.thermo_equations = thermo_equations
         self.component_references = component_references
         self.description = description
