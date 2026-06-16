@@ -14,6 +14,7 @@ def build_thermo_model_source(
         components: List[Component],
         component_key: ComponentKey,
         thermo_properties: List[str],
+        thermo_equations: List[str],
         description: Optional[str] = None
 ) -> Optional[ThermoModelSource]:
     """
@@ -35,6 +36,8 @@ def build_thermo_model_source(
             - 'Formula-Name-State': Use the formula, name, and state.
     thermo_properties : List[str]
         List of thermodynamic properties to be extracted from the model source.
+    thermo_equations : List[str]
+        List of thermodynamic equations to be extracted from the model source.
     description : Optional[str]
         Optional description of the thermodynamic model source.
 
@@ -55,6 +58,7 @@ def build_thermo_model_source(
             components=components,
             component_key=component_key,
             thermo_properties=thermo_properties,
+            thermo_equations=thermo_equations,
             component_references=component_references,
             description=description
         )
