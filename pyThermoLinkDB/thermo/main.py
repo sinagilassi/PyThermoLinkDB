@@ -73,6 +73,72 @@ def mkeqs(
         logger.error(f"Error creating equation: {e}")
         return None
 
+# NOTE: Multiple Equation Maker
+
+
+def mkeqss(
+    components: list[Component],
+    model_source: ModelSource,
+    component_key: ComponentKey = 'Name-State',
+    build_all: bool = False,
+    build_list: Optional[list[str]] = None,
+) -> Optional[dict[str, EquationSourcesCore]]:
+    """
+    Make equation source cores for a list of components.
+
+    Parameters
+    ----------
+    components : list[Component]
+        The chemical components for which properties are to be calculated.
+    model_source : ModelSource
+        The source containing data for calculations.
+    component_key : Literal
+        The key to identify the components in the source data. Defaults to 'Name-State'.
+    build_all : bool
+        Whether to build all available equations for each component. Defaults to False.
+    build_list : Optional[list[str]]
+        A list of specific equation names to build. If provided, only these equations will be built. Defaults to None.
+
+    Returns
+    -------
+    Optional[dict[str, EquationSourcesCore]]
+        A dictionary of EquationSourcesCore objects keyed by component id; otherwise, None.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+
+        if not isinstance(components, list):
+            logger.error("Invalid components provided.")
+            return None
+
+        if not all(isinstance(component, Component) for component in components):
+            logger.error("Invalid component found in components.")
+            return None
+
+        # SECTION: Prepare source
+        Source_ = Source(
+            model_source=model_source,
+            component_key=component_key,
+        )
+
+        # SECTION: Create EquationSourcesCore objects
+        return {
+            set_component_id(component, component_key): EquationSourcesCore(
+                component=component,
+                source=Source_,
+                component_key=component_key,
+                build_all=build_all,
+                build_list=build_list,
+            )
+            for component in components
+        }
+    except Exception as e:
+        logger.error(f"Error creating equations: {e}")
+        return None
+
 # NOTE: Single Equation Maker
 
 
@@ -201,6 +267,64 @@ def mkdt(
         )
     except Exception as e:
         logger.error(f"Error creating data source: {e}")
+        return None
+
+# NOTE: Multiple Data Source Maker
+
+
+def mkdts(
+    components: list[Component],
+    model_source: ModelSource,
+    component_key: ComponentKey = 'Name-State',
+) -> Optional[dict[str, DataSourceCore]]:
+    """
+    Make data source cores for a list of components.
+
+    Parameters
+    ----------
+    components : list[Component]
+        The chemical components for which properties are to be calculated.
+    model_source : ModelSource
+        The source containing data for calculations.
+    component_key : Literal
+        The key to identify the components in the source data. Defaults to 'Name-State'.
+
+    Returns
+    -------
+    Optional[dict[str, DataSourceCore]]
+        A dictionary of DataSourceCore objects keyed by component id; otherwise, None.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+
+        if not isinstance(components, list):
+            logger.error("Invalid components provided.")
+            return None
+
+        if not all(isinstance(component, Component) for component in components):
+            logger.error("Invalid component found in components.")
+            return None
+
+        # SECTION: Prepare source
+        Source_ = Source(
+            model_source=model_source,
+            component_key=component_key,
+        )
+
+        # SECTION: Create DataSourceCore objects
+        return {
+            set_component_id(component, component_key): DataSourceCore(
+                component=component,
+                source=Source_,
+                component_key=component_key,
+            )
+            for component in components
+        }
+    except Exception as e:
+        logger.error(f"Error creating data sources: {e}")
         return None
 
 # SECTION: Constants Source Maker
