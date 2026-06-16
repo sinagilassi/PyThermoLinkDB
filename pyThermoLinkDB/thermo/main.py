@@ -225,6 +225,7 @@ def mkdt(
     component: Component,
     model_source: ModelSource,
     component_key: ComponentKey = 'Name-State',
+    extract_list: Optional[list[str]] = None,
 ) -> Optional[DataSourceCore]:
     """
     Make a data source core for a given component.
@@ -237,6 +238,8 @@ def mkdt(
         The source containing data for calculations.
     component_key : Literal
         The key to identify the component in the source data. Defaults to 'Name-State'.
+    extract_list : Optional[list[str]]
+        A list of specific property names to extract. If provided, only these properties will be extracted. Defaults to None, which means all available properties will be extracted.
 
     Returns
     -------
@@ -264,6 +267,7 @@ def mkdt(
             component=component,
             source=Source_,
             component_key=component_key,
+            extract_list=extract_list,
         )
     except Exception as e:
         logger.error(f"Error creating data source: {e}")
@@ -276,6 +280,7 @@ def mkdts(
     components: list[Component],
     model_source: ModelSource,
     component_key: ComponentKey = 'Name-State',
+    extract_list: Optional[list[str]] = None,
 ) -> Optional[dict[str, DataSourceCore]]:
     """
     Make data source cores for a list of components.
@@ -288,6 +293,8 @@ def mkdts(
         The source containing data for calculations.
     component_key : Literal
         The key to identify the components in the source data. Defaults to 'Name-State'.
+    extract_list : Optional[list[str]]
+        A list of specific property names to extract. If provided, only these properties will be extracted. Defaults to None, which means all available properties will be extracted.
 
     Returns
     -------
@@ -320,6 +327,7 @@ def mkdts(
                 component=component,
                 source=Source_,
                 component_key=component_key,
+                extract_list=extract_list,
             )
             for component in components
         }
