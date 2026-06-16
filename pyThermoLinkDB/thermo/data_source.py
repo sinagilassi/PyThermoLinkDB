@@ -50,6 +50,8 @@ class DataSourceCore:
         component: Component,
         source: Source,
         component_key: ComponentKey = 'Name-State',
+        build_all: bool = False,
+        build_list: Optional[list[str]] = None,
     ) -> None:
         """
         Initialize DataSource with a component and source.
@@ -66,6 +68,10 @@ class DataSourceCore:
             The source containing data for calculations.
         component_key : Literal
             The key to identify the component in the source data. Defaults to 'Name-State'.
+        build_all : bool
+            Whether to build all available data for the component. Defaults to False.
+        build_list : Optional[list[str]]
+            A list of specific property names to build. If provided, only these properties will be built. Defaults to None.
         """
         # NOTE: component
         self.component = component
@@ -73,6 +79,10 @@ class DataSourceCore:
         self.source = source
         # NOTE: component key
         self.component_key = component_key
+        # NOTE: build all
+        self.build_all = build_all
+        # NOTE: build list
+        self.build_list = build_list
 
         # SECTION: set component id
         self.component_id = set_component_id(
@@ -90,6 +100,32 @@ class DataSourceCore:
             logger.warning(
                 f"Component data not found for component ID: {self.component_id}"
             )
+
+        # NOTE:
+        if (
+            self.component_data is not None and
+            self.build_all is not True and
+            self.build_list is not None and
+            len(self.build_list) > 0
+        ):
+            # extracted properties
+            extracted_props = {}
+
+            # iterate over build list and check availability
+            for prop_name in self.build_list:
+                if not self.is_prop_available(prop_name):
+                    logger.error(
+                        f"Property '{prop_name}' is not available for component ID: {self.component_id}"
+                    )
+                    raise ValueError(
+                        f"Property '{prop_name}' is not available for component ID: {self.component_id}"
+                    )
+
+                # store the property data
+                extracted_props[prop_name] = self.component_data[prop_name]
+
+            # ! update component data to only include the extracted properties
+            self.component_data = extracted_props
 
         # SECTION: all properties
         self._props: List[str] = self.all_props()
