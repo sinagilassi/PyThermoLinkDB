@@ -340,6 +340,7 @@ def mkdts(
 
 def mkct(
     model_source: ModelSource,
+    extract_list: Optional[list[str]] = None,
 ) -> Optional[ConstantsSourceCore]:
     """
     Make a constants source core.
@@ -348,6 +349,8 @@ def mkct(
     ----------
     model_source : ModelSource
         The source containing data for calculations.
+    extract_list : Optional[list[str]]
+        A list of specific constant names to extract. If provided, only these constants will be extracted. Defaults to None, which means all available constants will be extracted.
 
     Returns
     -------
@@ -368,6 +371,7 @@ def mkct(
         # SECTION: Create ConstantsSourceCore object
         return ConstantsSourceCore(
             source=Source_,
+            extract_list=extract_list,
         )
     except Exception as e:
         logger.error(f"Error creating constants source: {e}")
