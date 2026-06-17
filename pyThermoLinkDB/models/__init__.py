@@ -9,6 +9,11 @@ from .source import (
     ConstantsModelSource,
 )
 
+# component models
+from .component_models import (
+    ConstantResult,
+)
+
 __all__ = [
     "ComponentModelSource",
     "DataSource",
@@ -16,5 +21,6 @@ __all__ = [
     "ConstantsSource",
     "ModelSource",
     "MixtureModelSource",
-    "ConstantsModelSource"
+    "ConstantsModelSource",
+    "ConstantResult"
 ]
