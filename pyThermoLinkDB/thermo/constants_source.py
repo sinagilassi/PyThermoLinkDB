@@ -191,9 +191,21 @@ class ConstantsSourceCore:
             True if the constant is available, False otherwise.
         """
         try:
-            return self.source.is_constant_available(
-                constant_name=name
-            )
+            # NOTE: check if the constant is in the constants data
+            if (
+                self.constants_data and
+                name in self.constants_data.keys()
+            ):
+                return True
+
+            # NOTE: if not found in constants data, check if it's listed in the symbols metadata
+            if (
+                self.constants_symbols_data and
+                name in self.constants_symbols_data.keys()
+            ):
+                return True
+
+            return False
         except Exception as e:
             logger.error(f"Error checking constant availability: {e}")
             return False
@@ -273,9 +285,8 @@ class ConstantsSourceCore:
             The constant source entry, or None if not found.
         """
         try:
-            res = self.source.constants_extractor(
-                constant_name=name
-            )
+            # NOTE: retrieve the raw constant entry from the source
+            res = self.constants_data.get(name)
 
             if res is None:
                 logger.warning(f"Constant '{name}' not found.")
@@ -314,9 +325,7 @@ class ConstantsSourceCore:
             The constant symbol metadata, or None if not found.
         """
         try:
-            return self.source.constant_symbol(
-                constant_name=name
-            )
+            return self.constants_symbols_data.get(name)
         except Exception as e:
             logger.error(f"Error retrieving constant symbol '{name}': {e}")
             return None
