@@ -30,6 +30,7 @@ print(constants_symbols)
 # =======================================
 constants_src: ConstantsSourceCore | None = mkct(
     model_source=model_source,
+    extract_list=['R', 'C1', 'dH_rxn']
 )
 
 # print
