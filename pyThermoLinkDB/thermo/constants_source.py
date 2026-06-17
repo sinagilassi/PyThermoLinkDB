@@ -24,6 +24,7 @@ class ConstantsSourceCore:
     def __init__(
             self,
             source: Source,
+            extract_list: Optional[list[str]] = None,
     ) -> None:
         """
         Initialize ConstantsSourceCore with a source.
@@ -32,18 +33,46 @@ class ConstantsSourceCore:
         ----------
         source : Source
             The source containing data for calculations.
+        extract_list : Optional[list[str]]
+            A list of specific constant names to extract. If provided, only these constants will be extracted and made available through the methods. Defaults to None, which means all available constants will be extracted.
         """
         # NOTE: source
         self.source = source
+        self.extract_list = extract_list
 
         # SECTION: retrieve constants
+        # ! constants data
         self.constants_data: Dict[str, Any] = self.source.constantssource
+        # ! constants symbol metadata
         self.constants_symbols_data: Dict[
             str, Any
         ] = self.source.constantssource_symbols
 
         if not self.constants_data:
             logger.warning("No constants data found in source.")
+
+        # NOTE: if build_list is provided, filter component_data to only include those properties
+        if (
+            self.constants_data is not None and
+            self.extract_list is not None and
+            len(self.extract_list) > 0
+        ):
+            # extracted properties
+            extracted_props = {}
+
+            # iterate over build list and check availability
+            for prop_name in self.extract_list:
+                if not self.is_prop_available(prop_name):
+                    logger.warning(
+                        f"Property '{prop_name}' is not available in the source and will be skipped."
+                    )
+                    continue  # skip unavailable properties
+
+                # store the property data
+                extracted_props[prop_name] = self.constants_data[prop_name]
+
+            # ! update component data to only include the extracted properties
+            self.constants_data = extracted_props
 
         # SECTION: all constants
         self._constants: List[str] = self.all_constants()
