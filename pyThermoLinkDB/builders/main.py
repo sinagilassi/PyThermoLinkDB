@@ -5,6 +5,7 @@ from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import generate_component_references
 # locals
 from .thermo_model_source import ThermoModelSource
+from ..models import ModelSource
 
 # NOTE: logger setup
 logger = logging.getLogger(__name__)
@@ -13,8 +14,10 @@ logger = logging.getLogger(__name__)
 def build_thermo_model_source(
         components: List[Component],
         component_key: ComponentKey,
+        model_source: ModelSource,
         thermo_data: List[str],
         thermo_equations: List[str],
+        thermo_constants: List[str],
         description: Optional[str] = None
 ) -> Optional[ThermoModelSource]:
     """
@@ -34,10 +37,14 @@ def build_thermo_model_source(
             - 'Formula': Use the component formula.
             - 'Name-Formula-State': Use the name, formula, and state.
             - 'Formula-Name-State': Use the formula, name, and state.
+    model_source : ModelSource
+        The source of the thermodynamic model data.
     thermo_data : List[str]
         List of thermodynamic data symbols to be extracted from the model source.
     thermo_equations : List[str]
         List of thermodynamic equations symbols to be extracted from the model source.
+    thermo_constants : List[str]
+        List of thermodynamic constants symbols to be extracted from the model source.
     description : Optional[str]
         Optional description of the thermodynamic model source.
 
@@ -57,8 +64,10 @@ def build_thermo_model_source(
         thermo_model_source = ThermoModelSource(
             components=components,
             component_key=component_key,
+            model_source=model_source,
             thermo_data=thermo_data,
             thermo_equations=thermo_equations,
+            thermo_constants=thermo_constants,
             component_references=component_references,
             description=description
         )
