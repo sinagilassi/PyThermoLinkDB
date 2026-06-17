@@ -2,10 +2,19 @@
 import logging
 import numpy as np
 from typing import List, Optional, Dict, Any, cast
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty
 # locals
 from ..models import ModelSource
-from ..thermo import mkdts, mkeqss, EquationSourcesCore
+from ..models.component_models import ConstantResult
+from ..thermo import (
+    mkdts,
+    mkeqss,
+    mkct,
+    EquationSourceCore,
+    EquationSourcesCore,
+    DataSourceCore,
+    ConstantsSourceCore
+)
 
 
 # NOTE: logger setup
@@ -45,6 +54,8 @@ class ThermoModelSource:
                 - 'Formula': Use the component formula.
                 - 'Name-Formula-State': Use the name, formula, and state.
                 - 'Formula-Name-State': Use the formula, name, and state.
+        model_source : ModelSource
+            The source of the thermodynamic model data.
         thermo_data : List[str]
             List of thermodynamic data symbol to be extracted from the model source.
         thermo_equations : List[str]
@@ -67,11 +78,13 @@ class ThermoModelSource:
         self.description = description
 
         # NOTE: thermo source
-        self.thermo_data_source: Dict[str, Any] = {}
+        self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
+        self.thermo_constants_source: ConstantsSourceCore | None = None
         self.thermo_source: Dict[str, Any] = {}
 
-    # SECTION: build thermo data
+    # SECTION: build configuration methods
+    # ! build thermo data
 
     def _build_thermo_data(self):
         try:
@@ -83,7 +96,7 @@ class ThermoModelSource:
                 return
 
             # NOTE: build thermo data
-            res_ = mkdts(
+            res_: Dict[str, DataSourceCore] | None = mkdts(
                 components=self.components,
                 model_source=self.model_source,
                 component_key=cast(ComponentKey, self.component_key),
@@ -107,7 +120,7 @@ class ThermoModelSource:
                 f"An error occurred while building thermodynamic data: {e}")
             raise
 
-    # SECTION: build thermo equations
+    # ! build thermo equations
     def _build_thermo_equations(self):
         try:
             # >> check if thermo equations is available
@@ -142,6 +155,44 @@ class ThermoModelSource:
                 f"An error occurred while building thermodynamic equations: {e}")
             raise
 
+    # ! build thermo constants
+    def _build_thermo_constants(self):
+        try:
+            # >> check if thermo constants is available
+            if len(self.thermo_constants) == 0:
+                logger.warning(
+                    "No thermodynamic constants specified for extraction."
+                )
+                return
+
+            # NOTE: check constant source
+            if self.model_source.constants_source is None:
+                logger.warning(
+                    "Model source does not contain any constants for extraction."
+                )
+                return
+
+            # NOTE: build thermo constants
+            res_: ConstantsSourceCore | None = mkct(
+                model_source=self.model_source,
+                extract_list=self.thermo_constants,
+            )
+
+            # >> check if thermo constants was successfully built
+            if res_ is None:
+                logger.warning(
+                    "Failed to build thermodynamic constants from the model source."
+                )
+                return
+
+            # NOTE: set thermo constants in the thermo source
+            self.thermo_constants_source = res_
+
+        except Exception as e:
+            logger.error(
+                f"An error occurred while building thermodynamic constants: {e}")
+            raise
+
     # SECTION: build
 
     def build(self) -> None:
@@ -152,6 +203,7 @@ class ThermoModelSource:
             # NOTE: thermo data and equations are built in the constructor
             self._build_thermo_data()
             self._build_thermo_equations()
+            self._build_thermo_constants()
 
         except Exception as e:
             logger.error(
@@ -167,22 +219,96 @@ class ThermoModelSource:
 
         # ! data variables
         # >>> init res
-        prop_value = np.array([])
-        prop_value_comp = {}
-        prop_src = {}
+        dt_value = np.array([])
+        dt_comp = {}
+        dt_src: Dict[str, CustomProperty] = {}
 
         # iterate over thermo data and set attributes
         for symbol in self.thermo_data:
-            # NOTE: set attributes for each symbol
-            setattr(self, f"{symbol}_src", prop_src)
+            # > extract property data for the symbol for all components
+            dt_src = {}
+
+            # iterate over components and extract data source for the symbol
+            for comp_id in self.component_references['component_ids']:
+                res_dt: DataSourceCore | None = self.thermo_data_source.get(
+                    comp_id, None
+                )
+
+                # >> check
+                if res_dt is not None:
+                    res_dt_: CustomProperty | None = res_dt.select(
+                        symbol=symbol)
+                    if res_dt_ is not None:
+                        dt_src[comp_id] = res_dt_
+                    else:
+                        logger.warning(
+                            f"Data source for symbol '{symbol}' not found for component '{comp_id}'."
+                        )
+                else:
+                    logger.warning(
+                        f"Data source for symbol '{symbol}' not found for component '{comp_id}'."
+                    )
+            # ? set attributes for each symbol
+            setattr(self, f"{symbol}_src", dt_src)
+            setattr(self, f"{symbol}_comp", dt_comp)
+            setattr(self, f"{symbol}_value", dt_value)
 
         # ! equation variables
         # >>> init res
         eqn_value = np.array([])
-        eqn_value_comp: Dict[str, float] = {}
-        eqn_src: Dict[str, EquationSourcesCore] = {}
+        eqn_comp: Dict[str, float] = {}
+        eqn_src: Dict[str, EquationSourceCore] = {}
 
         # iterate over thermo equations and set attributes
         for symbol in self.thermo_equations:
-            # NOTE: set attributes for each symbol
+            # > extract equation data for the symbol for all components
+            eqn_src: Dict[str, EquationSourceCore] = {}
+
+            # iterate over components and extract equation source for the symbol
+            for comp_id in self.component_references['component_ids']:
+                eqs_comp: EquationSourcesCore = self.thermo_equations_source[comp_id]
+                eqn_src_comp: EquationSourceCore | None = eqs_comp.select(
+                    name=symbol
+                )
+
+                # >> check if equation source for the symbol was found for the component
+                if eqn_src_comp is not None:
+                    eqn_src[comp_id] = eqn_src_comp
+                else:
+                    logger.warning(
+                        f"Equation source for symbol '{symbol}' not found for component '{comp_id}'."
+                    )
+            # ? set attributes for each symbol
             setattr(self, f"{symbol}_src", eqn_src)
+            setattr(self, f"{symbol}_comp", eqn_comp)
+            setattr(self, f"{symbol}_value", eqn_value)
+
+        # ! constants variables
+        # >>> init res
+        const_value = np.array([])
+        const_src = {}
+
+        # iterate over thermo constants and set attributes
+        for symbol in self.thermo_constants:
+            # source
+            res_const_src: ConstantsSourceCore | None = self.thermo_constants_source
+
+            # >> check if constant source is available
+            if res_const_src is None:
+                logger.warning(
+                    f"Constant source for symbol '{symbol}' not available in the model source."
+                )
+                continue
+
+            # > extract constant data for the symbol
+            res_const: ConstantResult | None = res_const_src.select(
+                symbol=symbol
+            )
+
+            # >> check if constant source for the symbol was found
+            if res_const is not None:
+                setattr(self, f"{symbol}_src", res_const)
+            else:
+                logger.warning(
+                    f"Constant source for symbol '{symbol}' not found in the model source."
+                )
