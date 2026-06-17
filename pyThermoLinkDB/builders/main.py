@@ -72,6 +72,12 @@ def build_thermo_model_source(
             description=description
         )
 
+        # ! build all thermo
+        thermo_model_source.build_all()
+
+        # ! configure all attributes
+        thermo_model_source.config_attributes()
+
         return thermo_model_source
     except Exception as e:
         logger.error(f"Error building thermodynamic model source: {e}")

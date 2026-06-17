@@ -195,7 +195,7 @@ class ThermoModelSource:
 
     # SECTION: build
 
-    def build(self) -> None:
+    def build_all(self) -> None:
         """
         Build the thermodynamic model source by extracting data and equations from the model source.
         """
@@ -286,7 +286,7 @@ class ThermoModelSource:
         # ! constants variables
         # >>> init res
         const_value = np.array([])
-        const_src = {}
+        const_src: ConstantResult | None = None
 
         # iterate over thermo constants and set attributes
         for symbol in self.thermo_constants:
@@ -301,13 +301,14 @@ class ThermoModelSource:
                 continue
 
             # > extract constant data for the symbol
-            res_const: ConstantResult | None = res_const_src.select(
+            const_src: ConstantResult | None = res_const_src.select(
                 symbol=symbol
             )
 
             # >> check if constant source for the symbol was found
-            if res_const is not None:
-                setattr(self, f"{symbol}_src", res_const)
+            if const_src is not None:
+                setattr(self, f"{symbol}_src", const_src)
+                setattr(self, f"{symbol}_value", const_value)
             else:
                 logger.warning(
                     f"Constant source for symbol '{symbol}' not found in the model source."
