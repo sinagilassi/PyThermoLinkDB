@@ -109,7 +109,7 @@ class EquationSourcesCore:
 
         # SECTION: build all equations if requested
         if (
-            self.build_all is True and
+            (self.build_all is True or self.build_list is not None) and
             self.component_equations is not None
         ):
             # ! build all sources and store in _src
