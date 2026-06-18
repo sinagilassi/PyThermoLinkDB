@@ -1,8 +1,5 @@
 # import libs
-import logging
 import os
-from typing import Dict
-import warnings
 from rich import print
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
@@ -175,12 +172,19 @@ custom_inputs = {
 # BUILD CUSTOM MODEL SOURCE
 # =======================================
 # NOTE: components configuration
-components = [CO2, C2H5OH]
-component_key = 'Name-State'
+components = [C2H4, C2H6, CO2]
+component_key = 'Formula-State'
 
-# NOTE: thermo data, equations, and constants to be extracted from the model source
-thermo_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ', 'dH_rxn', 'Cp_LIQ_MIX_VOL']
-thermo_constants = ['R', 'CUSTOM_CONST', 'ANOTHER_CONST', 'THIRD_CONST']
+# NOTE: thermo data and constants to be extracted from the custom source
+thermo_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ']
+thermo_constants = [
+    'dH_rxn',
+    'Cp_LIQ_MIX_VOL',
+    'R',
+    'CUSTOM_CONST',
+    'ANOTHER_CONST',
+    'THIRD_CONST'
+]
 
 # NOTE: build custom model source
 custom_model_src: CustomModelSource | None = build_custom_model_source(
@@ -196,4 +200,7 @@ custom_model_src: CustomModelSource | None = build_custom_model_source(
 if custom_model_src is None:
     raise RuntimeError("Failed to build custom model source.")
 
-print(custom_model_src)
+dynamic_attrs = custom_model_src.dynamic_attributes()
+
+print("\n[bold green]Custom model source dynamic attributes[/bold green]")
+print(dynamic_attrs)
