@@ -7,6 +7,9 @@ from rich import print
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
 from pythermodb_settings.models import CustomProperty, Component
+# ! from pyThermoLinkDB
+from pyThermoLinkDB.models import CustomConstant
+from pyThermoLinkDB.builders import build_custom_model_source, CustomModelSource
 
 # ====================================================
 # SECTION: BUILD COMPONENT THERMODB
@@ -124,6 +127,36 @@ liquid_mixture_volumetric_heat_capacity = CustomProperty(
     symbol="Cp_LIQ_MIX_VOL"
 )
 
+# NOTE: universal gas constant (R) in J/mol.K
+universal_gas_constant = CustomProperty(
+    value=8.314, unit="J/mol.K", symbol="R"
+)
+
+# NOTE: custom source dictionary
+custom_1 = CustomConstant(
+    name="custom_constant",
+    description="This is a custom constant for demonstration purposes.",
+    value="GAS",
+    unit=None,
+    symbol="CUSTOM_CONST"
+)
+
+custom_2 = CustomConstant(
+    name="another_custom_constant",
+    description="This is another custom constant for demonstration purposes.",
+    value=[1, 2, 3],
+    unit="units",
+    symbol="ANOTHER_CONST"
+)
+
+custom_3 = CustomConstant(
+    name="third_custom_constant",
+    description="This is a third custom constant for demonstration purposes.",
+    value={"key1": "value1", "key2": "value2"},
+    unit=None,
+    symbol="THIRD_CONST"
+)
+
 # ! thermo inputs
 custom_inputs = {
     "molecular_weight": molecular_weight,
@@ -132,4 +165,35 @@ custom_inputs = {
     "constant_liquid_density": constant_liquid_density,
     "reaction_enthalpy": reaction_enthalpies,
     "liquid_mixture_volumetric_heat_capacity": liquid_mixture_volumetric_heat_capacity,
+    "universal_gas_constant": universal_gas_constant,
+    "custom_constant_1": custom_1,
+    "custom_constant_2": custom_2,
+    "custom_constant_3": custom_3,
 }
+
+# # =======================================
+# BUILD CUSTOM MODEL SOURCE
+# =======================================
+# NOTE: components configuration
+components = [CO2, C2H5OH]
+component_key = 'Name-State'
+
+# NOTE: thermo data, equations, and constants to be extracted from the model source
+thermo_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ', 'dH_rxn', 'Cp_LIQ_MIX_VOL']
+thermo_constants = ['R', 'CUSTOM_CONST', 'ANOTHER_CONST', 'THIRD_CONST']
+
+# NOTE: build custom model source
+custom_model_src: CustomModelSource | None = build_custom_model_source(
+    components=components,
+    component_key=component_key,
+    custom_source=custom_inputs,
+    thermo_data=thermo_data,
+    thermo_constants=thermo_constants,
+    description="Example custom model source with custom constants",
+    mode='log'  # options: 'silent', 'log', 'attach'
+)
+
+if custom_model_src is None:
+    raise RuntimeError("Failed to build custom model source.")
+
+print(custom_model_src)
