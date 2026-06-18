@@ -6,7 +6,7 @@ import pyThermoLinkDB as ptdblink
 from pythermodb_settings.models import CustomProperty, Component
 # ! from pyThermoLinkDB
 from pyThermoLinkDB.models import CustomConstant
-from pyThermoLinkDB.builders import build_custom_model_source, CustomModelSource
+from pyThermoLinkDB.builders import build_custom_model_source, ThermoCustomSource
 
 # ====================================================
 # SECTION: BUILD COMPONENT THERMODB
@@ -187,7 +187,7 @@ thermo_constants = [
 ]
 
 # NOTE: build custom model source
-custom_model_src: CustomModelSource | None = build_custom_model_source(
+custom_model_src: ThermoCustomSource | None = build_custom_model_source(
     components=components,
     component_key=component_key,
     custom_source=custom_inputs,
