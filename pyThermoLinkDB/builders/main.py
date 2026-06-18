@@ -158,6 +158,12 @@ def build_custom_model_source(
             description=description
         )
 
+        # ! build all custom thermo
+        custom_model_source.build_all()
+
+        # ! configure all attributes
+        custom_model_source.config_attributes()
+
         return custom_model_source
     except Exception as e:
         logger.error(f"Error building custom thermodynamic model source: {e}")
