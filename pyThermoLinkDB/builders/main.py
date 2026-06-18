@@ -5,7 +5,7 @@ from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import generate_component_references, measure_time
 # locals
 from .thermo_model_source import ThermoModelSource
-from .custom_model_source import CustomModelSource
+from .thermo_custom_source import ThermoCustomSource
 from ..models import ModelSource
 
 # NOTE: logger setup
@@ -104,7 +104,7 @@ def build_custom_model_source(
         thermo_constants: List[str],
         description: Optional[str] = None,
         **kwargs
-) -> Optional[CustomModelSource]:
+) -> Optional[ThermoCustomSource]:
     """
     Build a custom thermodynamic model source.
 
@@ -137,8 +137,8 @@ def build_custom_model_source(
 
     Returns
     -------
-    Optional[CustomModelSource]
-        An instance of CustomModelSource if successful, None otherwise.
+    Optional[ThermoCustomSource]
+        An instance of ThermoCustomSource if successful, None otherwise.
     """
     try:
         # NOTE: generate component references
@@ -147,8 +147,8 @@ def build_custom_model_source(
             component_key=component_key
         )
 
-        # NOTE: create CustomModelSource instance
-        custom_model_source = CustomModelSource(
+        # NOTE: create ThermoCustomSource instance
+        thermo_custom_source = ThermoCustomSource(
             components=components,
             component_key=component_key,
             custom_source=custom_source,
@@ -159,12 +159,12 @@ def build_custom_model_source(
         )
 
         # ! build all custom thermo
-        custom_model_source.build_all()
+        thermo_custom_source.build_all()
 
         # ! configure all attributes
-        custom_model_source.config_attributes()
+        thermo_custom_source.config_attributes()
 
-        return custom_model_source
+        return thermo_custom_source
     except Exception as e:
         logger.error(f"Error building custom thermodynamic model source: {e}")
         return None
