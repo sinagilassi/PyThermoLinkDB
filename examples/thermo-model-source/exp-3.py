@@ -127,6 +127,9 @@ liquid_mixture_volumetric_heat_capacity = CustomProperty(
 # ! thermo inputs
 custom_inputs = {
     "molecular_weight": molecular_weight,
+    "constant_gas_heat_capacity": constant_gas_heat_capacity,
+    "constant_liquid_heat_capacity": constant_liquid_heat_capacity,
+    "constant_liquid_density": constant_liquid_density,
     "reaction_enthalpy": reaction_enthalpies,
     "liquid_mixture_volumetric_heat_capacity": liquid_mixture_volumetric_heat_capacity,
 }
