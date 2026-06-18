@@ -81,7 +81,6 @@ class ThermoModelSource:
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
         self.thermo_constants_source: ConstantsSourceCore | None = None
-        self.thermo_source: Dict[str, Any] = {}
 
     # SECTION: list all thermo (symbols) for thermo data, equations, and constants
     def thermo(self) -> Dict[str, List[str]]:
