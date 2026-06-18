@@ -8,7 +8,7 @@ from pythermodb_settings.models import (
     CustomProperty
 )
 # locals
-from ..models import CustomConstant
+from ..models import CustomConstant, CustomSource
 from ..models.component_models import ConstantResult
 
 # NOTE: logger setup
@@ -64,7 +64,6 @@ class ThermoCustomSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
-            custom_source: Dict[str, Any],
             thermo_data: List[str],
             thermo_constants: List[str],
             component_references: Dict[str, Any],
@@ -74,7 +73,6 @@ class ThermoCustomSource:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
-        self.custom_source = custom_source
         self.thermo_data = thermo_data
         self.thermo_constants = thermo_constants
         self.component_references = component_references
@@ -83,6 +81,55 @@ class ThermoCustomSource:
         # NOTE: normalized custom source
         self.thermo_data_source: Dict[str, Dict[str, CustomProperty]] = {}
         self.thermo_constants_source: Dict[str, ConstantResult] = {}
+
+        # NOTE: custom source input
+        self._custom_source: Optional[CustomSource] = None
+
+    # SECTION: properties
+    @property
+    def custom_source(self) -> Optional[CustomSource]:
+        """
+        Get the original custom source input.
+
+        Returns
+        -------
+        Optional[CustomSource]
+            The original custom source dictionary provided during initialization.
+        """
+        return self._custom_source
+
+    @custom_source.setter
+    def custom_source(self, value: CustomSource) -> None:
+        """
+        Set the custom source input and trigger the build process.
+
+        Parameters
+        ----------
+        value : CustomSource
+            The custom source dictionary to set.
+
+        Notes
+        -----
+        - Setting the custom source will automatically build the thermo data and constants.
+        """
+        self._custom_source = value
+
+    # SECTION: select custom source
+    def select_custom_source(self) -> CustomSource:
+        """
+        Select the custom source to use for building thermo data and constants.
+
+        Returns
+        -------
+        CustomSource
+            The custom source dictionary to be used for building.
+        """
+        if self._custom_source is not None:
+            return self._custom_source
+        else:
+            raise ValueError(
+                "Custom source is not set. Please provide a custom source to build thermo data and constants."
+            )
 
     # SECTION: list all thermo symbols
     def thermo(self) -> Dict[str, List[str]]:
@@ -259,9 +306,14 @@ class ThermoCustomSource:
                 logger.warning("No custom thermodynamic data specified.")
                 return
 
+            # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
 
-            for key, value in self.custom_source.items():
+            # NOTE: select custom source
+            custom_source = self.select_custom_source()
+
+            # >>> iterate through custom source entries to find component-wise data for requested symbols
+            for key, value in custom_source.items():
                 if not self._is_component_data(value=value, component_ids=component_ids):
                     continue
 
@@ -304,9 +356,13 @@ class ThermoCustomSource:
                 logger.warning("No custom thermodynamic constants specified.")
                 return
 
+            # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
 
-            for key, value in self.custom_source.items():
+            # NOTE: select custom source
+            custom_source = self.select_custom_source()
+
+            for key, value in custom_source.items():
                 if self._is_component_data(value=value, component_ids=component_ids):
                     continue
 
