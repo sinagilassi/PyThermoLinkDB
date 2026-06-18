@@ -23,7 +23,54 @@ logger = logging.getLogger(__name__)
 
 class ThermoModelSource:
     """
-    Class representing a source of thermodynamic model data.
+    Build thermodynamic data, equation, and constants accessors from a
+    ``ModelSource``.
+
+    ``ThermoModelSource`` wraps a structured
+    :class:`pyThermoLinkDB.models.ModelSource` and extracts the requested
+    component data, component equations, and source-level constants. After
+    ``build_all`` and ``config_attributes`` are called, each requested symbol is
+    exposed through predictable dynamic attributes.
+
+    For each symbol in ``thermo_data``, the class creates:
+
+    - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
+    - ``{symbol}_comp``: mapping of component ID to numeric property value.
+    - ``{symbol}_value``: NumPy array of values in component order.
+
+    For each symbol in ``thermo_equations``, the class creates:
+
+    - ``{symbol}_src``: mapping of component ID to ``EquationSourceCore``.
+    - ``{symbol}_comp``: currently ``None``; reserved for evaluated component
+    values.
+    - ``{symbol}_value``: currently ``None``; reserved for evaluated value
+    arrays.
+
+    For each symbol in ``thermo_constants``, the class creates:
+
+    - ``{symbol}_src``: ``ConstantResult`` selected from the constants source.
+    - ``{symbol}_value``: raw constant value.
+
+    Parameters
+    ----------
+    components : List[Component]
+        Components to extract data and equations for.
+    component_key : ComponentKey
+        Identifier strategy used to map components to entries in
+        ``model_source``.
+    model_source : ModelSource
+        Structured source containing data, equation, and optional constants
+        dictionaries.
+    thermo_data : List[str]
+        Component data symbols to extract.
+    thermo_equations : List[str]
+        Component equation symbols to build.
+    thermo_constants : List[str]
+        Source-level constants symbols to extract.
+    component_references : Dict[str, Any]
+        Precomputed component references, including ``component_ids``.
+    description : Optional[str], optional
+        Optional human-readable description of the source.
     """
 
     def __init__(

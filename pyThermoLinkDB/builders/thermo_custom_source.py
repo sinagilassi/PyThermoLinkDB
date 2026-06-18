@@ -17,7 +17,47 @@ logger = logging.getLogger(__name__)
 
 class ThermoCustomSource:
     """
-    Class representing a custom source of thermodynamic data and constants.
+    Build component-wise thermodynamic data and source-level constants from a
+    user-provided custom dictionary.
+
+    ``ThermoCustomSource`` is the custom-data counterpart to
+    :class:`ThermoModelSource`. It accepts a mixed ``custom_source`` payload,
+    separates component-keyed entries from general constants, and exposes the
+    requested symbols as dynamic attributes after ``build_all`` and
+    ``config_attributes`` are called.
+
+    Component-wise entries must be dictionaries keyed by the component IDs
+    generated from ``components`` and ``component_key``. For each requested
+    symbol in ``thermo_data``, the class creates:
+
+    - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
+    - ``{symbol}_comp``: mapping of component ID to numeric property value.
+    - ``{symbol}_value``: NumPy array of values in component order.
+
+    General constants may be scalar values, lists, dictionaries,
+    ``CustomProperty`` instances, or ``CustomConstant`` instances. For each
+    requested symbol in ``thermo_constants``, the class creates:
+
+    - ``{symbol}_src``: ``ConstantResult`` containing value, unit, and symbol.
+    - ``{symbol}_value``: the raw constant value with its original shape.
+
+    Parameters
+    ----------
+    components : List[Component]
+        Components used to determine the expected component IDs and output
+        value order.
+    component_key : ComponentKey
+        Identifier strategy used to map components to keys in ``custom_source``.
+    custom_source : Dict[str, Any]
+        Mixed source containing component-wise data and general constants.
+    thermo_data : List[str]
+        Component-wise symbols to extract and expose as dynamic attributes.
+    thermo_constants : List[str]
+        Constant symbols to extract and expose as dynamic attributes.
+    component_references : Dict[str, Any]
+        Precomputed component references, including ``component_ids``.
+    description : Optional[str], optional
+        Optional human-readable description of the source.
     """
 
     def __init__(
