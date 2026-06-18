@@ -1,4 +1,3 @@
-from rich import print
 from pyThermoLinkDB.builders import build_thermo_model_source
 from pyThermoLinkDB.utils.input_builder import validate_and_build_inputs
 import pyThermoLinkDB as ptdblink
@@ -9,6 +8,12 @@ import io
 import logging
 import sys
 import pycuc
+from rich import print
+
+from rich.console import Console
+
+console = Console(force_terminal=True, color_system="truecolor")
+print = console.print
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
