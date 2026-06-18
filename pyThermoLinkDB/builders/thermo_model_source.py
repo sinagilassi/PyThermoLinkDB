@@ -77,7 +77,6 @@ class ThermoModelSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
-            model_source: ModelSource,
             thermo_data: List[str],
             thermo_equations: List[str],
             thermo_constants: List[str],
@@ -101,8 +100,6 @@ class ThermoModelSource:
                 - 'Formula': Use the component formula.
                 - 'Name-Formula-State': Use the name, formula, and state.
                 - 'Formula-Name-State': Use the formula, name, and state.
-        model_source : ModelSource
-            The source of the thermodynamic model data.
         thermo_data : List[str]
             List of thermodynamic data symbol to be extracted from the model source.
         thermo_equations : List[str]
@@ -117,7 +114,6 @@ class ThermoModelSource:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
-        self.model_source = model_source
         self.thermo_data = thermo_data
         self.thermo_equations = thermo_equations
         self.thermo_constants = thermo_constants
@@ -128,6 +124,54 @@ class ThermoModelSource:
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
         self.thermo_constants_source: ConstantsSourceCore | None = None
+
+        # NOTE: set model source
+        self._model_source: Optional[ModelSource] = None
+
+    # SECTION: Properties
+    @property
+    def model_source(self) -> Optional[ModelSource]:
+        """
+        Get the model source.
+
+        Returns
+        -------
+        ModelSource
+            The model source containing data, equations, and constants.
+        """
+        return self._model_source
+
+    @model_source.setter
+    def model_source(self, value: ModelSource) -> None:
+        """
+        Set the model source.
+
+        Parameters
+        ----------
+        value : ModelSource
+            The model source to set.
+        """
+        self._model_source = value
+
+    # SECTION: select model source (for production)
+    def select_model_source(self) -> ModelSource:
+        """
+        Select the model source to use for building the thermo model source.
+
+        Returns
+        -------
+        ModelSource
+            The selected model source.
+
+        Raises
+        ------
+        ValueError
+            If no model source is available.
+        """
+        if self.model_source is not None:
+            return self.model_source
+        else:
+            raise ValueError("No model source available for selection.")
 
     # SECTION: list all thermo (symbols) for thermo data, equations, and constants
     def thermo(self) -> Dict[str, List[str]]:
@@ -198,10 +242,13 @@ class ThermoModelSource:
                 )
                 return
 
+            # NOTE: select model source
+            model_source = self.select_model_source()
+
             # NOTE: build thermo data
             res_: Dict[str, DataSourceCore] | None = mkdts(
                 components=self.components,
-                model_source=self.model_source,
+                model_source=model_source,
                 component_key=cast(ComponentKey, self.component_key),
                 extract_list=self.thermo_data,
             )
@@ -233,10 +280,13 @@ class ThermoModelSource:
                 )
                 return
 
+            # NOTE: select model source
+            model_source = self.select_model_source()
+
             # NOTE: build thermo equations
             res_: dict[str, EquationSourcesCore] | None = mkeqss(
                 components=self.components,
-                model_source=self.model_source,
+                model_source=model_source,
                 component_key=cast(ComponentKey, self.component_key),
                 build_list=self.thermo_equations,
             )
@@ -268,8 +318,11 @@ class ThermoModelSource:
                 )
                 return
 
+            # NOTE: select model source
+            model_source = self.select_model_source()
+
             # NOTE: check constant source
-            if self.model_source.constants_source is None:
+            if model_source.constants_source is None:
                 logger.warning(
                     "Model source does not contain any constants for extraction."
                 )
@@ -277,7 +330,7 @@ class ThermoModelSource:
 
             # NOTE: build thermo constants
             res_: ConstantsSourceCore | None = mkct(
-                model_source=self.model_source,
+                model_source=model_source,
                 extract_list=self.thermo_constants,
             )
 
