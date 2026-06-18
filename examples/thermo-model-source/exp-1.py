@@ -1,6 +1,6 @@
-from pyThermoLinkDB.builders import build_thermo_model_source
-from pyThermoLinkDB.utils.input_builder import validate_and_build_inputs
 import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB.utils.input_builder import validate_and_build_inputs
+from pyThermoLinkDB.builders import build_thermo_model_source, ThermoModelSource
 import pyThermoDB as ptdb
 from pathlib import Path
 import contextlib
@@ -14,6 +14,8 @@ from rich.console import Console
 
 console = Console(force_terminal=True, color_system="truecolor")
 print = console.print
+
+# ! from pyThermoLinkDB
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -67,7 +69,7 @@ thermo_equations = ['Cp_IG', 'VaPr']
 thermo_constants = ['R', 'dH_rxn']
 
 # NOTE: build thermo model source
-thermo_model_src = build_thermo_model_source(
+thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
     model_source=model_source_with_rules,
     components=components,
     component_key=component_key,
