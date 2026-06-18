@@ -7,6 +7,7 @@ from .source import (
     ModelSource,
     MixtureModelSource,
     ConstantsModelSource,
+    CustomSource,
 )
 
 # component models
@@ -29,4 +30,5 @@ __all__ = [
     "ConstantsModelSource",
     "ConstantResult",
     "CustomConstant",
+    "CustomSource",
 ]

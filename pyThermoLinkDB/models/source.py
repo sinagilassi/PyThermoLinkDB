@@ -222,3 +222,7 @@ class ModelSource(BaseModel):
         arbitrary_types_allowed=True,
         extra="allow"
     )
+
+
+# SECTION: Custom Source Model
+CustomSource = Dict[str, Any]

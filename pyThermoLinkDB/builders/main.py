@@ -1,15 +1,16 @@
 # import libs
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import generate_component_references, measure_time
 # locals
 from .thermo_model_source import ThermoModelSource
 from .thermo_custom_source import ThermoCustomSource
-from ..models import ModelSource
+from ..models import ModelSource, CustomSource
 
 # NOTE: logger setup
 logger = logging.getLogger(__name__)
+
 
 # SECTION: build thermo model source
 
@@ -99,7 +100,7 @@ def build_thermo_model_source(
 def build_custom_model_source(
         components: List[Component],
         component_key: ComponentKey,
-        custom_source: dict,
+        custom_source: CustomSource,
         thermo_data: List[str],
         thermo_constants: List[str],
         description: Optional[str] = None,
@@ -122,7 +123,7 @@ def build_custom_model_source(
             - 'Formula': Use the component formula.
             - 'Name-Formula-State': Use the name, formula, and state.
             - 'Formula-Name-State': Use the formula, name, and state.
-    custom_source : dict
+    custom_source : CustomSource
         A dictionary containing custom thermodynamic data, equations, and constants.
     thermo_data : List[str]
         List of thermodynamic data symbols to be extracted from the custom source.
@@ -168,3 +169,16 @@ def build_custom_model_source(
     except Exception as e:
         logger.error(f"Error building custom thermodynamic model source: {e}")
         return None
+
+
+# SECTION: main build function
+def build_thermo_source(
+        components: List[Component],
+        component_key: ComponentKey,
+        thermo_source: List[ModelSource | CustomSource],
+        thermo_data: List[str],
+        thermo_equations: List[str],
+        thermo_constants: List[str],
+        description: Optional[str] = None,
+):
+    pass
