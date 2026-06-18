@@ -1,8 +1,8 @@
 # import libs
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from pythermodb_settings.models import Component, ComponentKey
-from pythermodb_settings.utils import generate_component_references
+from pythermodb_settings.utils import generate_component_references, measure_time
 # locals
 from .thermo_model_source import ThermoModelSource
 from ..models import ModelSource
@@ -11,6 +11,7 @@ from ..models import ModelSource
 logger = logging.getLogger(__name__)
 
 
+@measure_time
 def build_thermo_model_source(
         components: List[Component],
         component_key: ComponentKey,
@@ -18,7 +19,8 @@ def build_thermo_model_source(
         thermo_data: List[str],
         thermo_equations: List[str],
         thermo_constants: List[str],
-        description: Optional[str] = None
+        description: Optional[str] = None,
+        **kwargs
 ) -> Optional[ThermoModelSource]:
     """
     Build a thermodynamic model source.
@@ -47,6 +49,10 @@ def build_thermo_model_source(
         List of thermodynamic constants symbols to be extracted from the model source.
     description : Optional[str]
         Optional description of the thermodynamic model source.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
 
     Returns
     -------
