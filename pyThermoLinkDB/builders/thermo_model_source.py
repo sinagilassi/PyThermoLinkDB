@@ -99,6 +99,47 @@ class ThermoModelSource:
             "thermo_constants": self.thermo_constants
         }
 
+    def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        """
+        Return all generated dynamic attributes for thermo data, equations, and constants.
+
+        Returns
+        -------
+        Dict[str, Dict[str, Dict[str, Any]]]
+            A grouped dictionary containing generated attribute names and values.
+        """
+        def collect(
+                symbols: List[str],
+                suffixes: List[str]
+        ) -> Dict[str, Dict[str, Any]]:
+            attrs: Dict[str, Dict[str, Any]] = {}
+
+            for symbol in symbols:
+                symbol_attrs: Dict[str, Any] = {}
+
+                for suffix in suffixes:
+                    attr_name = f"{symbol}_{suffix}"
+                    symbol_attrs[attr_name] = getattr(self, attr_name, None)
+
+                attrs[symbol] = symbol_attrs
+
+            return attrs
+
+        return {
+            "thermo_data": collect(
+                symbols=self.thermo_data,
+                suffixes=["src", "comp", "value"]
+            ),
+            "thermo_equations": collect(
+                symbols=self.thermo_equations,
+                suffixes=["src", "comp", "value"]
+            ),
+            "thermo_constants": collect(
+                symbols=self.thermo_constants,
+                suffixes=["src", "value"]
+            )
+        }
+
     # SECTION: build configuration methods
     # ! build thermo data
 
