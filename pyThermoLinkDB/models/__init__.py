@@ -8,6 +8,8 @@ from .source import (
     MixtureModelSource,
     ConstantsModelSource,
     CustomSource,
+    ModelSourceConfig,
+    CustomSourceConfig,
 )
 
 # component models
@@ -31,4 +33,6 @@ __all__ = [
     "ConstantResult",
     "CustomConstant",
     "CustomSource",
+    "ModelSourceConfig",
+    "CustomSourceConfig",
 ]
