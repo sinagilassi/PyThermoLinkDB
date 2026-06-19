@@ -306,6 +306,9 @@ def build_thermo_source(
             custom_source_key=custom_source_key
         )
 
+        # ! extract attributes from model source and custom source to populate the source dictionary
+        thermo_source_instance._extract_attributes()
+
         return thermo_source_instance
     except Exception as e:
         logger.error(f"Error building thermodynamic source: {e}")
