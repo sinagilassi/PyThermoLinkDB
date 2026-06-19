@@ -223,6 +223,36 @@ class ModelSource(BaseModel):
         extra="allow"
     )
 
+# NOTE: model source config
+
+
+class ModelSourceConfig(BaseModel):
+    data: List[str] = Field(
+        default_factory=list,
+        description="List of data properties to be extracted from the model source"
+    )
+    equations: List[str] = Field(
+        default_factory=list,
+        description="List of equations to be extracted from the model source"
+    )
+    constants: List[str] = Field(
+        default_factory=list,
+        description="List of constants to be extracted from the model source"
+    )
+
 
 # SECTION: Custom Source Model
 CustomSource = Dict[str, Any]
+
+# NOTE: custom source config
+
+
+class CustomSourceConfig(BaseModel):
+    data: List[str] = Field(
+        default_factory=list,
+        description="List of data properties to be extracted from the custom source"
+    )
+    constants: List[str] = Field(
+        default_factory=list,
+        description="List of constants to be extracted from the custom source"
+    )
