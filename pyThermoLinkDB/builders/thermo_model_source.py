@@ -282,13 +282,18 @@ class ThermoModelSource:
                 )
 
             # NOTE: build thermo equations
+            # ? build_all is True if thermo_equations is empty, meaning build all equations; otherwise, build only the specified equations
+            build_all = not self.thermo_equations
+            build_list = self.thermo_equations or None
+
             res_: dict[str, EquationSourcesCore] | None = mkeqss(
                 components=self.components,
                 model_source=model_source,
                 component_key=cast(ComponentKey, self.component_key),
                 # Empty means "build all"; EquationSourcesCore treats [] as
                 # an explicit filter that matches no equations.
-                build_list=self.thermo_equations or None,
+                build_all=build_all,
+                build_list=build_list,
             )
 
             # >> check if thermo equations was successfully built
