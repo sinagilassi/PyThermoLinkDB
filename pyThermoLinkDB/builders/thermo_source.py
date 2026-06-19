@@ -59,4 +59,4 @@ class ThermoSource:
         else:
             logger.warning("No thermodynamic custom source specified.")
 
-    # SECTION: Source Management
+    # SECTION: Source Management & Utilities
