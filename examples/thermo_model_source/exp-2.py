@@ -27,7 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # ! model source & components
 logging.getLogger("pyThermoLinkDB.docs.thermolink").setLevel(logging.ERROR)
 with contextlib.redirect_stdout(io.StringIO()):
-    from examples.model_source_2 import CO2, C2H5OH, model_source_with_rules
+    from examples.model_source_2 import CO2, C2H5OH, model_source, components
 
 
 # version
@@ -55,14 +55,12 @@ runtime_inputs = {
 
 runtime_inputs_symbols = list(runtime_inputs.keys())
 
-
-# =======================================
-# BUILD MODEL SOURCE
-# =======================================
 # NOTE: components configuration
-components = [CO2, C2H5OH]
 component_key = 'Name-State'
 
+# =======================================
+# ☑️ BUILD MODEL SOURCE
+# =======================================
 # NOTE: thermo data, equations, and constants to be extracted from the model source
 thermo_data = ['EnFo_IG', 'Tc', 'Pc']
 thermo_equations = ['Cp_IG', 'VaPr']
@@ -70,12 +68,33 @@ thermo_constants = ['R', 'dH_rxn']
 
 # NOTE: build thermo model source
 thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
-    model_source=model_source_with_rules,
+    model_source=model_source,
     components=components,
     component_key=component_key,
     thermo_data=thermo_data,
     thermo_equations=thermo_equations,
     thermo_constants=thermo_constants,
+    description="Example thermo model source with rules",
+    mode='log'  # options: 'silent', 'log', 'attach'
+)
+
+if thermo_model_src is None:
+    raise RuntimeError("Failed to build thermo model source.")
+
+
+dynamic_attrs = thermo_model_src.dynamic_attributes()
+
+print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
+print(dynamic_attrs)
+
+# =======================================
+# ☑️ BUILD MODEL SOURCE (no configuration)
+# =======================================
+# NOTE: build thermo model source
+thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
+    model_source=model_source,
+    components=components,
+    component_key=component_key,
     description="Example thermo model source with rules",
     mode='log'  # options: 'silent', 'log', 'attach'
 )
