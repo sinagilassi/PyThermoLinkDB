@@ -23,6 +23,8 @@ class ThermoSource:
             thermo_model_source: Optional[ThermoModelSource],
             thermo_custom_source: Optional[ThermoCustomSource],
             description: Optional[str] = None,
+            model_source_key: str = 'model_source',
+            custom_source_key: str = 'custom_source'
     ):
         # NOTE: set up attributes
         self.components = components
@@ -33,8 +35,8 @@ class ThermoSource:
 
         # NOTE: source
         self._source = {
-            'model_source': {},
-            'custom_source': {}
+            model_source_key: {},
+            custom_source_key: {}
         }
 
     # SECTION: Properties
