@@ -5,7 +5,7 @@ import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
 from pythermodb_settings.models import CustomProperty, Component, ComponentKey
 # ! from pyThermoLinkDB
-from pyThermoLinkDB.models import CustomConstant
+from pyThermoLinkDB.models import ModelSourceConfig, CustomSourceConfig
 from pyThermoLinkDB.builders import build_thermo_source, ThermoSource
 # ! components
 from examples.thermo_model_source.components_1 import components
@@ -28,16 +28,17 @@ print(thermodb_dir)
 component_key = "Name-State"
 
 # NOTE: model source
-model_source_payload = {
-    'data': ['EnFo_IG', 'Tc', 'Pc'],
-    'equations': ['Cp_IG', 'VaPr'],
-    'constants': ['R', 'dH_rxn'],
-}
+model_source_config = ModelSourceConfig(
+    data=['EnFo_IG', 'Tc', 'Pc'],
+    equations=['Cp_IG', 'VaPr'],
+    constants=['R', 'dH_rxn'],
+)
+
 
 # NOTE: custom source
-custom_source_payload = {
-    'data': ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ'],
-    'constants': [
+custom_source_payload = CustomSourceConfig(
+    data=['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ'],
+    constants=[
         'dH_rxn',
         'Cp_LIQ_MIX_VOL',
         'R',
@@ -45,4 +46,4 @@ custom_source_payload = {
         'ANOTHER_CONST',
         'THIRD_CONST'
     ],
-}
+)
