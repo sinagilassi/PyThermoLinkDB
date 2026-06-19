@@ -233,17 +233,16 @@ class ThermoModelSource:
     # SECTION: build configuration methods
     # ! build thermo data
 
-    def _build_thermo_data(self):
+    def _build_thermo_data(
+            self,
+            model_source: ModelSource
+    ):
         try:
             # >> check if thermo data is available
             if len(self.thermo_data) == 0:
                 logger.warning(
                     "No thermodynamic data specified for extraction."
                 )
-                return
-
-            # NOTE: select model source
-            model_source = self.select_model_source()
 
             # NOTE: build thermo data
             res_: Dict[str, DataSourceCore] | None = mkdts(
@@ -271,24 +270,25 @@ class ThermoModelSource:
             raise
 
     # ! build thermo equations
-    def _build_thermo_equations(self):
+    def _build_thermo_equations(
+            self,
+            model_source: ModelSource
+    ):
         try:
             # >> check if thermo equations is available
             if len(self.thermo_equations) == 0:
                 logger.warning(
                     "No thermodynamic equations specified for extraction."
                 )
-                return
-
-            # NOTE: select model source
-            model_source = self.select_model_source()
 
             # NOTE: build thermo equations
             res_: dict[str, EquationSourcesCore] | None = mkeqss(
                 components=self.components,
                 model_source=model_source,
                 component_key=cast(ComponentKey, self.component_key),
-                build_list=self.thermo_equations,
+                # Empty means "build all"; EquationSourcesCore treats [] as
+                # an explicit filter that matches no equations.
+                build_list=self.thermo_equations or None,
             )
 
             # >> check if thermo equations was successfully built
@@ -309,17 +309,16 @@ class ThermoModelSource:
             raise
 
     # ! build thermo constants
-    def _build_thermo_constants(self):
+    def _build_thermo_constants(
+            self,
+            model_source: ModelSource
+    ):
         try:
             # >> check if thermo constants is available
             if len(self.thermo_constants) == 0:
                 logger.warning(
                     "No thermodynamic constants specified for extraction."
                 )
-                return
-
-            # NOTE: select model source
-            model_source = self.select_model_source()
 
             # NOTE: check constant source
             if model_source.constants_source is None:
@@ -356,10 +355,13 @@ class ThermoModelSource:
         Build the thermodynamic model source by extracting data and equations from the model source.
         """
         try:
+            # NOTE: select model source
+            model_source = self.select_model_source()
+
             # NOTE: thermo data and equations are built in the constructor
-            self._build_thermo_data()
-            self._build_thermo_equations()
-            self._build_thermo_constants()
+            self._build_thermo_data(model_source)
+            self._build_thermo_equations(model_source)
+            self._build_thermo_constants(model_source)
 
         except Exception as e:
             logger.error(
@@ -367,12 +369,43 @@ class ThermoModelSource:
             raise
 
     # SECTION: config attributes
-    def config_attributes(self):
+    def config_attributes(self) -> None:
         """
         Configure the attributes of the thermodynamic model source.
         """
-        # NOTE: currently, there are no additional attributes to configure.
         component_ids = self.component_references.get('component_ids', [])
+
+        self._config_available_thermo()
+        self._config_data_attributes(component_ids)
+        self._config_equation_attributes(component_ids)
+        self._config_constant_attributes()
+
+    # NOTE: config available thermo
+    def _config_available_thermo(self) -> None:
+        """Populate empty thermo lists from sources built without filters."""
+        if not self.thermo_data:
+            self.thermo_data = list(dict.fromkeys(
+                prop
+                for data_source in self.thermo_data_source.values()
+                for prop in data_source.props
+            ))
+
+        if not self.thermo_equations:
+            self.thermo_equations = list(dict.fromkeys(
+                equation
+                for equations_source in self.thermo_equations_source.values()
+                for equation in equations_source.src
+            ))
+
+        constants_source = self.thermo_constants_source
+        if not self.thermo_constants and constants_source is not None:
+            self.thermo_constants = constants_source.constants
+
+    # NOTE: config data attributes
+    def _config_data_attributes(self, component_ids: List[str]) -> None:
+        """Configure dynamic attributes for available data sources."""
+        if not self.thermo_data or not self.thermo_data_source:
+            return
 
         # ! data variables
         # iterate over thermo data and set attributes
@@ -412,6 +445,12 @@ class ThermoModelSource:
             setattr(self, f"{symbol}_comp", dt_comp)
             setattr(self, f"{symbol}_value", np.array(dt_value))
 
+    # NOTE: config equation attributes
+    def _config_equation_attributes(self, component_ids: List[str]) -> None:
+        """Configure dynamic attributes for available equation sources."""
+        if not self.thermo_equations or not self.thermo_equations_source:
+            return
+
         # ! equation variables
         # iterate over thermo equations and set attributes
         for symbol in self.thermo_equations:
@@ -447,21 +486,22 @@ class ThermoModelSource:
             setattr(self, f"{symbol}_comp", eqn_comp)
             setattr(self, f"{symbol}_value", eqn_value)
 
+    # NOTE: config constant attributes
+    def _config_constant_attributes(self) -> None:
+        """Configure dynamic attributes for available constant sources."""
+        constants_source = self.thermo_constants_source
+        if (
+            not self.thermo_constants
+            or constants_source is None
+            or not constants_source.constants
+        ):
+            return
+
         # ! constants variables
         # iterate over thermo constants and set attributes
         for symbol in self.thermo_constants:
-            # source
-            res_const_src: ConstantsSourceCore | None = self.thermo_constants_source
-
-            # >> check if constant source is available
-            if res_const_src is None:
-                logger.warning(
-                    f"Constant source for symbol '{symbol}' not available in the model source."
-                )
-                continue
-
             # > extract constant data for the symbol
-            const_src: ConstantResult | None = res_const_src.select(
+            const_src: ConstantResult | None = constants_source.select(
                 symbol=symbol
             )
 
