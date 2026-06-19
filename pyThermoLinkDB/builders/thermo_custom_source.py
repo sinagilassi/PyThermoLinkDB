@@ -303,8 +303,7 @@ class ThermoCustomSource:
     def _build_thermo_data(self) -> None:
         try:
             if len(self.thermo_data) == 0:
-                logger.warning("No custom thermodynamic data specified.")
-                return
+                logger.info("No custom data filter specified; extracting all available data.")
 
             # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
@@ -318,7 +317,7 @@ class ThermoCustomSource:
                     continue
 
                 symbol = self._get_entry_symbol(key=key, value=value)
-                if symbol not in self.thermo_data:
+                if self.thermo_data and symbol not in self.thermo_data:
                     continue
 
                 data_source: Dict[str, CustomProperty] = {}
@@ -353,8 +352,7 @@ class ThermoCustomSource:
     def _build_thermo_constants(self) -> None:
         try:
             if len(self.thermo_constants) == 0:
-                logger.warning("No custom thermodynamic constants specified.")
-                return
+                logger.info("No custom constants filter specified; extracting all available constants.")
 
             # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
@@ -370,7 +368,10 @@ class ThermoCustomSource:
                     key=key,
                     value=value
                 )
-                if const_source.symbol not in self.thermo_constants:
+                if (
+                    self.thermo_constants
+                    and const_source.symbol not in self.thermo_constants
+                ):
                     continue
 
                 self.thermo_constants_source[const_source.symbol] = const_source
@@ -407,6 +408,24 @@ class ThermoCustomSource:
         """
         component_ids = self.component_references.get('component_ids', [])
 
+        self._config_available_thermo()
+        self._config_data_attributes(component_ids)
+        self._config_constant_attributes()
+
+    def _config_available_thermo(self) -> None:
+        """Populate empty thermo lists from the discovered custom sources."""
+        if not self.thermo_data:
+            self.thermo_data = list(self.thermo_data_source)
+
+        if not self.thermo_constants:
+            self.thermo_constants = list(self.thermo_constants_source)
+
+    # NOTE: config data attributes
+    def _config_data_attributes(self, component_ids: List[str]) -> None:
+        """Configure dynamic attributes for available custom data sources."""
+        if not self.thermo_data or not self.thermo_data_source:
+            return
+
         # ! data variables
         for symbol in self.thermo_data:
             dt_value: List[float] = []
@@ -430,6 +449,12 @@ class ThermoCustomSource:
             setattr(self, f"{symbol}_src", dt_src)
             setattr(self, f"{symbol}_comp", dt_comp)
             setattr(self, f"{symbol}_value", np.array(dt_value))
+
+    # NOTE: config constant attributes
+    def _config_constant_attributes(self) -> None:
+        """Configure dynamic attributes for available custom constants."""
+        if not self.thermo_constants or not self.thermo_constants_source:
+            return
 
         # ! constants variables
         for symbol in self.thermo_constants:
