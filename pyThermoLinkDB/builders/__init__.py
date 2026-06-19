@@ -6,6 +6,12 @@ from .thermo_custom_source import ThermoCustomSource
 
 # thermo source
 from .thermo_source import ThermoSource
+from .source_management import (
+    ThermoSourceRegistry,
+    ThermoSourceResolver,
+    ThermoSourceValidationResult,
+    ThermoSourceValidator,
+)
 
 # main
 from .main import (
@@ -21,4 +27,8 @@ __all__ = [
     "ThermoModelSource",
     "ThermoCustomSource",
     "ThermoSource",
+    "ThermoSourceRegistry",
+    "ThermoSourceResolver",
+    "ThermoSourceValidationResult",
+    "ThermoSourceValidator",
 ]
