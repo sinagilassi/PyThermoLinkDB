@@ -188,6 +188,8 @@ def build_custom_model_source(
 
 
 # SECTION: main build function
+
+@measure_time
 def build_thermo_source(
         components: List[Component],
         component_key: ComponentKey,
@@ -196,6 +198,7 @@ def build_thermo_source(
         model_source_config: Optional[ModelSourceConfig],
         custom_source_config: Optional[CustomSourceConfig],
         description: Optional[str] = None,
+        **kwargs
 ) -> Optional[ThermoSource]:
     """
     Build a thermodynamic source, which can be either a model source or a custom source.
@@ -218,14 +221,20 @@ def build_thermo_source(
         The source of the thermodynamic model data, or None if not applicable.
     custom_source : Optional[CustomSource]
         A dictionary containing custom thermodynamic data, equations, and constants, or None if not applicable.
-    thermo_data : List[str]
-        List of thermodynamic data symbols to be extracted from the sources.
-    thermo_equations : List[str]
-        List of thermodynamic equations symbols to be extracted from the sources.
-    thermo_constants : List[str]
-        List of thermodynamic constants symbols to be extracted from the sources.
+    model_source_config : Optional[ModelSourceConfig]
+        Configuration for the model source, including which data, equations, and constants to extract.
+    custom_source_config : Optional[CustomSourceConfig]
+        Configuration for the custom source, including which data and constants to extract.
     description : Optional[str]
         Optional description of the thermodynamic source.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
+            - model_source_key : str, optional
+                Key to use for the model source in the ThermoSource instance. Default is 'model_source'.
+            - custom_source_key : str, optional
+                Key to use for the custom source in the ThermoSource instance. Default is 'custom_source'.
 
     Returns
     -------
@@ -237,6 +246,17 @@ def build_thermo_source(
     - At least one of model_source or custom_source must be provided. If both are provided, they will be used for thermo_data, thermo_equations, and thermo_constants.
     """
     try:
+        # NOTE: validate that at least one source is provided
+        if model_source is None and custom_source is None:
+            logger.error(
+                "At least one of model_source or custom_source must be provided."
+            )
+            return None
+
+        # NOTE: kwargs for source keys
+        model_source_key = kwargs.get('model_source_key', 'model_source')
+        custom_source_key = kwargs.get('custom_source_key', 'custom_source')
+
         # NOTE: build thermo model source and custom model source
         thermo_model_source = None
         thermo_custom_source = None
@@ -281,7 +301,9 @@ def build_thermo_source(
             component_key=component_key,
             thermo_model_source=thermo_model_source,
             thermo_custom_source=thermo_custom_source,
-            description=description
+            description=description,
+            model_source_key=model_source_key,
+            custom_source_key=custom_source_key
         )
 
         return thermo_source_instance
