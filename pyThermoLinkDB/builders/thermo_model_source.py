@@ -37,6 +37,7 @@ class ThermoModelSource:
     - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
     - ``{symbol}_comp``: mapping of component ID to numeric property value.
     - ``{symbol}_value``: NumPy array of values in component order.
+    - ``{symbol}_eq``: ``None``.
 
     For each symbol in ``thermo_equations``, the class creates:
 
@@ -45,6 +46,7 @@ class ThermoModelSource:
     values.
     - ``{symbol}_value``: currently ``None``; reserved for evaluated value
     arrays.
+    - ``{symbol}_eq``: alias of ``{symbol}_src``.
 
     For each symbol in ``thermo_constants``, the class creates:
 
@@ -124,6 +126,10 @@ class ThermoModelSource:
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
         self.thermo_constants_source: ConstantsSourceCore | None = None
+
+        # Symbols whose dynamic attributes were configured during the latest
+        # config_attributes() pass.
+        self.used_symbols: List[str] = []
 
         # NOTE: set model source
         self._model_source: Optional[ModelSource] = None
@@ -222,7 +228,7 @@ class ThermoModelSource:
             ),
             "thermo_equations": collect(
                 symbols=self.thermo_equations,
-                suffixes=["src", "comp", "value"]
+                suffixes=["eq"]
             ),
             "thermo_constants": collect(
                 symbols=self.thermo_constants,
@@ -379,6 +385,7 @@ class ThermoModelSource:
         Configure the attributes of the thermodynamic model source.
         """
         component_ids = self.component_references.get('component_ids', [])
+        self.used_symbols = []
 
         self._config_available_thermo()
         self._config_data_attributes(component_ids)
@@ -388,6 +395,7 @@ class ThermoModelSource:
     # NOTE: config available thermo
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from sources built without filters."""
+        # ? data source
         if not self.thermo_data:
             self.thermo_data = list(dict.fromkeys(
                 prop
@@ -395,6 +403,7 @@ class ThermoModelSource:
                 for prop in data_source.props
             ))
 
+        # ? equations source
         if not self.thermo_equations:
             self.thermo_equations = list(dict.fromkeys(
                 equation
@@ -402,12 +411,18 @@ class ThermoModelSource:
                 for equation in equations_source.src
             ))
 
-        constants_source = self.thermo_constants_source
+        # ? constants source
+        constants_source: ConstantsSourceCore | None = self.thermo_constants_source
+
         if not self.thermo_constants and constants_source is not None:
+            # >>> get all constant symbols
             self.thermo_constants = constants_source.constants
 
     # NOTE: config data attributes
-    def _config_data_attributes(self, component_ids: List[str]) -> None:
+    def _config_data_attributes(
+            self,
+            component_ids: List[str]
+    ) -> None:
         """Configure dynamic attributes for available data sources."""
         if not self.thermo_data or not self.thermo_data_source:
             return
@@ -428,6 +443,7 @@ class ThermoModelSource:
 
                 # >> check
                 if res_dt is not None:
+                    # >>> select data source for the symbol for the component
                     res_dt_: CustomProperty | None = res_dt.select(
                         symbol=symbol
                     )
@@ -450,8 +466,15 @@ class ThermoModelSource:
             setattr(self, f"{symbol}_comp", dt_comp)
             setattr(self, f"{symbol}_value", np.array(dt_value))
 
+            # >> add symbol to used symbols
+            if symbol not in self.used_symbols:
+                self.used_symbols.append(symbol)
+
     # NOTE: config equation attributes
-    def _config_equation_attributes(self, component_ids: List[str]) -> None:
+    def _config_equation_attributes(
+            self,
+            component_ids: List[str]
+    ) -> None:
         """Configure dynamic attributes for available equation sources."""
         if not self.thermo_equations or not self.thermo_equations_source:
             return
@@ -460,8 +483,6 @@ class ThermoModelSource:
         # iterate over thermo equations and set attributes
         for symbol in self.thermo_equations:
             # > extract equation data for the symbol for all components
-            eqn_value: Optional[List[float]] = None
-            eqn_comp: Optional[Dict[str, float]] = None
             eqn_src: Dict[str, EquationSourceCore] = {}
 
             # iterate over components and extract equation source for the symbol
@@ -487,14 +508,58 @@ class ThermoModelSource:
                         f"Equation source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
             # ? set attributes for each symbol
-            setattr(self, f"{symbol}_src", eqn_src)
-            setattr(self, f"{symbol}_comp", eqn_comp)
-            setattr(self, f"{symbol}_value", eqn_value)
+            setattr(self, f"{symbol}_eq", eqn_src)
+
+            # >> add symbol to used symbols
+            if symbol not in self.used_symbols:
+                self.used_symbols.append(symbol)
+
+    # NOTE: config constant attributes
+    # ! utility
+    def _component_constant_values(
+            self,
+            const_src: ConstantResult
+    ) -> tuple[Dict[str, Any], np.ndarray] | None:
+        """Return component-aligned constant values when all component IDs exist."""
+        component_ids = self.component_references.get('component_ids', [])
+        const_value = const_src.value
+
+        if (
+            not component_ids
+            or not isinstance(const_value, dict)
+            or not all(comp_id in const_value for comp_id in component_ids)
+        ):
+            return None
+
+        const_comp: Dict[str, float] = {}
+        const_value_list: List[float] = []
+
+        for comp_id in component_ids:
+            component_value = const_value[comp_id]
+            if isinstance(component_value, CustomProperty):
+                component_value = component_value.value
+            elif isinstance(component_value, dict) and "value" in component_value:
+                component_value = component_value["value"]
+
+            if not isinstance(component_value, (int, float)):
+                logger.warning(
+                    f"Component value for '{comp_id}' in constant source is "
+                    "not numeric; the constant will not be treated as component-wise."
+                )
+                return None
+
+            const_comp[comp_id] = float(component_value)
+            const_value_list.append(float(component_value))
+
+        return const_comp, np.array(const_value_list)
 
     # NOTE: config constant attributes
     def _config_constant_attributes(self) -> None:
-        """Configure dynamic attributes for available constant sources."""
-        constants_source = self.thermo_constants_source
+        """Configure constants without replacing previously configured symbols."""
+        # >>> check constant source
+        constants_source: ConstantsSourceCore | None = self.thermo_constants_source
+
+        # >> check
         if (
             not self.thermo_constants
             or constants_source is None
@@ -503,21 +568,79 @@ class ThermoModelSource:
             return
 
         # ! constants variables
+        consumed_constant_symbols: List[str] = []
+
         # iterate over thermo constants and set attributes
         for symbol in self.thermo_constants:
-            # > extract constant data for the symbol
+            # > select constant source for the symbol
             const_src: ConstantResult | None = constants_source.select(
                 symbol=symbol
             )
+
+            # Component-wise constants requested as thermo data belong only to
+            # thermo_data, even if no regular data source configured them.
+            component_values = (
+                self._component_constant_values(const_src)
+                if const_src is not None
+                else None
+            )
+
+            if component_values is not None and symbol in self.thermo_data:
+                const_comp, const_value = component_values
+                setattr(self, f"{symbol}_src", const_src)
+                setattr(self, f"{symbol}_comp", const_comp)
+                setattr(self, f"{symbol}_value", const_value)
+                consumed_constant_symbols.append(symbol)
+                if symbol not in self.used_symbols:
+                    self.used_symbols.append(symbol)
+                logger.warning(
+                    f"Data symbol '{symbol}' was configured from "
+                    "component-wise values in the constant source."
+                )
+                continue
+
+            # >>> check symbol conflicts with previously configured data or equations
+            if symbol in self.used_symbols:
+                if component_values is not None and symbol in self.thermo_equations:
+                    const_comp, const_value = component_values
+                    setattr(self, f"{symbol}_comp", const_comp)
+                    setattr(self, f"{symbol}_value", const_value)
+                    consumed_constant_symbols.append(symbol)
+                    logger.warning(
+                        f"Equation symbol '{symbol}' received component-wise "
+                        "comp and value attributes from the constant source; "
+                        "its src and eq attributes were preserved."
+                    )
+                    continue
+
+                if symbol in self.thermo_equations:
+                    consumed_constant_symbols.append(symbol)
+                    logger.warning(
+                        f"Constant symbol '{symbol}' is already configured as "
+                        "an equation; removing it from thermo_constants."
+                    )
+                    continue
+
+                logger.warning(
+                    f"Constant symbol '{symbol}' is already configured as data "
+                    "or an equation; preserving the existing attributes."
+                )
+                continue
 
             # >> check if constant source for the symbol was found
             if const_src is not None:
                 setattr(self, f"{symbol}_src", const_src)
                 setattr(self, f"{symbol}_value", const_src.value)
+                self.used_symbols.append(symbol)
             else:
                 logger.warning(
                     f"Constant source for symbol '{symbol}' not found in the model source."
                 )
-                # set attributes to None if not found
-                setattr(self, f"{symbol}_src", None)
-                setattr(self, f"{symbol}_value", None)
+
+        if consumed_constant_symbols:
+            consumed_symbols = set(consumed_constant_symbols)
+            self.thermo_constants = [
+                symbol
+                for symbol in self.thermo_constants
+                if symbol not in consumed_symbols
+            ]
