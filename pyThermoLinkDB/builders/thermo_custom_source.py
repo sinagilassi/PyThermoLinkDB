@@ -82,6 +82,10 @@ class ThermoCustomSource:
         self.thermo_data_source: Dict[str, Dict[str, CustomProperty]] = {}
         self.thermo_constants_source: Dict[str, ConstantResult] = {}
 
+        # Symbols whose dynamic attributes were configured during the latest
+        # config_attributes() pass.
+        self.used_symbols: List[str] = []
+
         # NOTE: custom source input
         self._custom_source: Optional[CustomSource] = None
 
@@ -407,6 +411,7 @@ class ThermoCustomSource:
         Configure dynamic attributes of the custom thermodynamic model source.
         """
         component_ids = self.component_references.get('component_ids', [])
+        self.used_symbols = []
 
         self._config_available_thermo()
         self._config_data_attributes(component_ids)
@@ -449,6 +454,8 @@ class ThermoCustomSource:
             setattr(self, f"{symbol}_src", dt_src)
             setattr(self, f"{symbol}_comp", dt_comp)
             setattr(self, f"{symbol}_value", np.array(dt_value))
+            if symbol not in self.used_symbols:
+                self.used_symbols.append(symbol)
 
     # NOTE: config constant attributes
     def _config_constant_attributes(self) -> None:
@@ -458,15 +465,21 @@ class ThermoCustomSource:
 
         # ! constants variables
         for symbol in self.thermo_constants:
+            if symbol in self.used_symbols:
+                logger.warning(
+                    f"Custom constant symbol '{symbol}' is already configured "
+                    "as data; preserving the existing attributes."
+                )
+                continue
+
             const_src = self.thermo_constants_source.get(symbol)
 
             if const_src is None:
                 logger.warning(
                     f"Custom constant source for symbol '{symbol}' not found."
                 )
-                setattr(self, f"{symbol}_src", None)
-                setattr(self, f"{symbol}_value", None)
                 continue
 
             setattr(self, f"{symbol}_src", const_src)
             setattr(self, f"{symbol}_value", const_src.value)
+            self.used_symbols.append(symbol)
