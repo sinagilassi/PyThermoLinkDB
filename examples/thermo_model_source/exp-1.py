@@ -123,7 +123,7 @@ def show_thermo_constants(symbols: list[str]) -> None:
 def show_dynamic_attribute_group(symbols: list[str]) -> None:
     for symbol in symbols:
         print(f"\n[bold cyan]{symbol}[/bold cyan]")
-        for suffix in ("src", "comp", "value"):
+        for suffix in ("src", "comp", "value", "eq"):
             attr_name = f"{symbol}_{suffix}"
             print(f"{attr_name} =", getattr(thermo_model_src, attr_name, None))
 
@@ -138,7 +138,7 @@ show_dynamic_attribute_group(thermo_constants)
 
 print("\n[bold green]Sample equation calculations with validated runtime inputs[/bold green]")
 for equation_symbol in thermo_equations:
-    eq_sources = getattr(thermo_model_src, f"{equation_symbol}_src", {})
+    eq_sources = getattr(thermo_model_src, f"{equation_symbol}_eq", {})
     print(f"\n[bold cyan]{equation_symbol}[/bold cyan]")
     for component_id, equation_source in eq_sources.items():
         # ! validate and build inputs for the equation source
