@@ -87,3 +87,34 @@ def test_custom_model_source_builds_component_data_and_constants():
     dynamic_attrs = custom_model_src.dynamic_attributes()
     assert dynamic_attrs["thermo_data"]["MW"]["MW_value"] is custom_model_src.MW_value
     assert dynamic_attrs["thermo_constants"]["R"]["R_value"] == 8.314
+
+
+def test_custom_constant_does_not_overwrite_existing_data_attributes():
+    components = [
+        Component(name="methane", formula="CH4", state="g"),
+    ]
+    custom_source = {
+        "component_value": {
+            "CH4-g": CustomProperty(value=16.04, unit="g/mol", symbol="MW"),
+        },
+        "constant_value": CustomConstant(
+            name="conflicting_constant",
+            description="Uses the same symbol as component data.",
+            value=999.0,
+            unit=None,
+            symbol="MW",
+        ),
+    }
+
+    source = build_custom_model_source(
+        components=components,
+        component_key="Formula-State",
+        custom_source=custom_source,
+        thermo_data=[],
+        thermo_constants=[],
+    )
+
+    assert source is not None
+    np.testing.assert_allclose(source.MW_value, [16.04])
+    assert source.MW_comp == {"CH4-g": 16.04}
+    assert source.used_symbols == ["MW"]
