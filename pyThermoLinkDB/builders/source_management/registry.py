@@ -92,18 +92,25 @@ class ThermoSourceRegistry:
 
     # SECTION: Registry Configuration
     @staticmethod
-    def _model_entries(source: ThermoModelSource) -> Dict[str, Dict[str, Any]]:
-        """Convert a model's flat ``thermo_src`` into the registry view."""
+    def _source_entries(
+            source: ThermoModelSource | ThermoCustomSource,
+            equation_symbols: Iterable[str] | None = None,
+    ) -> Dict[str, Dict[str, Any]]:
+        """Convert a flat ``thermo_src`` into the categorized registry view."""
         categories: Dict[str, Dict[str, Any]] = {
             "thermo_data": {},
             "thermo_equations": {},
             "thermo_constants": {},
         }
-        category_config = (
+        category_config = [
             ("thermo_data", source.requested_data, ("src", "comp", "value")),
-            ("thermo_equations", source.requested_equations, ("eq",)),
             ("thermo_constants", source.requested_constants, ("src", "value")),
-        )
+        ]
+        if equation_symbols is not None:
+            category_config.insert(
+                1,
+                ("thermo_equations", equation_symbols, ("eq",)),
+            )
         for category, symbols, fields in category_config:
             for symbol in symbols:
                 entry = source.thermo_src.get(symbol)
@@ -119,11 +126,16 @@ class ThermoSourceRegistry:
         """Rebuild the registry from the current source objects."""
         self._source = {
             self.model_source_key: (
-                self._model_entries(self.thermo_model_source)
+                self._source_entries(
+                    self.thermo_model_source,
+                    equation_symbols=self.thermo_model_source.requested_equations,
+                )
                 if self.thermo_model_source is not None else {}
             ),
             self.custom_source_key: (
-                self.thermo_custom_source.dynamic_attributes()
+                self._source_entries(
+                    self.thermo_custom_source,
+                )
                 if self.thermo_custom_source is not None else {}
             ),
         }
