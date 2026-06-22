@@ -5,7 +5,29 @@ import pytest
 from pyThermoLinkDB.builders import ThermoSource
 
 
-class StubSource:
+class StubModelSource:
+    def __init__(self, attributes, component_ids=("A-g", "B-g")):
+        self.attributes = attributes
+        self.component_references = {"component_ids": list(component_ids)}
+        self.requested_data = list(attributes.get("thermo_data", {}))
+        self.requested_equations = list(attributes.get("thermo_equations", {}))
+        self.requested_constants = list(attributes.get("thermo_constants", {}))
+
+    @property
+    def thermo_src(self):
+        result = {}
+        for entries in self.attributes.values():
+            for symbol, attributes in entries.items():
+                entry_ = result.setdefault(
+                    symbol,
+                    {"src": None, "comp": None, "value": None, "eq": None},
+                )
+                for name, value in attributes.items():
+                    entry_[name.removeprefix(f"{symbol}_")] = value
+        return result
+
+
+class StubCustomSource:
     def __init__(self, attributes, component_ids=("A-g", "B-g")):
         self.attributes = attributes
         self.component_references = {"component_ids": list(component_ids)}
@@ -27,8 +49,8 @@ def make_source(model=None, custom=None, **kwargs):
     return ThermoSource(
         components=[SimpleNamespace(), SimpleNamespace()],
         component_key="Formula-State",
-        thermo_model_source=StubSource(model) if model is not None else None,
-        thermo_custom_source=StubSource(custom) if custom is not None else None,
+        thermo_model_source=StubModelSource(model) if model is not None else None,
+        thermo_custom_source=StubCustomSource(custom) if custom is not None else None,
         **kwargs,
     )
 
@@ -84,7 +106,7 @@ def test_validator_reports_missing_and_incomplete_data():
 
 
 def test_refresh_mutation_summary_and_copy():
-    model = StubSource({"thermo_constants": {"R": entry("R", 8.0)}})
+    model = StubModelSource({"thermo_constants": {"R": entry("R", 8.0)}})
     source = ThermoSource([], "Formula-State", model, None)
     model.attributes["thermo_constants"]["R"]["R_value"] = 8.314
 

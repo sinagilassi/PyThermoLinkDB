@@ -84,9 +84,16 @@ if thermo_model_src is None:
 
 def show_thermo_data(symbols: list[str]) -> None:
     print("\n[bold green]Thermo data[/bold green]")
+
+    # >> check
+    if thermo_model_src is None:
+        print("Thermo source is not available.")
+        raise RuntimeError("Thermo source is not available.")
+
     for symbol in symbols:
-        data_sources = getattr(thermo_model_src, f"{symbol}_src", {})
-        values = getattr(thermo_model_src, f"{symbol}_value", None)
+        entry = thermo_model_src.thermo_src[symbol]
+        data_sources = entry["src"] or {}
+        values = entry["value"]
 
         print(f"\n[bold cyan]{symbol}[/bold cyan]")
         print("values =", values)
@@ -103,9 +110,15 @@ def show_thermo_data(symbols: list[str]) -> None:
 
 def show_thermo_constants(symbols: list[str]) -> None:
     print("\n[bold green]Thermo constants[/bold green]")
+
+    if thermo_model_src is None:
+        print("Thermo source is not available.")
+        raise RuntimeError("Thermo source is not available.")
+
     for symbol in symbols:
-        const_source = getattr(thermo_model_src, f"{symbol}_src", None)
-        const_value = getattr(thermo_model_src, f"{symbol}_value", None)
+        entry = thermo_model_src.thermo_src[symbol]
+        const_source = entry["src"]
+        const_value = entry["value"]
 
         print(f"\n[bold cyan]{symbol}[/bold cyan]")
         print("value =", const_value)
@@ -120,25 +133,28 @@ def show_thermo_constants(symbols: list[str]) -> None:
             )
 
 
-def show_dynamic_attribute_group(symbols: list[str]) -> None:
+def show_thermo_source_group(symbols: list[str]) -> None:
+    if thermo_model_src is None:
+        print("Thermo source is not available.")
+        raise RuntimeError("Thermo source is not available.")
+
     for symbol in symbols:
         print(f"\n[bold cyan]{symbol}[/bold cyan]")
-        for suffix in ("src", "comp", "value", "eq"):
-            attr_name = f"{symbol}_{suffix}"
-            print(f"{attr_name} =", getattr(thermo_model_src, attr_name, None))
+        for key, value in thermo_model_src.thermo_src[symbol].items():
+            print(f"{key} =", value)
 
 
 show_thermo_data(requested_data)
 show_thermo_constants(requested_constants)
 
-print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
-show_dynamic_attribute_group(requested_data)
-show_dynamic_attribute_group(requested_equations)
-show_dynamic_attribute_group(requested_constants)
+print("\n[bold green]Thermo model source[/bold green]")
+show_thermo_source_group(requested_data)
+show_thermo_source_group(requested_equations)
+show_thermo_source_group(requested_constants)
 
 print("\n[bold green]Sample equation calculations with validated runtime inputs[/bold green]")
 for equation_symbol in requested_equations:
-    eq_sources = getattr(thermo_model_src, f"{equation_symbol}_eq", {})
+    eq_sources = thermo_model_src.thermo_src[equation_symbol]["eq"] or {}
     print(f"\n[bold cyan]{equation_symbol}[/bold cyan]")
     for component_id, equation_source in eq_sources.items():
         # ! validate and build inputs for the equation source

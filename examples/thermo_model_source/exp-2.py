@@ -82,10 +82,8 @@ if thermo_model_src is None:
     raise RuntimeError("Failed to build thermo model source.")
 
 
-dynamic_attrs = thermo_model_src.dynamic_attributes()
-
-print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
-print(dynamic_attrs)
+print("\n[bold green]Thermo model source[/bold green]")
+print(thermo_model_src.thermo_src)
 
 # =======================================
 # â˜‘ï¸ BUILD MODEL SOURCE (no configuration)
@@ -103,7 +101,5 @@ if thermo_model_src is None:
     raise RuntimeError("Failed to build thermo model source.")
 
 
-dynamic_attrs = thermo_model_src.dynamic_attributes()
-
-print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
-print(dynamic_attrs)
+print("\n[bold green]Thermo model source[/bold green]")
+print(thermo_model_src.thermo_src)
