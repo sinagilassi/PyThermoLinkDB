@@ -83,7 +83,7 @@ class ThermoSource:
 
     # SECTION: Source Configuration
     def refresh(self) -> None:
-        """Re-extract dynamic attributes from both source objects."""
+        """Refresh the categorized registry from both source objects."""
         self.registry.refresh()
         self.validator.component_ids = tuple(self._component_ids())
 
