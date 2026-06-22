@@ -40,7 +40,11 @@ print(constants_src)
 if constants_src is None:
     raise ValueError("Failed to create constants source.")
 
-# results
+# NOTE: >> check build status
+print(constants_src.summary())
+print(constants_src.build_status())
+
+# NOTE: results
 # ! all constants
 print(constants_src.constants)
 print(constants_src.all_constants())
