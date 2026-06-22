@@ -14,11 +14,10 @@ _MISSING = object()
 
 
 class ThermoSourceRegistry:
-    """Assemble and query model and custom dynamic attributes."""
+    """Assemble and query categorized thermodynamic source entries."""
 
     # SECTION: Category Configuration
-    # NOTE: Public shorthand names are normalized to the keys produced by
-    # ``dynamic_attributes()`` in the model and custom source builders.
+    # NOTE: Public shorthand names are normalized to registry category keys.
     CATEGORY_ALIASES = {
         "data": "thermo_data",
         "equation": "thermo_equations",
@@ -92,11 +91,35 @@ class ThermoSourceRegistry:
                 f"Unknown thermodynamic category '{category}'.") from exc
 
     # SECTION: Registry Configuration
+    @staticmethod
+    def _model_entries(source: ThermoModelSource) -> Dict[str, Dict[str, Any]]:
+        """Convert a model's flat ``thermo_src`` into the registry view."""
+        categories: Dict[str, Dict[str, Any]] = {
+            "thermo_data": {},
+            "thermo_equations": {},
+            "thermo_constants": {},
+        }
+        category_config = (
+            ("thermo_data", source.requested_data, ("src", "comp", "value")),
+            ("thermo_equations", source.requested_equations, ("eq",)),
+            ("thermo_constants", source.requested_constants, ("src", "value")),
+        )
+        for category, symbols, fields in category_config:
+            for symbol in symbols:
+                entry = source.thermo_src.get(symbol)
+                if entry is None:
+                    continue
+                categories[category][symbol] = {
+                    f"{symbol}_{field}": entry[field]
+                    for field in fields
+                }
+        return categories
+
     def refresh(self) -> None:
         """Rebuild the registry from the current source objects."""
         self._source = {
             self.model_source_key: (
-                self.thermo_model_source.dynamic_attributes()
+                self._model_entries(self.thermo_model_source)
                 if self.thermo_model_source is not None else {}
             ),
             self.custom_source_key: (
