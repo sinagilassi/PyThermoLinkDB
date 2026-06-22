@@ -123,8 +123,10 @@ class ThermoModelSource:
         self.description = description
 
         # NOTE: thermo source
+        # ! key: component ID; value: data/equation source for the component
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
+        # ! constants source (not component-specific)
         self.thermo_constants_source: ConstantsSourceCore | None = None
 
         # Symbols whose dynamic attributes were configured during the latest
@@ -135,7 +137,7 @@ class ThermoModelSource:
         self._model_source: Optional[ModelSource] = None
 
         # NOTE: thermo source
-        self.src = {}
+        self.thermo_src = {}
 
     # SECTION: Properties
     @property
@@ -198,6 +200,7 @@ class ThermoModelSource:
             "thermo_constants": self.requested_constants
         }
 
+    # NOTE: list all generated dynamic attributes for thermo data, equations, and constants
     def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
         """
         Return all generated dynamic attributes for thermo data, equations, and constants.
@@ -400,7 +403,8 @@ class ThermoModelSource:
         """Populate empty thermo lists from sources built without filters."""
         # ? data source
         if not self.requested_data:
-            self.requested_data = list(dict.fromkeys(
+            # >>> get all property symbols from x.data.props for all components
+            self.requested_data: list[str] = list(dict.fromkeys(
                 prop
                 for data_source in self.thermo_data_source.values()
                 for prop in data_source.props
@@ -408,7 +412,8 @@ class ThermoModelSource:
 
         # ? equations source
         if not self.requested_equations:
-            self.requested_equations = list(dict.fromkeys(
+            # >>> get all equation symbols from x.equations.eqs for all components
+            self.requested_equations: list[str] = list(dict.fromkeys(
                 equation
                 for equations_source in self.thermo_equations_source.values()
                 for equation in equations_source.src
@@ -419,7 +424,8 @@ class ThermoModelSource:
 
         if not self.requested_constants and constants_source is not None:
             # >>> get all constant symbols
-            self.requested_constants = constants_source.constants
+            # from x.constants
+            self.requested_constants: list[str] = constants_source.constants
 
     # NOTE: config data attributes
     def _config_data_attributes(
