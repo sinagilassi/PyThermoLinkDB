@@ -117,6 +117,37 @@ class ConstantsSourceCore:
         """
         return self.constants_symbols
 
+    # SECTION: summary of extracted constants
+    # ! summary of extracted constants
+    def summary(self) -> Dict[str, bool]:
+        """
+        Report the extraction status of each requested constant.
+
+        Returns
+        -------
+        Dict[str, bool]
+            A mapping of each constant in ``extract_list`` to whether it was
+            found and retained in ``constants_data``. Returns an empty mapping
+            when no extraction list was requested.
+        """
+        if not self.extract_list:
+            return {}
+
+        constants_all = self.all_constants()
+
+        return {
+            constant_name: constant_name in constants_all
+            for constant_name in self.extract_list
+        }
+
+    # ! overall build status
+    def build_status(self) -> bool:
+        """Return whether every constant in ``extract_list`` was extracted."""
+        if not self.extract_list:
+            return True
+
+        return all(self.summary().values())
+
     # SECTION: constants
     def all_constants(self) -> List[str]:
         """
