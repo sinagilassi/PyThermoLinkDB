@@ -172,7 +172,38 @@ class DataSourceCore:
             logger.error(f"Error retrieving property symbols: {e}")
             return []
 
-    # SECTION: properties
+    # SECTION: summary of extracted properties
+    # ! check if each property in extract_list
+    def summary(self) -> Dict[str, bool]:
+        """
+        Report the build status of each requested property.
+
+        Returns
+        -------
+        Dict[str, bool]
+            A mapping of each property in ``extract_list`` to whether it was
+            found and retained in ``component_data``. Returns an empty mapping
+            when no extraction list was requested.
+        """
+        if not self.extract_list:
+            return {}
+
+        props_all = self.all_props()
+
+        return {
+            prop_name: prop_name in props_all
+            for prop_name in self.extract_list
+        }
+
+    # ! build status
+    def build_status(self) -> bool:
+        if not self.extract_list:
+            return True  # No extraction list means nothing to check
+
+        # Check if all properties in the extract_list are available
+        return all(self.summary().values())
+
+    # SECTION: all properties
     def all_props(self) -> List[str]:
         """
         Get the list of property names available for the component.

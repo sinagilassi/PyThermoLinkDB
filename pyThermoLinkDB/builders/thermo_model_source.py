@@ -134,6 +134,9 @@ class ThermoModelSource:
         # NOTE: set model source
         self._model_source: Optional[ModelSource] = None
 
+        # NOTE: thermo source
+        self.src = {}
+
     # SECTION: Properties
     @property
     def model_source(self) -> Optional[ModelSource]:
