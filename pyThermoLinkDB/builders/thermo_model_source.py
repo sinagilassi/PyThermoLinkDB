@@ -385,19 +385,6 @@ class ThermoModelSource:
                 f"An error occurred while building the thermodynamic model source: {e}")
             raise
 
-    # SECTION: config attributes
-    def config_attributes(self) -> None:
-        """
-        Configure the attributes of the thermodynamic model source.
-        """
-        component_ids = self.component_references.get('component_ids', [])
-        self.used_symbols = []
-
-        self._config_available_thermo()
-        self._config_data_attributes(component_ids)
-        self._config_equation_attributes(component_ids)
-        self._config_constant_attributes()
-
     # NOTE: config available thermo
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from sources built without filters."""
@@ -426,6 +413,49 @@ class ThermoModelSource:
             # >>> get all constant symbols
             # from x.constants
             self.requested_constants: list[str] = constants_source.constants
+
+    # NOTE: config thermo source
+    def _config_thermo_source(self) -> None:
+        """
+        Configure the thermo source for all requested symbols, including data, equations, and constants.
+
+        This method initializes the thermo source for each requested symbol, creating
+        a dictionary with keys for the source, component values, and evaluated values.
+
+        Notes
+        -----
+        - The thermo source is a dictionary where each key is a symbol and the value is another dictionary containing the source, component values, and evaluated values for that symbol.
+        - For data sources, the keys are 'src', 'comp', and 'value'.
+        - For equation sources, the key is only 'eq'.
+        - For constant sources, the keys are 'src' and 'value'.
+        """
+        # create keys (all symbols) for thermo data, equations, and constants
+        symbols = [*self.requested_data, *
+                   self.requested_equations, *self.requested_constants]
+        # >> remove duplicates while preserving order
+        symbols = list(set(symbols))
+
+        # iterate through symbols and initialize thermo source for each symbol
+        for symbol in symbols:
+            self.thermo_src[symbol] = {
+                "src": None,
+                "comp": None,
+                "value": None,
+                "eq": None
+            }
+
+    # SECTION: config attributes
+    def config_attributes(self) -> None:
+        """
+        Configure the attributes of the thermodynamic model source.
+        """
+        component_ids = self.component_references.get('component_ids', [])
+        self.used_symbols = []
+
+        self._config_available_thermo()
+        self._config_data_attributes(component_ids)
+        self._config_equation_attributes(component_ids)
+        self._config_constant_attributes()
 
     # NOTE: config data attributes
     def _config_data_attributes(
