@@ -27,13 +27,8 @@ class StubModelSource:
         return result
 
 
-class StubCustomSource:
-    def __init__(self, attributes, component_ids=("A-g", "B-g")):
-        self.attributes = attributes
-        self.component_references = {"component_ids": list(component_ids)}
-
-    def dynamic_attributes(self):
-        return self.attributes
+class StubCustomSource(StubModelSource):
+    pass
 
 
 def entry(symbol, value, components=None):

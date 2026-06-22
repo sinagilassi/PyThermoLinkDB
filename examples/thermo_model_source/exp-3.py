@@ -200,7 +200,5 @@ custom_model_src: ThermoCustomSource | None = build_custom_model_source(
 if custom_model_src is None:
     raise RuntimeError("Failed to build custom model source.")
 
-dynamic_attrs = custom_model_src.dynamic_attributes()
-
-print("\n[bold green]Custom model source dynamic attributes[/bold green]")
-print(dynamic_attrs)
+print("\n[bold green]Custom model source[/bold green]")
+print(custom_model_src.thermo_src)
