@@ -184,21 +184,36 @@ class ThermoModelSource:
         else:
             raise ValueError("No model source available for selection.")
 
-    # SECTION: list all thermo (symbols) for thermo data, equations, and constants
-    def thermo(self) -> Dict[str, List[str]]:
-        """
-        List all thermo (symbols) for thermo data, equations, and constants.
+    # NOTE: config thermo source
 
-        Returns
-        -------
-        Dict[str, List[str]]
-            A dictionary containing lists of symbols for thermo data, equations, and constants.
+    def _config_thermo_source(self) -> None:
         """
-        return {
-            "thermo_data": self.requested_data,
-            "thermo_equations": self.requested_equations,
-            "thermo_constants": self.requested_constants
-        }
+        Configure the thermo source for all requested symbols, including data, equations, and constants.
+
+        This method initializes the thermo source for each requested symbol, creating
+        a dictionary with keys for the source, component values, and evaluated values.
+
+        Notes
+        -----
+        - The thermo source is a dictionary where each key is a symbol and the value is another dictionary containing the source, component values, and evaluated values for that symbol.
+        - For data sources, the keys are 'src', 'comp', and 'value'.
+        - For equation sources, the key is only 'eq'.
+        - For constant sources, the keys are 'src' and 'value'.
+        """
+        # create keys (all symbols) for thermo data, equations, and constants
+        symbols = [*self.requested_data, *
+                   self.requested_equations, *self.requested_constants]
+        # >> remove duplicates while preserving order
+        symbols = list(set(symbols))
+
+        # iterate through symbols and initialize thermo source for each symbol
+        for symbol in symbols:
+            self.thermo_src[symbol] = {
+                "src": None,
+                "comp": None,
+                "value": None,
+                "eq": None
+            }
 
     # NOTE: list all generated dynamic attributes for thermo data, equations, and constants
     def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
@@ -385,6 +400,22 @@ class ThermoModelSource:
                 f"An error occurred while building the thermodynamic model source: {e}")
             raise
 
+    # SECTION: list all thermo (symbols) for thermo data, equations, and constants
+    def thermo(self) -> Dict[str, List[str]]:
+        """
+        List all thermo (symbols) for thermo data, equations, and constants.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            A dictionary containing lists of symbols for thermo data, equations, and constants.
+        """
+        return {
+            "thermo_data": self.requested_data,
+            "thermo_equations": self.requested_equations,
+            "thermo_constants": self.requested_constants
+        }
+
     # NOTE: config available thermo
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from sources built without filters."""
@@ -413,36 +444,6 @@ class ThermoModelSource:
             # >>> get all constant symbols
             # from x.constants
             self.requested_constants: list[str] = constants_source.constants
-
-    # NOTE: config thermo source
-    def _config_thermo_source(self) -> None:
-        """
-        Configure the thermo source for all requested symbols, including data, equations, and constants.
-
-        This method initializes the thermo source for each requested symbol, creating
-        a dictionary with keys for the source, component values, and evaluated values.
-
-        Notes
-        -----
-        - The thermo source is a dictionary where each key is a symbol and the value is another dictionary containing the source, component values, and evaluated values for that symbol.
-        - For data sources, the keys are 'src', 'comp', and 'value'.
-        - For equation sources, the key is only 'eq'.
-        - For constant sources, the keys are 'src' and 'value'.
-        """
-        # create keys (all symbols) for thermo data, equations, and constants
-        symbols = [*self.requested_data, *
-                   self.requested_equations, *self.requested_constants]
-        # >> remove duplicates while preserving order
-        symbols = list(set(symbols))
-
-        # iterate through symbols and initialize thermo source for each symbol
-        for symbol in symbols:
-            self.thermo_src[symbol] = {
-                "src": None,
-                "comp": None,
-                "value": None,
-                "eq": None
-            }
 
     # SECTION: config attributes
     def config_attributes(self) -> None:
