@@ -94,6 +94,11 @@ print(ethanol_eqs)
 if ethanol_eqs is None:
     raise ValueError("No equation source found for ethanol.")
 
+# NOTE: >> check build status
+print(ethanol_eqs.summary())
+print(ethanol_eqs.build_status())
+
+# NOTE: results
 # ! all available equations
 print(ethanol_eqs.all_available_equations())
 

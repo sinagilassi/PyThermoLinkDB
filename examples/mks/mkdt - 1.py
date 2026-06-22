@@ -58,7 +58,11 @@ print(CO2_dt)
 if CO2_dt is None:
     raise ValueError("Failed to create data source for CO2.")
 
-# results
+# NOTE: build status
+print(CO2_dt.summary())
+print(CO2_dt.build_status())
+
+# NOTE: results
 # ! all properties
 print(CO2_dt.props)
 print(CO2_dt.all_props())
