@@ -22,9 +22,9 @@ def build_thermo_model_source(
         components: List[Component],
         component_key: ComponentKey,
         model_source: ModelSource,
-        thermo_data: Optional[List[str]] = None,
-        thermo_equations: Optional[List[str]] = None,
-        thermo_constants: Optional[List[str]] = None,
+        requested_data: Optional[List[str]] = None,
+        requested_equations: Optional[List[str]] = None,
+        requested_constants: Optional[List[str]] = None,
         description: Optional[str] = None,
         **kwargs
 ) -> Optional[ThermoModelSource]:
@@ -47,11 +47,11 @@ def build_thermo_model_source(
             - 'Formula-Name-State': Use the formula, name, and state.
     model_source : ModelSource
         The source of the thermodynamic model data.
-    thermo_data : List[str] | None
+    requested_data : List[str] | None
         List of thermodynamic data symbols to be extracted from the model source, or None to extract all available data.
-    thermo_equations : List[str] | None
+    requested_equations : List[str] | None
         List of thermodynamic equations symbols to be extracted from the model source, or None to extract all available equations.
-    thermo_constants : List[str] | None
+    requested_constants : List[str] | None
         List of thermodynamic constants symbols to be extracted from the model source, or None to extract all available constants.
     description : Optional[str]
         Optional description of the thermodynamic model source.
@@ -73,17 +73,17 @@ def build_thermo_model_source(
         )
 
         # NOTE: normalize
-        thermo_data = [] if thermo_data is None else thermo_data
-        thermo_equations = [] if thermo_equations is None else thermo_equations
-        thermo_constants = [] if thermo_constants is None else thermo_constants
+        requested_data = [] if requested_data is None else requested_data
+        requested_equations = [] if requested_equations is None else requested_equations
+        requested_constants = [] if requested_constants is None else requested_constants
 
         # NOTE: create ThermoModelSource instance
         thermo_model_source = ThermoModelSource(
             components=components,
             component_key=component_key,
-            thermo_data=thermo_data,
-            thermo_equations=thermo_equations,
-            thermo_constants=thermo_constants,
+            requested_data=requested_data,
+            requested_equations=requested_equations,
+            requested_constants=requested_constants,
             component_references=component_references,
             description=description
         )
@@ -110,8 +110,8 @@ def build_custom_model_source(
         components: List[Component],
         component_key: ComponentKey,
         custom_source: CustomSource,
-        thermo_data: Optional[List[str]],
-        thermo_constants: Optional[List[str]],
+        requested_data: Optional[List[str]],
+        requested_constants: Optional[List[str]],
         description: Optional[str] = None,
         **kwargs
 ) -> Optional[ThermoCustomSource]:
@@ -134,9 +134,9 @@ def build_custom_model_source(
             - 'Formula-Name-State': Use the formula, name, and state.
     custom_source : CustomSource
         A dictionary containing custom thermodynamic data, equations, and constants.
-    thermo_data : List[str] | None
+    requested_data : List[str] | None
         List of thermodynamic data symbols to be extracted from the custom source, or None to extract all available data.
-    thermo_constants : List[str] | None
+    requested_constants : List[str] | None
         List of thermodynamic constants symbols to be extracted from the custom source, or None to extract all available constants.
     description : Optional[str]
         Optional description of the custom thermodynamic model source.
@@ -158,16 +158,16 @@ def build_custom_model_source(
         )
 
         # NOTE: normalize
-        thermo_data = [] if thermo_data is None else thermo_data
-        thermo_constants = [] if thermo_constants is None else thermo_constants
+        requested_data = [] if requested_data is None else requested_data
+        requested_constants = [] if requested_constants is None else requested_constants
 
         # NOTE: create ThermoCustomSource instance
         thermo_custom_source = ThermoCustomSource(
             components=components,
             component_key=component_key,
             custom_source=custom_source,
-            thermo_data=thermo_data,
-            thermo_constants=thermo_constants,
+            requested_data=requested_data,
+            requested_constants=requested_constants,
             component_references=component_references,
             description=description
         )
@@ -243,7 +243,7 @@ def build_thermo_source(
 
     Notes
     -----
-    - At least one of model_source or custom_source must be provided. If both are provided, they will be used for thermo_data, thermo_equations, and thermo_constants.
+    - At least one of model_source or custom_source must be provided. If both are provided, they will be used for requested_data, requested_equations, and requested_constants.
     """
     try:
         # NOTE: validate that at least one source is provided
@@ -264,34 +264,34 @@ def build_thermo_source(
         # NOTE: build thermo model source if model_source is provided
         if model_source is not None:
             # ! extract model source configuration
-            thermo_data = model_source_config.data if model_source_config else []
-            thermo_equations = model_source_config.equations if model_source_config else []
-            thermo_constants = model_source_config.constants if model_source_config else []
+            requested_data = model_source_config.data if model_source_config else []
+            requested_equations = model_source_config.equations if model_source_config else []
+            requested_constants = model_source_config.constants if model_source_config else []
 
             # build thermo model source
             thermo_model_source: Optional[ThermoModelSource] = build_thermo_model_source(
                 components=components,
                 component_key=component_key,
                 model_source=model_source,
-                thermo_data=thermo_data,
-                thermo_equations=thermo_equations,
-                thermo_constants=thermo_constants,
+                requested_data=requested_data,
+                requested_equations=requested_equations,
+                requested_constants=requested_constants,
                 description=description
             )
 
         # NOTE: build custom model source if custom_source is provided
         if custom_source is not None:
             # ! extract custom source configuration
-            thermo_data = custom_source_config.data if custom_source_config else []
-            thermo_constants = custom_source_config.constants if custom_source_config else []
+            requested_data = custom_source_config.data if custom_source_config else []
+            requested_constants = custom_source_config.constants if custom_source_config else []
 
             # build custom model source
             thermo_custom_source: Optional[ThermoCustomSource] = build_custom_model_source(
                 components=components,
                 component_key=component_key,
                 custom_source=custom_source,
-                thermo_data=thermo_data,
-                thermo_constants=thermo_constants,
+                requested_data=requested_data,
+                requested_constants=requested_constants,
                 description=description
             )
 

@@ -32,14 +32,14 @@ class ThermoModelSource:
     ``build_all`` and ``config_attributes`` are called, each requested symbol is
     exposed through predictable dynamic attributes.
 
-    For each symbol in ``thermo_data``, the class creates:
+    For each symbol in ``requested_data``, the class creates:
 
     - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
     - ``{symbol}_comp``: mapping of component ID to numeric property value.
     - ``{symbol}_value``: NumPy array of values in component order.
     - ``{symbol}_eq``: ``None``.
 
-    For each symbol in ``thermo_equations``, the class creates:
+    For each symbol in ``requested_equations``, the class creates:
 
     - ``{symbol}_src``: mapping of component ID to ``EquationSourceCore``.
     - ``{symbol}_comp``: currently ``None``; reserved for evaluated component
@@ -48,7 +48,7 @@ class ThermoModelSource:
     arrays.
     - ``{symbol}_eq``: alias of ``{symbol}_src``.
 
-    For each symbol in ``thermo_constants``, the class creates:
+    For each symbol in ``requested_constants``, the class creates:
 
     - ``{symbol}_src``: ``ConstantResult`` selected from the constants source.
     - ``{symbol}_value``: raw constant value.
@@ -63,11 +63,11 @@ class ThermoModelSource:
     model_source : ModelSource
         Structured source containing data, equation, and optional constants
         dictionaries.
-    thermo_data : List[str]
+    requested_data : List[str]
         Component data symbols to extract.
-    thermo_equations : List[str]
+    requested_equations : List[str]
         Component equation symbols to build.
-    thermo_constants : List[str]
+    requested_constants : List[str]
         Source-level constants symbols to extract.
     component_references : Dict[str, Any]
         Precomputed component references, including ``component_ids``.
@@ -79,9 +79,9 @@ class ThermoModelSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
-            thermo_data: List[str],
-            thermo_equations: List[str],
-            thermo_constants: List[str],
+            requested_data: List[str],
+            requested_equations: List[str],
+            requested_constants: List[str],
             component_references: Dict[str, Any],
             description: Optional[str] = None
     ):
@@ -102,11 +102,11 @@ class ThermoModelSource:
                 - 'Formula': Use the component formula.
                 - 'Name-Formula-State': Use the name, formula, and state.
                 - 'Formula-Name-State': Use the formula, name, and state.
-        thermo_data : List[str]
+        requested_data : List[str]
             List of thermodynamic data symbol to be extracted from the model source.
-        thermo_equations : List[str]
+        requested_equations : List[str]
             List of thermodynamic equations symbol to be extracted from the model source.
-        thermo_constants : List[str]
+        requested_constants : List[str]
             List of thermodynamic constants symbol to be extracted from the model source.
         component_references : Dict[str, Any]
             Dictionary containing references for each component.
@@ -116,9 +116,9 @@ class ThermoModelSource:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
-        self.thermo_data = thermo_data
-        self.thermo_equations = thermo_equations
-        self.thermo_constants = thermo_constants
+        self.requested_data = requested_data
+        self.requested_equations = requested_equations
+        self.requested_constants = requested_constants
         self.component_references = component_references
         self.description = description
 
@@ -193,9 +193,9 @@ class ThermoModelSource:
             A dictionary containing lists of symbols for thermo data, equations, and constants.
         """
         return {
-            "thermo_data": self.thermo_data,
-            "thermo_equations": self.thermo_equations,
-            "thermo_constants": self.thermo_constants
+            "thermo_data": self.requested_data,
+            "thermo_equations": self.requested_equations,
+            "thermo_constants": self.requested_constants
         }
 
     def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
@@ -226,15 +226,15 @@ class ThermoModelSource:
 
         return {
             "thermo_data": collect(
-                symbols=self.thermo_data,
+                symbols=self.requested_data,
                 suffixes=["src", "comp", "value"]
             ),
             "thermo_equations": collect(
-                symbols=self.thermo_equations,
+                symbols=self.requested_equations,
                 suffixes=["eq"]
             ),
             "thermo_constants": collect(
-                symbols=self.thermo_constants,
+                symbols=self.requested_constants,
                 suffixes=["src", "value"]
             )
         }
@@ -248,7 +248,7 @@ class ThermoModelSource:
     ):
         try:
             # >> check if thermo data is available
-            if len(self.thermo_data) == 0:
+            if len(self.requested_data) == 0:
                 logger.warning(
                     "No thermodynamic data specified for extraction."
                 )
@@ -258,7 +258,7 @@ class ThermoModelSource:
                 components=self.components,
                 model_source=model_source,
                 component_key=cast(ComponentKey, self.component_key),
-                extract_list=self.thermo_data,
+                extract_list=self.requested_data,
             )
 
             # >> check if thermo data was successfully built
@@ -285,15 +285,15 @@ class ThermoModelSource:
     ):
         try:
             # >> check if thermo equations is available
-            if len(self.thermo_equations) == 0:
+            if len(self.requested_equations) == 0:
                 logger.warning(
                     "No thermodynamic equations specified for extraction."
                 )
 
             # NOTE: build thermo equations
-            # ? build_all is True if thermo_equations is empty, meaning build all equations; otherwise, build only the specified equations
-            build_all = not self.thermo_equations
-            build_list = self.thermo_equations or None
+            # ? build_all is True if requested_equations is empty, meaning build all equations; otherwise, build only the specified equations
+            build_all = not self.requested_equations
+            build_list = self.requested_equations or None
 
             res_: dict[str, EquationSourcesCore] | None = mkeqss(
                 components=self.components,
@@ -329,7 +329,7 @@ class ThermoModelSource:
     ):
         try:
             # >> check if thermo constants is available
-            if len(self.thermo_constants) == 0:
+            if len(self.requested_constants) == 0:
                 logger.warning(
                     "No thermodynamic constants specified for extraction."
                 )
@@ -344,7 +344,7 @@ class ThermoModelSource:
             # NOTE: build thermo constants
             res_: ConstantsSourceCore | None = mkct(
                 model_source=model_source,
-                extract_list=self.thermo_constants,
+                extract_list=self.requested_constants,
             )
 
             # >> check if thermo constants was successfully built
@@ -399,16 +399,16 @@ class ThermoModelSource:
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from sources built without filters."""
         # ? data source
-        if not self.thermo_data:
-            self.thermo_data = list(dict.fromkeys(
+        if not self.requested_data:
+            self.requested_data = list(dict.fromkeys(
                 prop
                 for data_source in self.thermo_data_source.values()
                 for prop in data_source.props
             ))
 
         # ? equations source
-        if not self.thermo_equations:
-            self.thermo_equations = list(dict.fromkeys(
+        if not self.requested_equations:
+            self.requested_equations = list(dict.fromkeys(
                 equation
                 for equations_source in self.thermo_equations_source.values()
                 for equation in equations_source.src
@@ -417,9 +417,9 @@ class ThermoModelSource:
         # ? constants source
         constants_source: ConstantsSourceCore | None = self.thermo_constants_source
 
-        if not self.thermo_constants and constants_source is not None:
+        if not self.requested_constants and constants_source is not None:
             # >>> get all constant symbols
-            self.thermo_constants = constants_source.constants
+            self.requested_constants = constants_source.constants
 
     # NOTE: config data attributes
     def _config_data_attributes(
@@ -427,12 +427,12 @@ class ThermoModelSource:
             component_ids: List[str]
     ) -> None:
         """Configure dynamic attributes for available data sources."""
-        if not self.thermo_data or not self.thermo_data_source:
+        if not self.requested_data or not self.thermo_data_source:
             return
 
         # ! data variables
         # iterate over thermo data and set attributes
-        for symbol in self.thermo_data:
+        for symbol in self.requested_data:
             # > extract property data for the symbol for all components
             dt_value: List[float] = []
             dt_comp: Dict[str, float] = {}
@@ -479,12 +479,12 @@ class ThermoModelSource:
             component_ids: List[str]
     ) -> None:
         """Configure dynamic attributes for available equation sources."""
-        if not self.thermo_equations or not self.thermo_equations_source:
+        if not self.requested_equations or not self.thermo_equations_source:
             return
 
         # ! equation variables
         # iterate over thermo equations and set attributes
-        for symbol in self.thermo_equations:
+        for symbol in self.requested_equations:
             # > extract equation data for the symbol for all components
             eqn_src: Dict[str, EquationSourceCore] = {}
 
@@ -564,7 +564,7 @@ class ThermoModelSource:
 
         # >> check
         if (
-            not self.thermo_constants
+            not self.requested_constants
             or constants_source is None
             or not constants_source.constants
         ):
@@ -574,21 +574,21 @@ class ThermoModelSource:
         consumed_constant_symbols: List[str] = []
 
         # iterate over thermo constants and set attributes
-        for symbol in self.thermo_constants:
+        for symbol in self.requested_constants:
             # > select constant source for the symbol
             const_src: ConstantResult | None = constants_source.select(
                 symbol=symbol
             )
 
             # Component-wise constants requested as thermo data belong only to
-            # thermo_data, even if no regular data source configured them.
+            # requested_data, even if no regular data source configured them.
             component_values = (
                 self._component_constant_values(const_src)
                 if const_src is not None
                 else None
             )
 
-            if component_values is not None and symbol in self.thermo_data:
+            if component_values is not None and symbol in self.requested_data:
                 const_comp, const_value = component_values
                 setattr(self, f"{symbol}_src", const_src)
                 setattr(self, f"{symbol}_comp", const_comp)
@@ -604,7 +604,7 @@ class ThermoModelSource:
 
             # >>> check symbol conflicts with previously configured data or equations
             if symbol in self.used_symbols:
-                if component_values is not None and symbol in self.thermo_equations:
+                if component_values is not None and symbol in self.requested_equations:
                     const_comp, const_value = component_values
                     setattr(self, f"{symbol}_comp", const_comp)
                     setattr(self, f"{symbol}_value", const_value)
@@ -616,11 +616,11 @@ class ThermoModelSource:
                     )
                     continue
 
-                if symbol in self.thermo_equations:
+                if symbol in self.requested_equations:
                     consumed_constant_symbols.append(symbol)
                     logger.warning(
                         f"Constant symbol '{symbol}' is already configured as "
-                        "an equation; removing it from thermo_constants."
+                        "an equation; removing it from requested_constants."
                     )
                     continue
 
@@ -642,8 +642,8 @@ class ThermoModelSource:
 
         if consumed_constant_symbols:
             consumed_symbols = set(consumed_constant_symbols)
-            self.thermo_constants = [
+            self.requested_constants = [
                 symbol
-                for symbol in self.thermo_constants
+                for symbol in self.requested_constants
                 if symbol not in consumed_symbols
             ]
