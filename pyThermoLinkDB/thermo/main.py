@@ -281,6 +281,7 @@ def mkdts(
     model_source: ModelSource,
     component_key: ComponentKey = 'Name-State',
     extract_list: Optional[list[str]] = None,
+    check_build: bool = False,
 ) -> Optional[dict[str, DataSourceCore]]:
     """
     Make data source cores for a list of components.
@@ -295,6 +296,8 @@ def mkdts(
         The key to identify the components in the source data. Defaults to 'Name-State'.
     extract_list : Optional[list[str]]
         A list of specific property names to extract. If provided, only these properties will be extracted. Defaults to None, which means all available properties will be extracted.
+    check_build : bool
+        Whether to check the build status of each data source after creation. Defaults to False.
 
     Returns
     -------
@@ -322,15 +325,43 @@ def mkdts(
         )
 
         # SECTION: Create DataSourceCore objects
-        return {
-            set_component_id(component, component_key): DataSourceCore(
+        res: dict[str, DataSourceCore] = {}
+
+        # iterate components
+        for component in components:
+            # create data source
+            data_source = DataSourceCore(
                 component=component,
                 source=Source_,
                 component_key=component_key,
                 extract_list=extract_list,
             )
-            for component in components
-        }
+
+            # set component id
+            component_id: str = set_component_id(component, component_key)
+
+            # check build status if requested
+            if check_build:
+                # build status
+                build_status: bool = data_source.build_status()
+
+                # >> check result
+                if not build_status:
+                    # build summary
+                    summary = data_source.summary()
+
+                    error_msg = """
+                    Failed to build data source for component '{component_id}'.
+                    Build summary:
+                    {summary}
+                    """.format(component_id=component_id, summary=summary)
+
+                    logger.error(error_msg)
+
+            # add to results
+            res[component_id] = data_source
+
+        return res
     except Exception as e:
         logger.error(f"Error creating data sources: {e}")
         return None
