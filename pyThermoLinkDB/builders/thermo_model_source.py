@@ -28,30 +28,9 @@ class ThermoModelSource:
 
     ``ThermoModelSource`` wraps a structured
     :class:`pyThermoLinkDB.models.ModelSource` and extracts the requested
-    component data, component equations, and source-level constants. After
-    ``build_all`` and ``config_attributes`` are called, each requested symbol is
-    exposed through predictable dynamic attributes.
-
-    For each symbol in ``requested_data``, the class creates:
-
-    - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
-    - ``{symbol}_comp``: mapping of component ID to numeric property value.
-    - ``{symbol}_value``: NumPy array of values in component order.
-    - ``{symbol}_eq``: ``None``.
-
-    For each symbol in ``requested_equations``, the class creates:
-
-    - ``{symbol}_src``: mapping of component ID to ``EquationSourceCore``.
-    - ``{symbol}_comp``: currently ``None``; reserved for evaluated component
-    values.
-    - ``{symbol}_value``: currently ``None``; reserved for evaluated value
-    arrays.
-    - ``{symbol}_eq``: alias of ``{symbol}_src``.
-
-    For each symbol in ``requested_constants``, the class creates:
-
-    - ``{symbol}_src``: ``ConstantResult`` selected from the constants source.
-    - ``{symbol}_value``: raw constant value.
+    component data, component equations, and source-level constants. Each
+    available symbol is exposed through ``thermo_src`` with the fixed keys
+    ``src``, ``comp``, ``value``, and ``eq``.
 
     Parameters
     ----------
@@ -129,15 +108,11 @@ class ThermoModelSource:
         # ! constants source (not component-specific)
         self.thermo_constants_source: ConstantsSourceCore | None = None
 
-        # Symbols whose dynamic attributes were configured during the latest
-        # config_attributes() pass.
-        self.used_symbols: List[str] = []
-
         # NOTE: set model source
         self._model_source: Optional[ModelSource] = None
 
         # NOTE: thermo source
-        self.thermo_src = {}
+        self.thermo_src: Dict[str, Dict[str, Any]] = {}
 
     # SECTION: Properties
     @property
@@ -184,77 +159,25 @@ class ThermoModelSource:
         else:
             raise ValueError("No model source available for selection.")
 
-    # NOTE: config thermo source
-
-    def _config_thermo_source(self) -> None:
+    def _initialize_thermo_src(self) -> None:
         """
-        Configure the thermo source for all requested symbols, including data, equations, and constants.
+        Initialize one fixed-shape entry for every available symbol.
+        This method initializes the ``thermo_src`` attribute with a fixed shape"""
+        symbols = dict.fromkeys([
+            *self.requested_data,
+            *self.requested_equations,
+            *self.requested_constants,
+        ])
 
-        This method initializes the thermo source for each requested symbol, creating
-        a dictionary with keys for the source, component values, and evaluated values.
-
-        Notes
-        -----
-        - The thermo source is a dictionary where each key is a symbol and the value is another dictionary containing the source, component values, and evaluated values for that symbol.
-        - For data sources, the keys are 'src', 'comp', and 'value'.
-        - For equation sources, the key is only 'eq'.
-        - For constant sources, the keys are 'src' and 'value'.
-        """
-        # create keys (all symbols) for thermo data, equations, and constants
-        symbols = [*self.requested_data, *
-                   self.requested_equations, *self.requested_constants]
-        # >> remove duplicates while preserving order
-        symbols = list(set(symbols))
-
-        # iterate through symbols and initialize thermo source for each symbol
-        for symbol in symbols:
-            self.thermo_src[symbol] = {
+        # >>> initialize thermo source with fixed keys for all symbols
+        self.thermo_src = {
+            symbol: {
                 "src": None,
                 "comp": None,
                 "value": None,
-                "eq": None
+                "eq": None,
             }
-
-    # NOTE: list all generated dynamic attributes for thermo data, equations, and constants
-    def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
-        """
-        Return all generated dynamic attributes for thermo data, equations, and constants.
-
-        Returns
-        -------
-        Dict[str, Dict[str, Dict[str, Any]]]
-            A grouped dictionary containing generated attribute names and values.
-        """
-        def collect(
-                symbols: List[str],
-                suffixes: List[str]
-        ) -> Dict[str, Dict[str, Any]]:
-            attrs: Dict[str, Dict[str, Any]] = {}
-
-            for symbol in symbols:
-                symbol_attrs: Dict[str, Any] = {}
-
-                for suffix in suffixes:
-                    attr_name = f"{symbol}_{suffix}"
-                    symbol_attrs[attr_name] = getattr(self, attr_name, None)
-
-                attrs[symbol] = symbol_attrs
-
-            return attrs
-
-        return {
-            "thermo_data": collect(
-                symbols=self.requested_data,
-                suffixes=["src", "comp", "value"]
-            ),
-            "thermo_equations": collect(
-                symbols=self.requested_equations,
-                suffixes=["eq"]
-            ),
-            "thermo_constants": collect(
-                symbols=self.requested_constants,
-                suffixes=["src", "value"]
-            )
+            for symbol in symbols
         }
 
     # SECTION: build configuration methods
@@ -418,7 +341,9 @@ class ThermoModelSource:
 
     # NOTE: config available thermo
     def _config_available_thermo(self) -> None:
-        """Populate empty thermo lists from sources built without filters."""
+        """
+        Populate empty thermo lists from sources built without filters.
+        """
         # ? data source
         if not self.requested_data:
             # >>> get all property symbols from x.data.props for all components
@@ -445,25 +370,32 @@ class ThermoModelSource:
             # from x.constants
             self.requested_constants: list[str] = constants_source.constants
 
-    # SECTION: config attributes
-    def config_attributes(self) -> None:
+    # SECTION: populate thermo source
+    def populate_thermo_src(self) -> None:
         """
-        Configure the attributes of the thermodynamic model source.
+        Discover symbols, initialize ``thermo_src``, and populate it.
+        This method populates the ``thermo_src`` attribute with data, equations,
+        and constants based on the available sources and the requested symbols.
         """
         component_ids = self.component_references.get('component_ids', [])
-        self.used_symbols = []
 
+        # NOTE: config available thermo symbols and initialize thermo source
         self._config_available_thermo()
-        self._config_data_attributes(component_ids)
-        self._config_equation_attributes(component_ids)
-        self._config_constant_attributes()
+
+        # NOTE: initialize thermo source with fixed keys for all symbols
+        self._initialize_thermo_src()
+
+        # NOTE: populate thermo source with data, equations, and constants
+        self._populate_data(component_ids)
+        self._populate_equations(component_ids)
+        self._populate_constants()
 
     # NOTE: config data attributes
-    def _config_data_attributes(
+    def _populate_data(
             self,
             component_ids: List[str]
     ) -> None:
-        """Configure dynamic attributes for available data sources."""
+        """Populate component data entries."""
         if not self.requested_data or not self.thermo_data_source:
             return
 
@@ -501,21 +433,20 @@ class ThermoModelSource:
                     logger.warning(
                         f"Data source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
-            # ? set attributes for each symbol
-            setattr(self, f"{symbol}_src", dt_src)
-            setattr(self, f"{symbol}_comp", dt_comp)
-            setattr(self, f"{symbol}_value", np.array(dt_value))
 
-            # >> add symbol to used symbols
-            if symbol not in self.used_symbols:
-                self.used_symbols.append(symbol)
+            # set
+            self.thermo_src[symbol].update({
+                "src": dt_src,
+                "comp": dt_comp,
+                "value": np.array(dt_value),
+            })
 
     # NOTE: config equation attributes
-    def _config_equation_attributes(
+    def _populate_equations(
             self,
             component_ids: List[str]
     ) -> None:
-        """Configure dynamic attributes for available equation sources."""
+        """Populate component equation entries."""
         if not self.requested_equations or not self.thermo_equations_source:
             return
 
@@ -547,12 +478,7 @@ class ThermoModelSource:
                     logger.warning(
                         f"Equation source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
-            # ? set attributes for each symbol
-            setattr(self, f"{symbol}_eq", eqn_src)
-
-            # >> add symbol to used symbols
-            if symbol not in self.used_symbols:
-                self.used_symbols.append(symbol)
+            self.thermo_src[symbol]["eq"] = eqn_src
 
     # NOTE: config constant attributes
     # ! utility
@@ -594,8 +520,8 @@ class ThermoModelSource:
         return const_comp, np.array(const_value_list)
 
     # NOTE: config constant attributes
-    def _config_constant_attributes(self) -> None:
-        """Configure constants without replacing previously configured symbols."""
+    def _populate_constants(self) -> None:
+        """Populate constants without replacing data or equation fields."""
         # >>> check constant source
         constants_source: ConstantsSourceCore | None = self.thermo_constants_source
 
@@ -627,12 +553,12 @@ class ThermoModelSource:
 
             if component_values is not None and symbol in self.requested_data:
                 const_comp, const_value = component_values
-                setattr(self, f"{symbol}_src", const_src)
-                setattr(self, f"{symbol}_comp", const_comp)
-                setattr(self, f"{symbol}_value", const_value)
+                self.thermo_src[symbol].update({
+                    "src": const_src,
+                    "comp": const_comp,
+                    "value": const_value,
+                })
                 consumed_constant_symbols.append(symbol)
-                if symbol not in self.used_symbols:
-                    self.used_symbols.append(symbol)
                 logger.warning(
                     f"Data symbol '{symbol}' was configured from "
                     "component-wise values in the constant source."
@@ -640,11 +566,13 @@ class ThermoModelSource:
                 continue
 
             # >>> check symbol conflicts with previously configured data or equations
-            if symbol in self.used_symbols:
+            if symbol in self.requested_data or symbol in self.requested_equations:
                 if component_values is not None and symbol in self.requested_equations:
                     const_comp, const_value = component_values
-                    setattr(self, f"{symbol}_comp", const_comp)
-                    setattr(self, f"{symbol}_value", const_value)
+                    self.thermo_src[symbol].update({
+                        "comp": const_comp,
+                        "value": const_value,
+                    })
                     consumed_constant_symbols.append(symbol)
                     logger.warning(
                         f"Equation symbol '{symbol}' received component-wise "
@@ -669,9 +597,10 @@ class ThermoModelSource:
 
             # >> check if constant source for the symbol was found
             if const_src is not None:
-                setattr(self, f"{symbol}_src", const_src)
-                setattr(self, f"{symbol}_value", const_src.value)
-                self.used_symbols.append(symbol)
+                self.thermo_src[symbol].update({
+                    "src": const_src,
+                    "value": const_src.value,
+                })
             else:
                 logger.warning(
                     f"Constant source for symbol '{symbol}' not found in the model source."
