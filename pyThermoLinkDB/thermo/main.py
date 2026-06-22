@@ -82,6 +82,7 @@ def mkeqss(
     component_key: ComponentKey = 'Name-State',
     build_all: bool = False,
     build_list: Optional[list[str]] = None,
+    build_check: bool = False,
 ) -> Optional[dict[str, EquationSourcesCore]]:
     """
     Make equation source cores for a list of components.
@@ -98,6 +99,8 @@ def mkeqss(
         Whether to build all available equations for each component. Defaults to False.
     build_list : Optional[list[str]]
         A list of specific equation names to build. If provided, only these equations will be built. Defaults to None.
+    build_check : bool
+        Whether to check the build status of each equation source after creation. Defaults to False.
 
     Returns
     -------
@@ -125,16 +128,44 @@ def mkeqss(
         )
 
         # SECTION: Create EquationSourcesCore objects
-        return {
-            set_component_id(component, component_key): EquationSourcesCore(
+        res: dict[str, EquationSourcesCore] = {}
+
+        # iterate components
+        for component in components:
+            # create equation source
+            eq_source = EquationSourcesCore(
                 component=component,
                 source=Source_,
                 component_key=component_key,
                 build_all=build_all,
                 build_list=build_list,
             )
-            for component in components
-        }
+
+            # set component id
+            component_id: str = set_component_id(component, component_key)
+
+            # check build status if requested
+            if build_check:
+                # build status
+                build_status: bool = eq_source.build_status()
+
+                # >> check result
+                if not build_status:
+                    # build summary
+                    summary = eq_source.summary()
+
+                    error_msg = """
+                    Failed to build equation source for component '{component_id}'.
+                    Build summary:
+                    {summary}
+                    """.format(component_id=component_id, summary=summary)
+
+                    logger.error(error_msg)
+
+            # add to results
+            res[component_id] = eq_source
+
+        return res
     except Exception as e:
         logger.error(f"Error creating equations: {e}")
         return None
