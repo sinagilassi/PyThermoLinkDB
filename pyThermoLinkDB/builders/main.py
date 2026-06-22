@@ -241,10 +241,6 @@ def build_thermo_source(
         Additional keyword arguments for future extensibility.
             - mode : Literal['silent', 'log', 'attach'], optional
                 Mode for time measurement logging. Default is 'silent'.
-            - model_source_key : str, optional
-                Key to use for the model source in the ThermoSource instance. Default is 'model_source'.
-            - custom_source_key : str, optional
-                Key to use for the custom source in the ThermoSource instance. Default is 'custom_source'.
 
     Returns
     -------
@@ -262,10 +258,6 @@ def build_thermo_source(
                 "At least one of model_source or custom_source must be provided."
             )
             return None
-
-        # NOTE: kwargs for source keys
-        model_source_key = kwargs.get('model_source_key', 'model_source')
-        custom_source_key = kwargs.get('custom_source_key', 'custom_source')
 
         # NOTE: build thermo model source and custom model source
         thermo_model_source = None
@@ -305,21 +297,14 @@ def build_thermo_source(
                 description=description
             )
 
-        # NOTE: create ThermoSource instance
-        thermo_source_instance = ThermoSource(
+        # NOTE: create ThermoSource container
+        return ThermoSource(
             components=components,
             component_key=component_key,
             thermo_model_source=thermo_model_source,
             thermo_custom_source=thermo_custom_source,
             description=description,
-            model_source_key=model_source_key,
-            custom_source_key=custom_source_key
         )
-
-        # ! extract attributes from model source and custom source to populate the source dictionary
-        thermo_source_instance._extract_attributes()
-
-        return thermo_source_instance
     except Exception as e:
         logger.error(f"Error building thermodynamic source: {e}")
         return None
