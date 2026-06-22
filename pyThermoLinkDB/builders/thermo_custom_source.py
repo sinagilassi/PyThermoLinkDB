@@ -22,24 +22,18 @@ class ThermoCustomSource:
 
     ``ThermoCustomSource`` is the custom-data counterpart to
     :class:`ThermoModelSource`. It accepts a mixed ``custom_source`` payload,
-    separates component-keyed entries from general constants, and exposes the
-    requested symbols as dynamic attributes after ``build_all`` and
-    ``config_attributes`` are called.
+    separates component-keyed entries from general constants, and exposes each
+    available symbol through ``thermo_src`` with the fixed keys ``src``,
+    ``comp``, ``value``, and ``eq``.
 
     Component-wise entries must be dictionaries keyed by the component IDs
-    generated from ``components`` and ``component_key``. For each requested
-    symbol in ``requested_data``, the class creates:
-
-    - ``{symbol}_src``: mapping of component ID to ``CustomProperty``.
-    - ``{symbol}_comp``: mapping of component ID to numeric property value.
-    - ``{symbol}_value``: NumPy array of values in component order.
+    generated from ``components`` and ``component_key``. Component data
+    populates ``src``, ``comp``, and ``value`` in its symbol entry.
 
     General constants may be scalar values, lists, dictionaries,
     ``CustomProperty`` instances, or ``CustomConstant`` instances. For each
-    requested symbol in ``requested_constants``, the class creates:
-
-    - ``{symbol}_src``: ``ConstantResult`` containing value, unit, and symbol.
-    - ``{symbol}_value``: the raw constant value with its original shape.
+    requested constant, ``src`` contains its ``ConstantResult`` and ``value``
+    contains the raw value with its original shape.
 
     Parameters
     ----------
@@ -51,9 +45,9 @@ class ThermoCustomSource:
     custom_source : Dict[str, Any]
         Mixed source containing component-wise data and general constants.
     requested_data : List[str]
-        Component-wise symbols to extract and expose as dynamic attributes.
+        Component-wise symbols to extract.
     requested_constants : List[str]
-        Constant symbols to extract and expose as dynamic attributes.
+        Constant symbols to extract.
     component_references : Dict[str, Any]
         Precomputed component references, including ``component_ids``.
     description : Optional[str], optional
@@ -82,9 +76,8 @@ class ThermoCustomSource:
         self.thermo_data_source: Dict[str, Dict[str, CustomProperty]] = {}
         self.thermo_constants_source: Dict[str, ConstantResult] = {}
 
-        # Symbols whose dynamic attributes were configured during the latest
-        # config_attributes() pass.
-        self.used_symbols: List[str] = []
+        # NOTE: canonical symbol source mapping
+        self.thermo_src: Dict[str, Dict[str, Any]] = {}
 
         # NOTE: custom source input
         self._custom_source: Optional[CustomSource] = None
@@ -150,41 +143,20 @@ class ThermoCustomSource:
             "thermo_constants": self.requested_constants
         }
 
-    def dynamic_attributes(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
-        """
-        Return all generated dynamic attributes for custom data and constants.
-
-        Returns
-        -------
-        Dict[str, Dict[str, Dict[str, Any]]]
-            A grouped dictionary containing generated attribute names and values.
-        """
-        def collect(
-                symbols: List[str],
-                suffixes: List[str]
-        ) -> Dict[str, Dict[str, Any]]:
-            attrs: Dict[str, Dict[str, Any]] = {}
-
-            for symbol in symbols:
-                symbol_attrs: Dict[str, Any] = {}
-
-                for suffix in suffixes:
-                    attr_name = f"{symbol}_{suffix}"
-                    symbol_attrs[attr_name] = getattr(self, attr_name, None)
-
-                attrs[symbol] = symbol_attrs
-
-            return attrs
-
-        return {
-            "thermo_data": collect(
-                symbols=self.requested_data,
-                suffixes=["src", "comp", "value"]
-            ),
-            "thermo_constants": collect(
-                symbols=self.requested_constants,
-                suffixes=["src", "value"]
-            )
+    def _initialize_thermo_src(self) -> None:
+        """Initialize one fixed-shape entry for every available symbol."""
+        symbols = dict.fromkeys([
+            *self.requested_data,
+            *self.requested_constants,
+        ])
+        self.thermo_src = {
+            symbol: {
+                "src": None,
+                "comp": None,
+                "value": None,
+                "eq": None,
+            }
+            for symbol in symbols
         }
 
     # SECTION: source normalization helpers
@@ -405,17 +377,15 @@ class ThermoCustomSource:
                 f"An error occurred while building the custom thermodynamic model source: {e}")
             raise
 
-    # SECTION: config attributes
-    def config_attributes(self) -> None:
-        """
-        Configure dynamic attributes of the custom thermodynamic model source.
-        """
+    # SECTION: populate thermo source
+    def populate_thermo_src(self) -> None:
+        """Discover symbols, initialize ``thermo_src``, and populate it."""
         component_ids = self.component_references.get('component_ids', [])
-        self.used_symbols = []
 
         self._config_available_thermo()
-        self._config_data_attributes(component_ids)
-        self._config_constant_attributes()
+        self._initialize_thermo_src()
+        self._populate_data(component_ids)
+        self._populate_constants()
 
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from the discovered custom sources."""
@@ -425,9 +395,9 @@ class ThermoCustomSource:
         if not self.requested_constants:
             self.requested_constants = list(self.thermo_constants_source)
 
-    # NOTE: config data attributes
-    def _config_data_attributes(self, component_ids: List[str]) -> None:
-        """Configure dynamic attributes for available custom data sources."""
+    # NOTE: populate data entries
+    def _populate_data(self, component_ids: List[str]) -> None:
+        """Populate available custom component data."""
         if not self.requested_data or not self.thermo_data_source:
             return
 
@@ -451,21 +421,21 @@ class ThermoCustomSource:
                 dt_comp[component_id] = float(custom_property.value)
                 dt_value.append(float(custom_property.value))
 
-            setattr(self, f"{symbol}_src", dt_src)
-            setattr(self, f"{symbol}_comp", dt_comp)
-            setattr(self, f"{symbol}_value", np.array(dt_value))
-            if symbol not in self.used_symbols:
-                self.used_symbols.append(symbol)
+            self.thermo_src[symbol].update({
+                "src": dt_src,
+                "comp": dt_comp,
+                "value": np.array(dt_value),
+            })
 
-    # NOTE: config constant attributes
-    def _config_constant_attributes(self) -> None:
-        """Configure dynamic attributes for available custom constants."""
+    # NOTE: populate constant entries
+    def _populate_constants(self) -> None:
+        """Populate custom constants without replacing component data."""
         if not self.requested_constants or not self.thermo_constants_source:
             return
 
         # ! constants variables
         for symbol in self.requested_constants:
-            if symbol in self.used_symbols:
+            if symbol in self.requested_data:
                 logger.warning(
                     f"Custom constant symbol '{symbol}' is already configured "
                     "as data; preserving the existing attributes."
@@ -480,6 +450,7 @@ class ThermoCustomSource:
                 )
                 continue
 
-            setattr(self, f"{symbol}_src", const_src)
-            setattr(self, f"{symbol}_value", const_src.value)
-            self.used_symbols.append(symbol)
+            self.thermo_src[symbol].update({
+                "src": const_src,
+                "value": const_src.value,
+            })
