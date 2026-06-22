@@ -98,7 +98,9 @@ class EquationSourcesCore:
         )
 
         # SECTION: retrieve equations
-        self.component_equations: Optional[Dict[str, TableEquation]] = self.source.component_eq_extractor(
+        self.component_equations: Optional[
+            Dict[str, TableEquation]
+        ] = self.source.component_eq_extractor(
             component_id=self.component_id
         )
 
@@ -158,6 +160,35 @@ class EquationSourcesCore:
             The source dictionary of all equation input symbols.
         """
         return self._inputs_symbols_src
+
+    # SECTION: summary of built equation sources
+    # ! summary of build status for each equation in build_list
+    def summary(self) -> Dict[str, bool]:
+        """
+        Report the build status of each requested equation.
+
+        Returns
+        -------
+        Dict[str, bool]
+            A mapping of each equation in ``build_list`` to whether its source
+            was built successfully. Returns an empty mapping when no build
+            list was requested.
+        """
+        if not self.build_list:
+            return {}
+
+        return {
+            eq_name: self._src.get(eq_name) is not None
+            for eq_name in self.build_list
+        }
+
+    # ! overall build status for the component
+    def build_status(self) -> bool:
+        """Return whether every equation requested in ``build_list`` was built."""
+        if not self.build_list:
+            return True
+
+        return all(self.summary().values())
 
     # SECTION: list available equations
 
