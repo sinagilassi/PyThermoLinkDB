@@ -68,13 +68,17 @@ runtime_inputs_symbols = list(runtime_inputs.keys())
 components = [CO2, C2H5OH]
 component_key = 'Name-State'
 
+# build list (optional)
+build_list = ["Cp_IG", "Cp_LIQ", "EnFo_IG"]
+
 # SECTION: Build equations
 equation_sources: dict[str, EquationSourcesCore] | None = mkeqss(
     components=components,
     model_source=model_source,
     component_key=component_key,
     build_all=True,
-    build_list=["Cp_IG", "Cp_LIQ"],
+    build_list=build_list,  # ! optional
+    build_check=True,  # ! optional
 )
 
 # print the equation source objects
