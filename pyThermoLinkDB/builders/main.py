@@ -64,6 +64,11 @@ def build_thermo_model_source(
     -------
     Optional[ThermoModelSource]
         An instance of ThermoModelSource if successful, None otherwise.
+
+    Notes
+    -----
+    - The build process involves generating component references, normalizing the requested data/equations/constants, creating a ThermoModelSource instance, building all thermo data/equations/constants, and configuring all attributes.
+    - requested_data, requested_equations, and requested_constants will be normalized to empty lists if they are None, which means all available data/equations/constants will be extracted from the model source.
     """
     try:
         # NOTE: generate component references
@@ -149,6 +154,11 @@ def build_custom_model_source(
     -------
     Optional[ThermoCustomSource]
         An instance of ThermoCustomSource if successful, None otherwise.
+
+    Notes
+    -----
+    - The build process involves generating component references, normalizing the requested data/constants, creating a ThermoCustomSource instance, building all custom thermo data/constants, and configuring all attributes.
+    - requested_data and requested_constants will be normalized to empty lists if they are None, which means all available data/constants will be extracted from the custom source.
     """
     try:
         # NOTE: generate component references
