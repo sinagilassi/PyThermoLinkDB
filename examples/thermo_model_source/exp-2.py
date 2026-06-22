@@ -35,7 +35,7 @@ print(ptdblink.__version__)
 print(ptdb.__version__)
 
 # =======================================
-# ✅ unit conversion settings
+# âœ… unit conversion settings
 # =======================================
 # NOTE: create unit conversion function using pycuc
 unit_conversion_fn = pycuc.convert_from_to
@@ -44,7 +44,7 @@ unit_conversion_fn = pycuc.convert_from_to
 unit_availability_fn = pycuc.is_unit_available
 
 # =======================================
-# ✅ inputs
+# âœ… inputs
 # =======================================
 # NOTE: universal inputs
 runtime_inputs = {
@@ -59,21 +59,21 @@ runtime_inputs_symbols = list(runtime_inputs.keys())
 component_key = 'Name-State'
 
 # =======================================
-# ☑️ BUILD MODEL SOURCE
+# â˜‘ï¸ BUILD MODEL SOURCE
 # =======================================
 # NOTE: thermo data, equations, and constants to be extracted from the model source
-thermo_data = ['EnFo_IG', 'Tc', 'Pc']
-thermo_equations = ['Cp_IG', 'VaPr']
-thermo_constants = ['R', 'dH_rxn']
+requested_data = ['EnFo_IG', 'Tc', 'Pc']
+requested_equations = ['Cp_IG', 'VaPr']
+requested_constants = ['R', 'dH_rxn']
 
 # NOTE: build thermo model source
 thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
     model_source=model_source,
     components=components,
     component_key=component_key,
-    thermo_data=thermo_data,
-    thermo_equations=thermo_equations,
-    thermo_constants=thermo_constants,
+    requested_data=requested_data,
+    requested_equations=requested_equations,
+    requested_constants=requested_constants,
     description="Example thermo model source with rules",
     mode='log'  # options: 'silent', 'log', 'attach'
 )
@@ -88,7 +88,7 @@ print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
 print(dynamic_attrs)
 
 # =======================================
-# ☑️ BUILD MODEL SOURCE (no configuration)
+# â˜‘ï¸ BUILD MODEL SOURCE (no configuration)
 # =======================================
 # NOTE: build thermo model source
 thermo_model_src: ThermoModelSource | None = build_thermo_model_source(

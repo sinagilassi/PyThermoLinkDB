@@ -176,8 +176,8 @@ components = [C2H4, C2H6, CO2]
 component_key = 'Formula-State'
 
 # NOTE: thermo data and constants to be extracted from the custom source
-thermo_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ']
-thermo_constants = [
+requested_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ']
+requested_constants = [
     'dH_rxn',
     'Cp_LIQ_MIX_VOL',
     'R',
@@ -191,8 +191,8 @@ custom_model_src: ThermoCustomSource | None = build_custom_model_source(
     components=components,
     component_key=component_key,
     custom_source=custom_inputs,
-    thermo_data=thermo_data,
-    thermo_constants=thermo_constants,
+    requested_data=requested_data,
+    requested_constants=requested_constants,
     description="Example custom model source with custom constants",
     mode='log'  # options: 'silent', 'log', 'attach'
 )

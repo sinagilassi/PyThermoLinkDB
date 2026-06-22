@@ -35,7 +35,7 @@ print(ptdblink.__version__)
 print(ptdb.__version__)
 
 # =======================================
-# ✅ unit conversion settings
+# âœ… unit conversion settings
 # =======================================
 # NOTE: create unit conversion function using pycuc
 unit_conversion_fn = pycuc.convert_from_to
@@ -44,7 +44,7 @@ unit_conversion_fn = pycuc.convert_from_to
 unit_availability_fn = pycuc.is_unit_available
 
 # =======================================
-# ✅ inputs
+# âœ… inputs
 # =======================================
 # NOTE: universal inputs
 runtime_inputs = {
@@ -64,18 +64,18 @@ components = [CO2, C2H5OH]
 component_key = 'Name-State'
 
 # NOTE: thermo data, equations, and constants to be extracted from the model source
-thermo_data = ['EnFo_IG', 'Tc', 'Pc']
-thermo_equations = ['Cp_IG', 'VaPr']
-thermo_constants = ['R', 'dH_rxn']
+requested_data = ['EnFo_IG', 'Tc', 'Pc']
+requested_equations = ['Cp_IG', 'VaPr']
+requested_constants = ['R', 'dH_rxn']
 
 # NOTE: build thermo model source
 thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
     model_source=model_source_with_rules,
     components=components,
     component_key=component_key,
-    thermo_data=thermo_data,
-    thermo_equations=thermo_equations,
-    thermo_constants=thermo_constants
+    requested_data=requested_data,
+    requested_equations=requested_equations,
+    requested_constants=requested_constants
 )
 
 if thermo_model_src is None:
@@ -128,16 +128,16 @@ def show_dynamic_attribute_group(symbols: list[str]) -> None:
             print(f"{attr_name} =", getattr(thermo_model_src, attr_name, None))
 
 
-show_thermo_data(thermo_data)
-show_thermo_constants(thermo_constants)
+show_thermo_data(requested_data)
+show_thermo_constants(requested_constants)
 
 print("\n[bold green]Thermo model source dynamic attributes[/bold green]")
-show_dynamic_attribute_group(thermo_data)
-show_dynamic_attribute_group(thermo_equations)
-show_dynamic_attribute_group(thermo_constants)
+show_dynamic_attribute_group(requested_data)
+show_dynamic_attribute_group(requested_equations)
+show_dynamic_attribute_group(requested_constants)
 
 print("\n[bold green]Sample equation calculations with validated runtime inputs[/bold green]")
-for equation_symbol in thermo_equations:
+for equation_symbol in requested_equations:
     eq_sources = getattr(thermo_model_src, f"{equation_symbol}_eq", {})
     print(f"\n[bold cyan]{equation_symbol}[/bold cyan]")
     for component_id, equation_source in eq_sources.items():
