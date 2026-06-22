@@ -157,7 +157,7 @@ def build_custom_model_source(
 
     Notes
     -----
-    - The build process involves generating component references, normalizing the requested data/constants, creating a ThermoCustomSource instance, building all custom thermo data/constants, and configuring all attributes.
+    - The build process involves generating component references, normalizing the requested data/constants, creating a ThermoCustomSource instance, building all custom thermo data/constants, and populating ``thermo_src``.
     - requested_data and requested_constants will be normalized to empty lists if they are None, which means all available data/constants will be extracted from the custom source.
     """
     try:
@@ -188,8 +188,8 @@ def build_custom_model_source(
         # ! build all custom thermo
         thermo_custom_source.build_all()
 
-        # ! configure all attributes
-        thermo_custom_source.config_attributes()
+        # ! populate the canonical thermo source mapping
+        thermo_custom_source.populate_thermo_src()
 
         return thermo_custom_source
     except Exception as e:
