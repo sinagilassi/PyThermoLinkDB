@@ -99,8 +99,8 @@ def build_thermo_model_source(
         # ! build all thermo
         thermo_model_source.build_all()
 
-        # ! configure all attributes
-        thermo_model_source.config_attributes()
+        # ! populate the canonical thermo source mapping
+        thermo_model_source.populate_thermo_src()
 
         return thermo_model_source
     except Exception as e:
