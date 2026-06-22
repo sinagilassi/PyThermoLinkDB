@@ -54,8 +54,8 @@ def test_custom_model_source_builds_component_data_and_constants():
         components=components,
         component_key="Formula-State",
         custom_source=custom_source,
-        thermo_data=["MW"],
-        thermo_constants=[
+        requested_data=["MW"],
+        requested_constants=[
             "dH_rxn",
             "R",
             "CUSTOM_CONST",
@@ -110,8 +110,8 @@ def test_custom_constant_does_not_overwrite_existing_data_attributes():
         components=components,
         component_key="Formula-State",
         custom_source=custom_source,
-        thermo_data=[],
-        thermo_constants=[],
+        requested_data=[],
+        requested_constants=[],
     )
 
     assert source is not None
