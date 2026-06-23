@@ -12,5 +12,8 @@
         "THERMODB",
         "thermolink",
         "thermoutils"
-    ]
+    ],
+    "files.exclude": {
+        "**/__pycache__": true
+    }
 }
