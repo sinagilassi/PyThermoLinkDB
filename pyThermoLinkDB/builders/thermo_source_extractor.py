@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional, cast
 import numpy as np
 from pythermodb_settings.models import Component, ComponentKey
 from pythermodb_settings.utils import generate_component_references
+# locals
+from ..thermo import EquationSourceCore
 
 
 # NOTE: set logger
@@ -129,7 +131,7 @@ class ThermoSourceExtractor:
             source_type: str,
             symbol: str,
             components: List[Component] | None = None
-    ) -> Any:
+    ) -> Dict[str, EquationSourceCore] | None:
         return self.get_item(
             source_type=source_type,
             symbol=symbol,
@@ -143,11 +145,25 @@ class ThermoSourceExtractor:
             source_type: str,
             symbol: str,
             components: List[Component] | None = None
-    ) -> Any:
+    ) -> Dict[str, float] | None:
         return self.get_item(
             source_type=source_type,
             symbol=symbol,
             item="comp",
+            components=components
+        )
+
+    # ! get component values
+    def get_comp_values(
+            self,
+            source_type: str,
+            symbol: str,
+            components: List[Component] | None = None
+    ) -> List[float] | None:
+        return self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="value",
             components=components
         )
 
