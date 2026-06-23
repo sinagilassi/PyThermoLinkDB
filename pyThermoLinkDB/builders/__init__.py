@@ -7,6 +7,13 @@ from .thermo_custom_source import ThermoCustomSource
 # thermo source
 from .thermo_source import ThermoSource
 
+# source validation
+from .thermo_source_validator import (
+    ThermoSourceValidator,
+    ValidationIssue,
+    ValidationReport,
+)
+
 # main
 from .main import (
     build_thermo_model_source,
@@ -21,4 +28,7 @@ __all__ = [
     "ThermoModelSource",
     "ThermoCustomSource",
     "ThermoSource",
+    "ThermoSourceValidator",
+    "ValidationIssue",
+    "ValidationReport",
 ]
