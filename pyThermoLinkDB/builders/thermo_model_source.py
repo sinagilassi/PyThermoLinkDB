@@ -15,6 +15,7 @@ from ..thermo import (
     DataSourceCore,
     ConstantsSourceCore
 )
+from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
 
 # NOTE: logger setup
@@ -113,6 +114,7 @@ class ThermoModelSource:
 
         # NOTE: thermo source
         self.thermo_src: Dict[str, Dict[str, Any]] = {}
+        self.validation_report: Optional[ValidationReport] = None
 
     # SECTION: Properties
     @property
@@ -390,6 +392,9 @@ class ThermoModelSource:
         self._populate_equations(component_ids)
         self._populate_constants()
 
+        # NOTE: validate thermo source after population
+        self.validate_thermo_src()
+
     # NOTE: config data attributes
     def _populate_data(
             self,
@@ -613,3 +618,38 @@ class ThermoModelSource:
                 for symbol in self.requested_constants
                 if symbol not in consumed_symbols
             ]
+
+    # SECTION: validation
+    def validate_thermo_src(self) -> Optional[ValidationReport]:
+        """Validate the populated thermo source without raising."""
+        validator = ThermoSourceValidator(source=self)
+        self.validation_report = validator.validate()
+        return self.validation_report
+
+    def validation_details(self) -> Optional[ValidationReport]:
+        """Return the latest validation report."""
+        return self.validation_report
+
+    def validation_summary(self) -> Optional[Dict[str, Any]]:
+        """Return a compact validation summary."""
+        if self.validation_report is None:
+            return None
+        return self.validation_report.summary()
+
+    def is_valid_build(self) -> bool:
+        """Return whether the latest validation found no errors."""
+        return self.validation_report is not None and self.validation_report.is_valid
+
+    def has_all_requested(self) -> bool:
+        """Return whether all requested symbols are available."""
+        return (
+            self.validation_report is not None
+            and self.validation_report.all_requested_available
+        )
+
+    def has_all_components(self) -> bool:
+        """Return whether component-wise data/equations cover all components."""
+        return (
+            self.validation_report is not None
+            and self.validation_report.all_components_available
+        )
