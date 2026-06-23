@@ -59,6 +59,42 @@ def test_thermo_source_has_no_management_api():
     assert all(not hasattr(source, name) for name in removed_names)
 
 
+def test_thermo_source_delegates_validation_helpers():
+    model = SimpleNamespace(
+        validate_thermo_src=lambda: "model-report",
+        validation_summary=lambda: {"is_valid": True},
+        is_valid_build=lambda: True,
+        has_all_requested=lambda: True,
+        has_all_components=lambda: True,
+    )
+    custom = SimpleNamespace(
+        validate_thermo_src=lambda: "custom-report",
+        validation_summary=lambda: {"is_valid": False},
+        is_valid_build=lambda: False,
+        has_all_requested=lambda: False,
+        has_all_components=lambda: False,
+    )
+
+    source, _ = make_container(model=model, custom=custom)
+
+    assert source.validate_model_source() == "model-report"
+    assert source.validate_custom_source() == "custom-report"
+    assert source.validate_sources() == {
+        "model_source": "model-report",
+        "custom_source": "custom-report",
+    }
+    assert source.validation_summary() == {
+        "model_source": {"is_valid": True},
+        "custom_source": {"is_valid": False},
+    }
+    assert source.is_model_source_valid() is True
+    assert source.is_custom_source_valid() is False
+    assert source.has_all_model_requested() is True
+    assert source.has_all_custom_requested() is False
+    assert source.has_all_model_components() is True
+    assert source.has_all_custom_components() is False
+
+
 def test_builder_rejects_missing_model_and_custom_sources():
     result = build_thermo_source(
         components=[],
