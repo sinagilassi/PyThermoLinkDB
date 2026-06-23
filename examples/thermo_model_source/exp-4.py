@@ -44,6 +44,31 @@ thermo_source: ThermoSource | None = build_thermo_source(
 if thermo_source is None:
     raise RuntimeError("Failed to build the thermodynamic source.")
 
+print("\n[bold green]Validation quick checks[/bold green]")
+print({
+    "model_valid": thermo_source.is_model_source_valid(),
+    "model_all_requested": thermo_source.has_all_model_requested(),
+    "model_all_components": thermo_source.has_all_model_components(),
+    "custom_valid": thermo_source.is_custom_source_valid(),
+    "custom_all_requested": thermo_source.has_all_custom_requested(),
+    "custom_all_components": thermo_source.has_all_custom_components(),
+})
+
+print("\n[bold green]Validation summary[/bold green]")
+print(thermo_source.validation_summary())
+
+validation_reports = thermo_source.validate_sources()
+
+if validation_reports["model_source"] is not None:
+    print("\n[bold green]Model validation details[/bold green]")
+    print(validation_reports["model_source"].summary())
+    print(validation_reports["model_source"].issues)
+
+if validation_reports["custom_source"] is not None:
+    print("\n[bold green]Custom validation details[/bold green]")
+    print(validation_reports["custom_source"].summary())
+    print(validation_reports["custom_source"].issues)
+
 if thermo_source.thermo_model_source is not None:
     print("\n[bold cyan]Model thermo source[/bold cyan]")
     print(thermo_source.thermo_model_source.thermo_src)
