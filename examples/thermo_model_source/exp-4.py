@@ -69,10 +69,61 @@ if validation_reports["custom_source"] is not None:
     print(validation_reports["custom_source"].summary())
     print(validation_reports["custom_source"].issues)
 
-if thermo_source.thermo_model_source is not None:
-    print("\n[bold cyan]Model thermo source[/bold cyan]")
-    print(thermo_source.thermo_model_source.thermo_src)
+print("\n[bold cyan]Thermo source extraction[/bold cyan]")
 
-if thermo_source.thermo_custom_source is not None:
-    print("\n[bold cyan]Custom thermo source[/bold cyan]")
-    print(thermo_source.thermo_custom_source.thermo_src)
+# NOTE: get the full source entry for a model data symbol
+model_tc = thermo_source.get(
+    source_name="model_source",
+    symbol="Tc",
+)
+print("[bold]Model Tc entry[/bold]")
+print(model_tc)
+
+# NOTE: get a specific field from the model source entry
+model_tc_values = thermo_source.get_item(
+    source_type="model_source",
+    symbol="Tc",
+    item="value",
+)
+print("[bold]Model Tc values[/bold]")
+print(model_tc_values)
+
+# NOTE: get component-wise data from the custom source
+custom_mw = thermo_source.get_comp_dt(
+    source_type="custom_source",
+    symbol="MW",
+)
+print("[bold]Custom MW component data[/bold]")
+print(custom_mw)
+
+# NOTE: get component-wise equations from the model source
+model_cp_ig_eq = thermo_source.get_comp_eq(
+    source_type="model_source",
+    symbol="Cp_IG",
+)
+print("[bold]Model Cp_IG component equations[/bold]")
+print(model_cp_ig_eq)
+
+# NOTE: get constant values from model and custom sources
+model_r = thermo_source.get_const(
+    source_type="model_source",
+    symbol="R",
+)
+custom_constant = thermo_source.get_const(
+    source_type="custom_source",
+    symbol="CUSTOM_CONST",
+)
+print("[bold]Model R constant[/bold]")
+print(model_r)
+print("[bold]Custom constant[/bold]")
+print(custom_constant)
+
+# NOTE: reorder component-wise output with a different requested component order
+reordered_components = list(reversed(components))
+custom_mw_reordered = thermo_source.get(
+    source_name="custom_source",
+    symbol="MW",
+    components=reordered_components,
+)
+print("[bold]Custom MW entry in reversed component order[/bold]")
+print(custom_mw_reordered)
