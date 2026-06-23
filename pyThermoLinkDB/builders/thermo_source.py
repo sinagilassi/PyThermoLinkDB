@@ -8,6 +8,7 @@ from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
 from .thermo_source_validator import ValidationReport
 from .thermo_source_extractor import ThermoSourceExtractor
+from ..thermo import EquationSourceCore
 
 
 class ThermoSource:
@@ -166,7 +167,7 @@ class ThermoSource:
             source_name: str,
             symbol: str,
             components: Optional[List[Component]] = None
-    ):
+    ) -> Dict[str, Any] | None:
         """
         Return the full thermo entry for a symbol from a source group.
 
@@ -200,7 +201,7 @@ class ThermoSource:
             symbol: str,
             item: str,
             components: Optional[List[Component]] = None
-    ):
+    ) -> Any:
         """
         Return one field from a thermo symbol entry.
 
@@ -234,7 +235,7 @@ class ThermoSource:
             source_type: str,
             symbol: str,
             components: Optional[List[Component]] = None
-    ):
+    ) -> Dict[str, EquationSourceCore] | None:
         """
         Return component-wise equation sources for a symbol.
 
@@ -250,7 +251,7 @@ class ThermoSource:
 
         Returns
         -------
-        Any
+        Dict[str, EquationSourceCore] | None
             Component-keyed equation mapping, or ``None`` when unavailable.
         """
         return self._ensure_thermo_source_extractor().get_comp_eq(
@@ -264,7 +265,7 @@ class ThermoSource:
             source_type: str,
             symbol: str,
             components: Optional[List[Component]] = None
-    ):
+    ) -> Dict[str, float] | None:
         """
         Return component-wise data values for a symbol.
 
@@ -280,10 +281,40 @@ class ThermoSource:
 
         Returns
         -------
-        Any
+        Dict[str, float] | None
             Component-keyed data mapping, or ``None`` when unavailable.
         """
         return self._ensure_thermo_source_extractor().get_comp_dt(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
+
+    def get_comp_values(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ) -> List[float] | None:
+        """
+        Return component-wise values for a symbol.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Data symbol to extract.
+        components : Optional[List[Component]], optional
+            Optional component order for the returned component mapping.
+
+        Returns
+        -------
+        List[float] | None
+            Component-keyed value mapping, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_comp_values(
             source_type=source_type,
             symbol=symbol,
             components=components
@@ -293,7 +324,7 @@ class ThermoSource:
             self,
             source_type: str,
             symbol: str
-    ):
+    ) -> Any:
         """
         Return a constant value from a source group.
 
