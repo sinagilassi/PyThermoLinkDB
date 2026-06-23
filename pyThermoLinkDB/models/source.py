@@ -1,6 +1,6 @@
 # import libs
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Literal
 from pyThermoDB import (
     TableEquation,
     TableMatrixData,
