@@ -298,13 +298,15 @@ def build_thermo_source(
             )
 
         # NOTE: create ThermoSource container
-        return ThermoSource(
+        thermo_source = ThermoSource(
             components=components,
             component_key=component_key,
             thermo_model_source=thermo_model_source,
             thermo_custom_source=thermo_custom_source,
             description=description,
         )
+        thermo_source._configure_thermo_source()
+        return thermo_source
     except Exception as e:
         logger.error(f"Error building thermodynamic source: {e}")
         return None
