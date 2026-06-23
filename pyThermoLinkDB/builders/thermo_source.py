@@ -1,6 +1,6 @@
 """Container for built model and custom thermodynamic sources."""
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 
 from pythermodb_settings.models import Component, ComponentKey
 
@@ -56,8 +56,15 @@ class ThermoSource:
 
         # NOTE: thermo source extractor
         self.thermo_source_extractor = ThermoSourceExtractor(
-            self._thermo_source
+            thermo_source=self._thermo_source,
+            component_key=cast(ComponentKey, self.component_key)
         )
+
+    def _ensure_thermo_source_extractor(self) -> ThermoSourceExtractor:
+        """Configure the extractor on first access."""
+        if not hasattr(self, "thermo_source_extractor"):
+            self._configure_thermo_source()
+        return self.thermo_source_extractor
 
     # SECTION: validation
     # NOTE: validation methods return None if the source is not built
@@ -160,7 +167,32 @@ class ThermoSource:
             symbol: str,
             components: Optional[List[Component]] = None
     ):
-        pass
+        """
+        Return the full thermo entry for a symbol from a source group.
+
+        Parameters
+        ----------
+        source_name : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Thermodynamic symbol to extract.
+        components : Optional[List[Component]], optional
+            Optional component order for component-wise entries. When provided,
+            ``src``, ``comp``, ``eq``, and vector ``value`` fields are returned
+            in this component order.
+
+        Returns
+        -------
+        Dict[str, Any] | None
+            The source entry with ``src``, ``comp``, ``value``, and ``eq`` keys,
+            or ``None`` when the source group or symbol is unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get(
+            source_name=source_name,
+            symbol=symbol,
+            components=components
+        )
 
     def get_item(
             self,
@@ -169,7 +201,33 @@ class ThermoSource:
             item: str,
             components: Optional[List[Component]] = None
     ):
-        pass
+        """
+        Return one field from a thermo symbol entry.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Thermodynamic symbol to extract.
+        item : str
+            Entry field to return, such as ``"src"``, ``"comp"``, ``"value"``,
+            or ``"eq"``.
+        components : Optional[List[Component]], optional
+            Optional component order for component-wise entries.
+
+        Returns
+        -------
+        Any
+            The selected entry field, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item=item,
+            components=components
+        )
 
     def get_comp_eq(
             self,
@@ -177,7 +235,29 @@ class ThermoSource:
             symbol: str,
             components: Optional[List[Component]] = None
     ):
-        pass
+        """
+        Return component-wise equation sources for a symbol.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Equation symbol to extract.
+        components : Optional[List[Component]], optional
+            Optional component order for the returned equation mapping.
+
+        Returns
+        -------
+        Any
+            Component-keyed equation mapping, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_comp_eq(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
 
     def get_comp_dt(
             self,
@@ -185,11 +265,52 @@ class ThermoSource:
             symbol: str,
             components: Optional[List[Component]] = None
     ):
-        pass
+        """
+        Return component-wise data values for a symbol.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Data symbol to extract.
+        components : Optional[List[Component]], optional
+            Optional component order for the returned component mapping.
+
+        Returns
+        -------
+        Any
+            Component-keyed data mapping, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_comp_dt(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
 
     def get_const(
             self,
             source_type: str,
             symbol: str
     ):
-        pass
+        """
+        Return a constant value from a source group.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Constant symbol to extract.
+
+        Returns
+        -------
+        Any
+            Constant value, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_const(
+            source_type=source_type,
+            symbol=symbol
+        )
