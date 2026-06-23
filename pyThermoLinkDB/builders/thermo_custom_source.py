@@ -10,6 +10,7 @@ from pythermodb_settings.models import (
 # locals
 from ..models import CustomConstant, CustomSource
 from ..models.component_models import ConstantResult
+from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
 # NOTE: logger setup
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ class ThermoCustomSource:
 
         # NOTE: canonical symbol source mapping
         self.thermo_src: Dict[str, Dict[str, Any]] = {}
+        self.validation_report: Optional[ValidationReport] = None
 
         # NOTE: custom source input
         self._custom_source: Optional[CustomSource] = None
@@ -279,7 +281,8 @@ class ThermoCustomSource:
     def _build_thermo_data(self) -> None:
         try:
             if len(self.requested_data) == 0:
-                logger.info("No custom data filter specified; extracting all available data.")
+                logger.info(
+                    "No custom data filter specified; extracting all available data.")
 
             # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
@@ -328,7 +331,8 @@ class ThermoCustomSource:
     def _build_thermo_constants(self) -> None:
         try:
             if len(self.requested_constants) == 0:
-                logger.info("No custom constants filter specified; extracting all available constants.")
+                logger.info(
+                    "No custom constants filter specified; extracting all available constants.")
 
             # >>> set up component IDs for quick reference
             component_ids = self.component_references.get('component_ids', [])
@@ -380,12 +384,19 @@ class ThermoCustomSource:
     # SECTION: populate thermo source
     def populate_thermo_src(self) -> None:
         """Discover symbols, initialize ``thermo_src``, and populate it."""
+        # >> set up component IDs for quick reference
         component_ids = self.component_references.get('component_ids', [])
 
+        # NOTE: configure available thermo symbols and initialize thermo source
         self._config_available_thermo()
         self._initialize_thermo_src()
+
+        # NOTE: populate data and constants
         self._populate_data(component_ids)
         self._populate_constants()
+
+        # NOTE: validate thermo source after population
+        self.validate_thermo_src()
 
     def _config_available_thermo(self) -> None:
         """Populate empty thermo lists from the discovered custom sources."""
@@ -454,3 +465,38 @@ class ThermoCustomSource:
                 "src": const_src,
                 "value": const_src.value,
             })
+
+    # SECTION: validation
+    def validate_thermo_src(self) -> Optional[ValidationReport]:
+        """Validate the populated thermo source without raising."""
+        validator = ThermoSourceValidator(source=self)
+        self.validation_report = validator.validate()
+        return self.validation_report
+
+    def validation_details(self) -> Optional[ValidationReport]:
+        """Return the latest validation report."""
+        return self.validation_report
+
+    def validation_summary(self) -> Optional[Dict[str, Any]]:
+        """Return a compact validation summary."""
+        if self.validation_report is None:
+            return None
+        return self.validation_report.summary()
+
+    def is_valid_build(self) -> bool:
+        """Return whether the latest validation found no errors."""
+        return self.validation_report is not None and self.validation_report.is_valid
+
+    def has_all_requested(self) -> bool:
+        """Return whether all requested symbols are available."""
+        return (
+            self.validation_report is not None
+            and self.validation_report.all_requested_available
+        )
+
+    def has_all_components(self) -> bool:
+        """Return whether component-wise data covers all components."""
+        return (
+            self.validation_report is not None
+            and self.validation_report.all_components_available
+        )
