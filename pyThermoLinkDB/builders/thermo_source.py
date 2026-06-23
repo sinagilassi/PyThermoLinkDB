@@ -145,3 +145,16 @@ class ThermoSource:
             self.thermo_custom_source is not None
             and self.thermo_custom_source.has_all_components()
         )
+
+    # SECTION: access to thermo source
+    def get_all(self, source_name: str, symbol: str):
+        pass
+
+    def get_x(self, source_type: str, symbol: str, field: str):
+        pass
+
+    def get_equation(self, source_type: str, symbol: str):
+        pass
+
+    def get_constant(self, source_type: str, symbol: str):
+        pass
