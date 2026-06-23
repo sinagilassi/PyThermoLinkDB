@@ -7,6 +7,7 @@ from pythermodb_settings.models import Component, ComponentKey
 from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
 from .thermo_source_validator import ValidationReport
+from .thermo_source_extractor import ThermoSourceExtractor
 
 
 class ThermoSource:
@@ -40,17 +41,23 @@ class ThermoSource:
         return self._thermo_source
 
     # SECTION: Thermo source configuration
+    # ! to be called
     def _configure_thermo_source(self) -> None:
         """
         Configure thermo source dictionary.
         """
-        # ! model source
+        # NOTE: model source
         if self.thermo_model_source is not None:
             self._thermo_source["model_source"] = self.thermo_model_source.thermo_src
 
-        # ! custom source
+        # NOTE: custom source
         if self.thermo_custom_source is not None:
             self._thermo_source["custom_source"] = self.thermo_custom_source.thermo_src
+
+        # NOTE: thermo source extractor
+        self.thermo_source_extractor = ThermoSourceExtractor(
+            self._thermo_source
+        )
 
     # SECTION: validation
     # NOTE: validation methods return None if the source is not built
@@ -147,14 +154,42 @@ class ThermoSource:
         )
 
     # SECTION: access to thermo source
-    def get_all(self, source_name: str, symbol: str):
+    def get(
+            self,
+            source_name: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ):
         pass
 
-    def get_x(self, source_type: str, symbol: str, field: str):
+    def get_item(
+            self,
+            source_type: str,
+            symbol: str,
+            item: str,
+            components: Optional[List[Component]] = None
+    ):
         pass
 
-    def get_equation(self, source_type: str, symbol: str):
+    def get_comp_eq(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ):
         pass
 
-    def get_constant(self, source_type: str, symbol: str):
+    def get_comp_dt(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ):
+        pass
+
+    def get_const(
+            self,
+            source_type: str,
+            symbol: str
+    ):
         pass
