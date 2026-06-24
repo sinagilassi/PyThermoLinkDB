@@ -44,7 +44,8 @@ class ThermoSourceExtractor:
         Component-wise entries are built with values aligned to the source
         component order. This method rebuilds component IDs from ``components``
         and aligns ``src``, ``comp``, ``eq``, and vector ``value`` fields to
-        that requested order without mutating the stored source.
+        that requested order without mutating the stored source. Non-component
+        fields such as ``mode`` are copied unchanged.
         """
         # NOTE: no requested components means no reordering is needed
         if not components:
@@ -181,6 +182,32 @@ class ThermoSourceExtractor:
             item="value",
             components=components
         )
+
+    # ! get source mode
+    def get_mode(self, source_type: str, symbol: str) -> List[str] | None:
+        mode = self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="mode"
+        )
+        if mode is None:
+            return None
+        if isinstance(mode, list):
+            return mode
+        return [str(mode)]
+
+    # ! check source mode
+    def has_mode(
+            self,
+            source_type: str,
+            symbol: str,
+            mode: str
+    ) -> bool:
+        modes = self.get_mode(
+            source_type=source_type,
+            symbol=symbol
+        )
+        return modes is not None and mode in modes
 
     # ! get constant value
     def get_const(self, source_type: str, symbol: str) -> Any:
