@@ -29,18 +29,21 @@ def test_validator_reports_missing_component_data_without_raising():
                 "comp": {"A": 300.0},
                 "value": np.array([300.0]),
                 "eq": None,
+                "mode": ["data"],
             },
             "Cp": {
                 "src": None,
                 "comp": None,
                 "value": None,
                 "eq": {"A": object(), "B": object()},
+                "mode": ["equation"],
             },
             "R": {
                 "src": object(),
                 "comp": None,
                 "value": 8.314,
                 "eq": None,
+                "mode": ["constants"],
             },
         }
     )
@@ -62,18 +65,21 @@ def test_validator_accepts_complete_model_source():
                 "comp": {"A": 300.0, "B": 400.0},
                 "value": np.array([300.0, 400.0]),
                 "eq": None,
+                "mode": ["data"],
             },
             "Cp": {
                 "src": None,
                 "comp": None,
                 "value": None,
                 "eq": {"A": object(), "B": object()},
+                "mode": ["equation"],
             },
             "R": {
                 "src": object(),
                 "comp": None,
                 "value": 8.314,
                 "eq": None,
+                "mode": ["constants"],
             },
         }
     )
@@ -101,6 +107,7 @@ def test_source_exposes_validation_report_and_quick_checks():
             "comp": {"CH4-g": 16.04},
             "value": np.array([16.04]),
             "eq": None,
+            "mode": ["data"],
         }
     }
 

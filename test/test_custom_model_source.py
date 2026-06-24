@@ -74,8 +74,10 @@ def test_custom_model_source_builds_component_data_and_constants():
         "CO2-g": 0.046,
     }
     assert set(mw_entry["src"]) == {"C2H4-g", "C2H6-g", "CO2-g"}
+    assert mw_entry["mode"] == ["data"]
 
     assert custom_model_src.thermo_src["R"]["value"] == 8.314
+    assert custom_model_src.thermo_src["R"]["mode"] == ["constants"]
     assert custom_model_src.thermo_src["CUSTOM_CONST"]["value"] == "GAS"
     assert custom_model_src.thermo_src["ANOTHER_CONST"]["value"] == [1, 2, 3]
     assert custom_model_src.thermo_src["THIRD_CONST"]["value"] == {
@@ -87,7 +89,7 @@ def test_custom_model_source_builds_component_data_and_constants():
     assert reaction_values["r1"].value == -85000
 
     assert all(
-        list(entry) == ["src", "comp", "value", "eq"]
+        list(entry) == ["src", "comp", "value", "eq", "mode"]
         for entry in custom_model_src.thermo_src.values()
     )
     assert not hasattr(custom_model_src, "MW_value")
@@ -124,6 +126,7 @@ def test_custom_constant_does_not_overwrite_existing_data_attributes():
     np.testing.assert_allclose(source.thermo_src["MW"]["value"], [16.04])
     assert source.thermo_src["MW"]["comp"] == {"CH4-g": 16.04}
     assert set(source.thermo_src["MW"]["src"]) == {"CH4-g"}
+    assert source.thermo_src["MW"]["mode"] == ["data", "constants"]
 
 
 def test_custom_thermo_src_preserves_order_and_merges_duplicate_symbols():
@@ -159,5 +162,7 @@ def test_custom_thermo_src_preserves_order_and_merges_duplicate_symbols():
 
     assert source is not None
     assert list(source.thermo_src) == ["B", "A", "C"]
+    assert source.thermo_src["B"]["mode"] == ["data", "constants"]
     np.testing.assert_allclose(source.thermo_src["B"]["value"], [1.0])
+    assert source.thermo_src["C"]["mode"] == ["constants"]
     assert source.thermo_src["C"]["value"] == 3.0

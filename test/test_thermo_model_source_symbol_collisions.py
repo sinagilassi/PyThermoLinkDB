@@ -55,6 +55,7 @@ def test_constant_symbol_does_not_overwrite_existing_data_entry():
     assert source.thermo_src["R"]["src"] == {}
     assert isinstance(source.thermo_src["R"]["value"], np.ndarray)
     assert source.thermo_src["R"]["value"].size == 0
+    assert source.thermo_src["R"]["mode"] == ["data", "constants"]
     assert source.requested_constants == ["R"]
     assert not hasattr(source, "R_src")
 
@@ -87,9 +88,11 @@ def test_component_constants_merge_with_existing_data_and_equations():
     data_entry = source.thermo_src["data_symbol"]
     equation_entry = source.thermo_src["equation_symbol"]
     assert isinstance(data_entry["src"], ConstantResult)
+    assert data_entry["mode"] == ["data", "constants"]
     assert data_entry["comp"] == {"A": 10.0, "B": 20.0}
     np.testing.assert_allclose(data_entry["value"], [10.0, 20.0])
     assert equation_entry["src"] is original_equation_src
+    assert equation_entry["mode"] == ["equation", "constants"]
     assert equation_entry["comp"] == {"A": 30.0, "B": 40.0}
     np.testing.assert_allclose(equation_entry["value"], [30.0, 40.0])
     assert equation_entry["eq"] is original_equation_src
@@ -111,6 +114,7 @@ def test_component_constant_is_data_even_without_regular_data_source():
 
     assert source.requested_data == ["data_symbol"]
     assert source.requested_constants == []
+    assert source.thermo_src["data_symbol"]["mode"] == ["data", "constants"]
     assert source.thermo_src["data_symbol"]["comp"] == {"A": 10.0, "B": 20.0}
     np.testing.assert_allclose(
         source.thermo_src["data_symbol"]["value"], [10.0, 20.0]
@@ -137,6 +141,7 @@ def test_equation_symbol_is_removed_from_constants_when_constant_is_missing():
         "comp": None,
         "value": None,
         "eq": None,
+        "mode": ["equation", "constants"],
     }
 
 
@@ -154,7 +159,7 @@ def test_thermo_src_has_fixed_shape_and_preserves_symbol_order():
 
     assert list(source.thermo_src) == ["B", "A", "C", "D"]
     assert all(
-        list(entry) == ["src", "comp", "value", "eq"]
+        list(entry) == ["src", "comp", "value", "eq", "mode"]
         for entry in source.thermo_src.values()
     )
     assert not hasattr(source, "dynamic_attributes")
