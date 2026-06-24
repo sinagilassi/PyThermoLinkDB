@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from pyThermoLinkDB.builders import ThermoCustomSource, ThermoSourceValidator
+from pyThermoLinkDB.builders.thermo_source_extractor import ThermoSourceExtractor
 
 
 def make_model_source(thermo_src, component_ids=None):
@@ -118,3 +119,24 @@ def test_source_exposes_validation_report_and_quick_checks():
     assert source.has_all_requested() is True
     assert source.has_all_components() is True
     assert source.validation_summary()["all_requested_available"] is True
+
+
+def test_extractor_exposes_symbol_modes():
+    extractor = ThermoSourceExtractor(
+        thermo_source={
+            "model_source": {
+                "Cp": {
+                    "src": None,
+                    "comp": None,
+                    "value": None,
+                    "eq": {},
+                    "mode": ["data", "equation"],
+                }
+            }
+        },
+        component_key="Formula-State",
+    )
+
+    assert extractor.get_mode("model_source", "Cp") == ["data", "equation"]
+    assert extractor.has_mode("model_source", "Cp", "data") is True
+    assert extractor.has_mode("model_source", "Cp", "constants") is False
