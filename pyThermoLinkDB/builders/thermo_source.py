@@ -181,14 +181,15 @@ class ThermoSource:
             Thermodynamic symbol to extract.
         components : Optional[List[Component]], optional
             Optional component order for component-wise entries. When provided,
-            ``src``, ``comp``, ``eq``, and vector ``value`` fields are returned
-            in this component order.
+            ``src``, ``comp``, ``eq``, vector ``value``, and ``mode`` fields
+            are returned in this component order.
 
         Returns
         -------
         Dict[str, Any] | None
-            The source entry with ``src``, ``comp``, ``value``, and ``eq`` keys,
-            or ``None`` when the source group or symbol is unavailable.
+            The source entry with ``src``, ``comp``, ``value``, ``eq``, and
+            ``mode`` keys, or ``None`` when the source group or symbol is
+            unavailable.
         """
         return self._ensure_thermo_source_extractor().get(
             source_name=source_name,
