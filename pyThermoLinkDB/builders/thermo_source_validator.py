@@ -11,7 +11,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-THERMO_SRC_KEYS = ("src", "comp", "value", "eq")
+THERMO_SRC_KEYS = ("src", "comp", "value", "eq", "mode")
 
 
 @dataclass
@@ -482,4 +482,3 @@ class ThermoSourceValidator:
         if not isinstance(value, (int, float, np.number)):
             return False
         return math.isfinite(float(value))
-
