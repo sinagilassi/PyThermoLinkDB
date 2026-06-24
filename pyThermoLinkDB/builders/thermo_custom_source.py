@@ -25,7 +25,7 @@ class ThermoCustomSource:
     :class:`ThermoModelSource`. It accepts a mixed ``custom_source`` payload,
     separates component-keyed entries from general constants, and exposes each
     available symbol through ``thermo_src`` with the fixed keys ``src``,
-    ``comp``, ``value``, and ``eq``.
+    ``comp``, ``value``, ``eq``, and ``mode``.
 
     Component-wise entries must be dictionaries keyed by the component IDs
     generated from ``components`` and ``component_key``. Component data
@@ -157,9 +157,35 @@ class ThermoCustomSource:
                 "comp": None,
                 "value": None,
                 "eq": None,
+                "mode": self._symbol_modes(symbol),
             }
             for symbol in symbols
         }
+
+    def _symbol_modes(self, symbol: str) -> List[str]:
+        """Return requested source modes for a symbol, preserving mode order."""
+        modes: List[str] = []
+        for mode, requested_symbols in (
+            ("data", self.requested_data),
+            ("constants", self.requested_constants),
+        ):
+            if symbol in requested_symbols:
+                modes.append(mode)
+        return modes
+
+    def _add_symbol_mode(self, symbol: str, mode: str) -> None:
+        """Add a source mode to an initialized thermo entry."""
+        entry = self.thermo_src.get(symbol)
+        if entry is None:
+            return
+
+        modes = entry.setdefault("mode", [])
+        if not isinstance(modes, list):
+            entry["mode"] = [mode]
+            return
+
+        if mode not in modes:
+            modes.append(mode)
 
     # SECTION: source normalization helpers
     def _is_component_data(
@@ -437,6 +463,7 @@ class ThermoCustomSource:
                 "comp": dt_comp,
                 "value": np.array(dt_value),
             })
+            self._add_symbol_mode(symbol, "data")
 
     # NOTE: populate constant entries
     def _populate_constants(self) -> None:
@@ -465,6 +492,7 @@ class ThermoCustomSource:
                 "src": const_src,
                 "value": const_src.value,
             })
+            self._add_symbol_mode(symbol, "constants")
 
     # SECTION: validation
     def validate_thermo_src(self) -> Optional[ValidationReport]:
