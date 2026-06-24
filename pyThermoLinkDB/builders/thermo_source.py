@@ -2,12 +2,13 @@
 
 from typing import List, Optional, Dict, Any, cast
 
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty
 
 from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
 from .thermo_source_validator import ValidationReport
 from .thermo_source_extractor import ThermoSourceExtractor
+from ..models.component_models import ConstantResult
 from ..thermo import EquationSourceCore
 
 
@@ -260,6 +261,36 @@ class ThermoSource:
             components=components
         )
 
+    def get_comp_src(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ) -> Dict[str, CustomProperty] | None:
+        """
+        Return component-wise source objects for a symbol.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Data symbol to extract.
+        components : Optional[List[Component]], optional
+            Optional component order for the returned source mapping.
+
+        Returns
+        -------
+        Dict[str, CustomProperty] | None
+            Component-keyed source mapping, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_comp_src(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
+
     def get_comp_dt(
             self,
             source_type: str,
@@ -342,6 +373,32 @@ class ThermoSource:
             Constant value, or ``None`` when unavailable.
         """
         return self._ensure_thermo_source_extractor().get_const(
+            source_type=source_type,
+            symbol=symbol
+        )
+
+    def get_const_src(
+            self,
+            source_type: str,
+            symbol: str
+    ) -> Optional[ConstantResult]:
+        """
+        Return the constant source object from a source group.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Constant symbol to extract.
+
+        Returns
+        -------
+        Optional[ConstantResult]
+            Constant source object, or ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_const_src(
             source_type=source_type,
             symbol=symbol
         )
