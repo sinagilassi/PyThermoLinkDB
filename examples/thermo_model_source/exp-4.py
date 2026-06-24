@@ -1,6 +1,13 @@
 """Build a container holding model and custom thermodynamic sources."""
 
+from examples.thermo_model_source.model_source_1 import model_source
+from examples.thermo_model_source.custom_source_1 import custom_source
+from examples.thermo_model_source.components_1 import components
+from pyThermoLinkDB.thermo import EquationSourceCore
+from pyThermoLinkDB.models import CustomSourceConfig, ModelSourceConfig
+from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
 from pathlib import Path
+from typing import Dict, Any, List
 import sys
 
 from rich import print
@@ -8,13 +15,6 @@ from rich import print
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
-from pyThermoLinkDB.models import CustomSourceConfig, ModelSourceConfig
-
-from examples.thermo_model_source.components_1 import components
-from examples.thermo_model_source.custom_source_1 import custom_source
-from examples.thermo_model_source.model_source_1 import model_source
 
 
 thermo_source: ThermoSource | None = build_thermo_source(
@@ -72,7 +72,7 @@ if validation_reports["custom_source"] is not None:
 print("\n[bold cyan]Thermo source extraction[/bold cyan]")
 
 # NOTE: get the full source entry for a model data symbol
-model_tc = thermo_source.get(
+model_tc: Dict[str, Any] | None = thermo_source.get(
     source_name="model_source",
     symbol="Tc",
 )
@@ -80,7 +80,7 @@ print("[bold]Model Tc entry[/bold]")
 print(model_tc)
 
 # NOTE: get a specific field from the model source entry
-model_tc_values = thermo_source.get_item(
+model_tc_values: Any = thermo_source.get_item(
     source_type="model_source",
     symbol="Tc",
     item="value",
@@ -89,15 +89,24 @@ print("[bold]Model Tc values[/bold]")
 print(model_tc_values)
 
 # NOTE: get component-wise data from the custom source
-custom_mw = thermo_source.get_comp_dt(
+custom_mw: Dict[str, float] | None = thermo_source.get_comp_dt(
     source_type="custom_source",
     symbol="MW",
 )
 print("[bold]Custom MW component data[/bold]")
 print(custom_mw)
 
+# NOTE: get component-wise values from the custom source
+custom_cp_ig_values: List[float] | None = thermo_source.get_comp_values(
+    source_type="custom_source",
+    symbol="Cp_IG",
+)
+print("[bold]Custom Cp_IG component values[/bold]")
+print(custom_cp_ig_values)
+
+
 # NOTE: get component-wise equations from the model source
-model_cp_ig_eq = thermo_source.get_comp_eq(
+model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source.get_comp_eq(
     source_type="model_source",
     symbol="Cp_IG",
 )
@@ -105,11 +114,11 @@ print("[bold]Model Cp_IG component equations[/bold]")
 print(model_cp_ig_eq)
 
 # NOTE: get constant values from model and custom sources
-model_r = thermo_source.get_const(
+model_r: Any = thermo_source.get_const(
     source_type="model_source",
     symbol="R",
 )
-custom_constant = thermo_source.get_const(
+custom_constant: Any = thermo_source.get_const(
     source_type="custom_source",
     symbol="CUSTOM_CONST",
 )
@@ -120,7 +129,7 @@ print(custom_constant)
 
 # NOTE: reorder component-wise output with a different requested component order
 reordered_components = list(reversed(components))
-custom_mw_reordered = thermo_source.get(
+custom_mw_reordered: Dict[str, Any] | None = thermo_source.get(
     source_name="custom_source",
     symbol="MW",
     components=reordered_components,
