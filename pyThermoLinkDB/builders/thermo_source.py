@@ -216,7 +216,7 @@ class ThermoSource:
             Thermodynamic symbol to extract.
         item : str
             Entry field to return, such as ``"src"``, ``"comp"``, ``"value"``,
-            or ``"eq"``.
+            ``"eq"``, or ``"mode"``.
         components : Optional[List[Component]], optional
             Optional component order for component-wise entries.
 
@@ -350,6 +350,48 @@ class ThermoSource:
             source_type=source_type,
             symbol=symbol,
             components=components
+        )
+
+    def get_mode(
+            self,
+            source_type: str,
+            symbol: str
+    ) -> List[str] | None:
+        """
+        Return source modes for a symbol.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+        symbol : str
+            Thermodynamic symbol to extract.
+
+        Returns
+        -------
+        List[str] | None
+            Source modes such as ``["data"]`` or ``["data", "equation"]``, or
+            ``None`` when unavailable.
+        """
+        return self._ensure_thermo_source_extractor().get_mode(
+            source_type=source_type,
+            symbol=symbol
+        )
+
+    def has_mode(
+            self,
+            source_type: str,
+            symbol: str,
+            mode: str
+    ) -> bool:
+        """
+        Return whether a symbol entry includes the requested source mode.
+        """
+        return self._ensure_thermo_source_extractor().has_mode(
+            source_type=source_type,
+            symbol=symbol,
+            mode=mode
         )
 
     def get_const(
