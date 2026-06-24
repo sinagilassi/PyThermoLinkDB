@@ -31,7 +31,7 @@ class ThermoModelSource:
     :class:`pyThermoLinkDB.models.ModelSource` and extracts the requested
     component data, component equations, and source-level constants. Each
     available symbol is exposed through ``thermo_src`` with the fixed keys
-    ``src``, ``comp``, ``value``, and ``eq``.
+    ``src``, ``comp``, ``value``, ``eq``, and ``mode``.
 
     Parameters
     ----------
@@ -178,9 +178,36 @@ class ThermoModelSource:
                 "comp": None,
                 "value": None,
                 "eq": None,
+                "mode": self._symbol_modes(symbol),
             }
             for symbol in symbols
         }
+
+    def _symbol_modes(self, symbol: str) -> List[str]:
+        """Return requested source modes for a symbol, preserving mode order."""
+        modes: List[str] = []
+        for mode, requested_symbols in (
+            ("data", self.requested_data),
+            ("equation", self.requested_equations),
+            ("constants", self.requested_constants),
+        ):
+            if symbol in requested_symbols:
+                modes.append(mode)
+        return modes
+
+    def _add_symbol_mode(self, symbol: str, mode: str) -> None:
+        """Add a source mode to an initialized thermo entry."""
+        entry = self.thermo_src.get(symbol)
+        if entry is None:
+            return
+
+        modes = entry.setdefault("mode", [])
+        if not isinstance(modes, list):
+            entry["mode"] = [mode]
+            return
+
+        if mode not in modes:
+            modes.append(mode)
 
     # SECTION: build configuration methods
     # ! build thermo data
@@ -445,6 +472,7 @@ class ThermoModelSource:
                 "comp": dt_comp,
                 "value": np.array(dt_value),
             })
+            self._add_symbol_mode(symbol, "data")
 
     # NOTE: config equation attributes
     def _populate_equations(
@@ -484,6 +512,7 @@ class ThermoModelSource:
                         f"Equation source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
             self.thermo_src[symbol]["eq"] = eqn_src
+            self._add_symbol_mode(symbol, "equation")
 
     # NOTE: config constant attributes
     # ! utility
@@ -563,6 +592,7 @@ class ThermoModelSource:
                     "comp": const_comp,
                     "value": const_value,
                 })
+                self._add_symbol_mode(symbol, "constants")
                 consumed_constant_symbols.append(symbol)
                 logger.warning(
                     f"Data symbol '{symbol}' was configured from "
@@ -578,6 +608,7 @@ class ThermoModelSource:
                         "comp": const_comp,
                         "value": const_value,
                     })
+                    self._add_symbol_mode(symbol, "constants")
                     consumed_constant_symbols.append(symbol)
                     logger.warning(
                         f"Equation symbol '{symbol}' received component-wise "
@@ -606,6 +637,7 @@ class ThermoModelSource:
                     "src": const_src,
                     "value": const_src.value,
                 })
+                self._add_symbol_mode(symbol, "constants")
             else:
                 logger.warning(
                     f"Constant source for symbol '{symbol}' not found in the model source."
