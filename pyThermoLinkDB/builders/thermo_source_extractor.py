@@ -7,10 +7,11 @@ import logging
 from typing import Any, Dict, List, Optional, cast
 
 import numpy as np
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty
 from pythermodb_settings.utils import generate_component_references
 # locals
 from ..thermo import EquationSourceCore
+from ..models.component_models import ConstantResult
 
 
 # NOTE: set logger
@@ -125,6 +126,20 @@ class ThermoSourceExtractor:
             return None
         return value.get(item)
 
+    # ! get component src
+    def get_comp_src(
+            self,
+            source_type: str,
+            symbol: str,
+            components: List[Component] | None = None
+    ) -> Dict[str, CustomProperty] | None:
+        return self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="src",
+            components=components
+        )
+
     # ! get component eq
     def get_comp_eq(
             self,
@@ -173,6 +188,18 @@ class ThermoSourceExtractor:
             source_type=source_type,
             symbol=symbol,
             item="value"
+        )
+
+    # ! get constant source
+    def get_const_src(
+            self,
+            source_type: str,
+            symbol: str
+    ) -> Optional[ConstantResult]:
+        return self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="src"
         )
 
     # SECTION: component id helpers
