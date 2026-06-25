@@ -87,11 +87,17 @@ class ThermoSourceHub:
         self
     ) -> Literal["model_source", "custom_source", "both"]:
         """Return the available thermo source hub types."""
-        if self.thermo_model_source is not None and self.thermo_custom_source is not None:
+        if not hasattr(self, "thermo_source_extractor"):
+            self._configure_thermo_source()
+
+        has_model_source = len(self.thermo_model_source_hub) > 0
+        has_custom_source = len(self.thermo_custom_source_hub) > 0
+
+        if has_model_source and has_custom_source:
             return "both"
-        elif self.thermo_model_source is not None:
+        elif has_model_source:
             return "model_source"
-        elif self.thermo_custom_source is not None:
+        elif has_custom_source:
             return "custom_source"
         else:
             raise ValueError("No thermo source is available in the hub.")
