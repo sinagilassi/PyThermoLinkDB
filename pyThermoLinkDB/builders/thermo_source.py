@@ -2,13 +2,12 @@
 
 from typing import List, Optional, Dict, Any, cast
 
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
 
 from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
 from .thermo_source_validator import ValidationReport
 from .thermo_source_extractor import ThermoSourceExtractor
-from ..models.component_models import ConstantResult
 from ..thermo import EquationSourceCore
 
 
@@ -424,7 +423,7 @@ class ThermoSource:
             self,
             source_type: str,
             symbol: str
-    ) -> Optional[ConstantResult]:
+    ) -> Optional[CustomConstant]:
         """
         Return the constant source object from a source group.
 
@@ -438,7 +437,7 @@ class ThermoSource:
 
         Returns
         -------
-        Optional[ConstantResult]
+        Optional[CustomConstant]
             Constant source object, or ``None`` when unavailable.
         """
         return self._ensure_thermo_source_extractor().get_const_src(
