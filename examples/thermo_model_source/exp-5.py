@@ -10,7 +10,7 @@ from pyThermoLinkDB.models import (
     CustomSourceConfig,
     ModelSourceConfig,
 )
-from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
+from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source
 from rich import print
 from pathlib import Path
 import sys
@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-thermo_source: ThermoSource | None = build_thermo_source(
+thermo_source_hub: ThermoSourceHub | None = build_thermo_source(
     components=components,
     component_key="Formula-State",
     model_source=model_source,
@@ -46,23 +46,23 @@ thermo_source: ThermoSource | None = build_thermo_source(
     description="Model and custom thermodynamic source container",
 )
 
-if thermo_source is None:
+if thermo_source_hub is None:
     raise RuntimeError("Failed to build the thermodynamic source.")
 
 print("\n[bold green]Validation quick checks[/bold green]")
 print({
-    "model_valid": thermo_source.is_model_source_valid(),
-    "model_all_requested": thermo_source.has_all_model_requested(),
-    "model_all_components": thermo_source.has_all_model_components(),
-    "custom_valid": thermo_source.is_custom_source_valid(),
-    "custom_all_requested": thermo_source.has_all_custom_requested(),
-    "custom_all_components": thermo_source.has_all_custom_components(),
+    "model_valid": thermo_source_hub.is_model_source_valid(),
+    "model_all_requested": thermo_source_hub.has_all_model_requested(),
+    "model_all_components": thermo_source_hub.has_all_model_components(),
+    "custom_valid": thermo_source_hub.is_custom_source_valid(),
+    "custom_all_requested": thermo_source_hub.has_all_custom_requested(),
+    "custom_all_components": thermo_source_hub.has_all_custom_components(),
 })
 
 print("\n[bold green]Validation summary[/bold green]")
-print(thermo_source.validation_summary())
+print(thermo_source_hub.validation_summary())
 
-validation_reports = thermo_source.validate_sources()
+validation_reports = thermo_source_hub.validate_sources()
 
 if validation_reports["model_source"] is not None:
     print("\n[bold green]Model validation details[/bold green]")
@@ -81,7 +81,7 @@ print("\n[bold cyan]Thermo source extraction[/bold cyan]")
 unit_conversion_fn = pycuc.convert_from_to
 
 # NOTE: get MW source from custom source
-mw_source = thermo_source.get_comp_src(
+mw_source = thermo_source_hub.get_comp_src(
     source_type="custom_source",
     symbol="MW",
 )
@@ -103,7 +103,7 @@ if mw_source is not None:
         print(mw_values)
 
 # NOTE: get Cp_IG equation source from model source
-model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source.get_comp_eq(
+model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source_hub.get_comp_eq(
     source_type="model_source",
     symbol="Cp_IG",
 )

@@ -1,7 +1,7 @@
 """Build a container holding model and custom thermodynamic sources."""
 
 from rich import print
-from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
+from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source
 from pyThermoLinkDB.models import (
     CustomSourceConfig,
     ModelSourceConfig,
@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-thermo_source: ThermoSource | None = build_thermo_source(
+thermo_source_hub: ThermoSourceHub | None = build_thermo_source(
     components=components,
     component_key="Formula-State",
     model_source=model_source,
@@ -44,23 +44,23 @@ thermo_source: ThermoSource | None = build_thermo_source(
     description="Model and custom thermodynamic source container",
 )
 
-if thermo_source is None:
+if thermo_source_hub is None:
     raise RuntimeError("Failed to build the thermodynamic source.")
 
 print("\n[bold green]Validation quick checks[/bold green]")
 print({
-    "model_valid": thermo_source.is_model_source_valid(),
-    "model_all_requested": thermo_source.has_all_model_requested(),
-    "model_all_components": thermo_source.has_all_model_components(),
-    "custom_valid": thermo_source.is_custom_source_valid(),
-    "custom_all_requested": thermo_source.has_all_custom_requested(),
-    "custom_all_components": thermo_source.has_all_custom_components(),
+    "model_valid": thermo_source_hub.is_model_source_valid(),
+    "model_all_requested": thermo_source_hub.has_all_model_requested(),
+    "model_all_components": thermo_source_hub.has_all_model_components(),
+    "custom_valid": thermo_source_hub.is_custom_source_valid(),
+    "custom_all_requested": thermo_source_hub.has_all_custom_requested(),
+    "custom_all_components": thermo_source_hub.has_all_custom_components(),
 })
 
 print("\n[bold green]Validation summary[/bold green]")
-print(thermo_source.validation_summary())
+print(thermo_source_hub.validation_summary())
 
-validation_reports = thermo_source.validate_sources()
+validation_reports = thermo_source_hub.validate_sources()
 
 if validation_reports["model_source"] is not None:
     print("\n[bold green]Model validation details[/bold green]")
@@ -75,7 +75,7 @@ if validation_reports["custom_source"] is not None:
 print("\n[bold cyan]Thermo source extraction[/bold cyan]")
 
 # NOTE: get the full source entry for a model data symbol
-model_tc: Dict[str, Any] | None = thermo_source.get(
+model_tc: Dict[str, Any] | None = thermo_source_hub.get(
     source_name="model_source",
     symbol="Tc",
 )
@@ -83,7 +83,7 @@ print("[bold]Model Tc entry[/bold]")
 print(model_tc)
 
 # ! get source
-model_tc_src: Dict[str, CustomProperty] | None = thermo_source.get_comp_src(
+model_tc_src: Dict[str, CustomProperty] | None = thermo_source_hub.get_comp_src(
     source_type="model_source",
     symbol="Tc",
 )
@@ -91,20 +91,20 @@ print("[bold]Model Tc component sources[/bold]")
 print(model_tc_src)
 
 # NOTE: get source modes for symbols
-model_tc_mode: List[str] | None = thermo_source.get_mode(
+model_tc_mode: List[str] | None = thermo_source_hub.get_mode(
     source_type="model_source",
     symbol="Tc",
 )
-custom_cp_ig_mode: List[str] | None = thermo_source.get_mode(
+custom_cp_ig_mode: List[str] | None = thermo_source_hub.get_mode(
     source_type="custom_source",
     symbol="Cp_IG",
 )
-custom_cp_ig_has_data: bool = thermo_source.has_mode(
+custom_cp_ig_has_data: bool = thermo_source_hub.has_mode(
     source_type="custom_source",
     symbol="Cp_IG",
     mode="data",
 )
-custom_cp_ig_has_equation: bool = thermo_source.has_mode(
+custom_cp_ig_has_equation: bool = thermo_source_hub.has_mode(
     source_type="custom_source",
     symbol="Cp_IG",
     mode="equation",
@@ -120,7 +120,7 @@ print({
 })
 
 # NOTE: get a specific field from the model source entry
-model_tc_values: Any = thermo_source.get_item(
+model_tc_values: Any = thermo_source_hub.get_item(
     source_type="model_source",
     symbol="Tc",
     item="value",
@@ -129,7 +129,7 @@ print("[bold]Model Tc values[/bold]")
 print(model_tc_values)
 
 # NOTE: get component-wise data from the custom source
-custom_mw: Dict[str, float] | None = thermo_source.get_comp_dt(
+custom_mw: Dict[str, float] | None = thermo_source_hub.get_comp_dt(
     source_type="custom_source",
     symbol="MW",
 )
@@ -137,7 +137,7 @@ print("[bold]Custom MW component data[/bold]")
 print(custom_mw)
 
 # NOTE: get component-wise source objects from the custom source
-custom_mw_src: Dict[str, CustomProperty] | None = thermo_source.get_comp_src(
+custom_mw_src: Dict[str, CustomProperty] | None = thermo_source_hub.get_comp_src(
     source_type="custom_source",
     symbol="MW",
 )
@@ -145,7 +145,7 @@ print("[bold]Custom MW component sources[/bold]")
 print(custom_mw_src)
 
 # NOTE: get component-wise values from the custom source
-custom_cp_ig_values: List[float] | None = thermo_source.get_comp_values(
+custom_cp_ig_values: List[float] | None = thermo_source_hub.get_comp_values(
     source_type="custom_source",
     symbol="Cp_IG",
 )
@@ -154,7 +154,7 @@ print(custom_cp_ig_values)
 
 
 # NOTE: get component-wise equations from the model source
-model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source.get_comp_eq(
+model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source_hub.get_comp_eq(
     source_type="model_source",
     symbol="Cp_IG",
 )
@@ -162,7 +162,7 @@ print("[bold]Model Cp_IG component equations[/bold]")
 print(model_cp_ig_eq)
 
 # ! mode
-model_cp_ig_eq_mode: List[str] | None = thermo_source.get_mode(
+model_cp_ig_eq_mode: List[str] | None = thermo_source_hub.get_mode(
     source_type="model_source",
     symbol="Cp_IG",
 )
@@ -170,19 +170,19 @@ print("[bold]Model Cp_IG component equation modes[/bold]")
 print(model_cp_ig_eq_mode)
 
 # NOTE: get constant values from model and custom sources
-model_r: Any = thermo_source.get_const(
+model_r: Any = thermo_source_hub.get_const(
     source_type="model_source",
     symbol="R",
 )
-custom_constant: Any = thermo_source.get_const(
+custom_constant: Any = thermo_source_hub.get_const(
     source_type="custom_source",
     symbol="CUSTOM_CONST",
 )
-model_r_src: CustomConstant | None = thermo_source.get_const_src(
+model_r_src: CustomConstant | None = thermo_source_hub.get_const_src(
     source_type="model_source",
     symbol="R",
 )
-custom_constant_src: CustomConstant | None = thermo_source.get_const_src(
+custom_constant_src: CustomConstant | None = thermo_source_hub.get_const_src(
     source_type="custom_source",
     symbol="CUSTOM_CONST",
 )
@@ -197,7 +197,7 @@ print(custom_constant_src)
 
 # NOTE: reorder component-wise output with a different requested component order
 reordered_components = list(reversed(components))
-custom_mw_reordered: Dict[str, Any] | None = thermo_source.get(
+custom_mw_reordered: Dict[str, Any] | None = thermo_source_hub.get(
     source_name="custom_source",
     symbol="MW",
     components=reordered_components,
