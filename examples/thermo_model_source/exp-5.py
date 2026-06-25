@@ -10,7 +10,7 @@ from pyThermoLinkDB.models import (
     CustomSourceConfig,
     ModelSourceConfig,
 )
-from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source
+from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
 from rich import print
 from pathlib import Path
 import sys
@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-thermo_source_hub: ThermoSourceHub | None = build_thermo_source(
+thermo_source_hub: ThermoSourceHub | None = build_thermo_source_hub(
     components=components,
     component_key="Formula-State",
     model_source=model_source,
