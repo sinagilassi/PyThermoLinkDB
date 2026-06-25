@@ -49,6 +49,12 @@ thermo_source_hub: ThermoSourceHub | None = build_thermo_source_hub(
 if thermo_source_hub is None:
     raise RuntimeError("Failed to build the thermodynamic source.")
 
+# NOTE: thermo source hub
+print("\n[bold cyan]Thermo source hub[/bold cyan]")
+print(thermo_source_hub.thermo_source_hub_types)
+
+# SECTION: Validation checks
+
 print("\n[bold green]Validation quick checks[/bold green]")
 print({
     "model_valid": thermo_source_hub.is_model_source_valid(),
