@@ -1,10 +1,10 @@
 # import libs
 import logging
 from typing import Dict, Any, Optional, List
-from pythermodb_settings.models import CustomProperty
+from pythermodb_settings.models import CustomProperty, CustomConstant
 # local
 from ..thermo import Source
-from ..models.component_models import ConstantResult, PropResult
+from ..models.component_models import PropResult
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -455,9 +455,9 @@ class ConstantsSourceCore:
     def select(
         self,
         symbol: str
-    ) -> Optional[ConstantResult]:
+    ) -> Optional[CustomConstant]:
         """
-        Select any constant value shape and return it as a ``ConstantResult``.
+        Select any constant value shape and return it as a ``CustomConstant``.
 
         Unlike ``select``, this method does not coerce the constant value to a
         numeric ``CustomProperty``. It supports scalar, string, dictionary,
@@ -473,8 +473,8 @@ class ConstantsSourceCore:
 
         Returns
         -------
-        Optional[ConstantResult]
-            A ConstantResult object containing the constant's raw value, unit,
+        Optional[CustomConstant]
+            A CustomConstant object containing the constant's raw value, unit,
             and symbol, or None if the constant is not found.
         """
         try:
@@ -499,7 +499,7 @@ class ConstantsSourceCore:
                 selected_symbol = symbol_info.get("symbol", symbol)
 
             # NOTE: constant entry
-            return ConstantResult(
+            return CustomConstant(
                 value=res.get("value", res),
                 unit=res.get("unit", None),
                 symbol=res.get("symbol", selected_symbol)
