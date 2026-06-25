@@ -3,12 +3,11 @@
 from rich import print
 from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
 from pyThermoLinkDB.models import (
-    ConstantResult,
     CustomSourceConfig,
     ModelSourceConfig,
 )
 from pyThermoLinkDB.thermo import EquationSourceCore
-from pythermodb_settings.models import CustomProperty
+from pythermodb_settings.models import CustomProperty, CustomConstant
 from examples.thermo_model_source.components_1 import components
 from examples.thermo_model_source.custom_source_1 import custom_source
 from examples.thermo_model_source.model_source_1 import model_source
@@ -82,6 +81,14 @@ model_tc: Dict[str, Any] | None = thermo_source.get(
 )
 print("[bold]Model Tc entry[/bold]")
 print(model_tc)
+
+# ! get source
+model_tc_src: Dict[str, CustomProperty] | None = thermo_source.get_comp_src(
+    source_type="model_source",
+    symbol="Tc",
+)
+print("[bold]Model Tc component sources[/bold]")
+print(model_tc_src)
 
 # NOTE: get source modes for symbols
 model_tc_mode: List[str] | None = thermo_source.get_mode(
@@ -171,11 +178,11 @@ custom_constant: Any = thermo_source.get_const(
     source_type="custom_source",
     symbol="CUSTOM_CONST",
 )
-model_r_src: ConstantResult | None = thermo_source.get_const_src(
+model_r_src: CustomConstant | None = thermo_source.get_const_src(
     source_type="model_source",
     symbol="R",
 )
-custom_constant_src: ConstantResult | None = thermo_source.get_const_src(
+custom_constant_src: CustomConstant | None = thermo_source.get_const_src(
     source_type="custom_source",
     symbol="CUSTOM_CONST",
 )
