@@ -120,20 +120,3 @@ class PropResult(BaseModel):
         ...,
         description="Symbol representing the property"
     )
-
-
-class ConstantResult(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    value: Any = Field(
-        ...,
-        description="Constant value"
-    )
-    unit: str | None = Field(
-        default="",
-        description="Unit of the constant value"
-    )
-    symbol: str = Field(
-        default="",
-        description="Symbol representing the constant"
-    )
