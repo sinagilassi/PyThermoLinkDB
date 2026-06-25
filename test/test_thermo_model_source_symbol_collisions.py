@@ -1,20 +1,19 @@
 import numpy as np
-
+from pythermodb_settings.models import CustomConstant
 from pyThermoLinkDB.builders.thermo_model_source import ThermoModelSource
-from pyThermoLinkDB.models.component_models import ConstantResult
 
 
 class StubConstantsSource:
     constants = ["R"]
 
-    def select(self, symbol: str) -> ConstantResult:
-        return ConstantResult(value=8.314, unit="J/mol.K", symbol=symbol)
+    def select(self, symbol: str) -> CustomConstant:
+        return CustomConstant(value=8.314, unit="J/mol.K", symbol=symbol)
 
 
 class StubComponentConstantsSource:
     constants = ["data_symbol", "equation_symbol"]
 
-    def select(self, symbol: str) -> ConstantResult:
+    def select(self, symbol: str) -> CustomConstant:
         values = {
             "data_symbol": {"A": 10.0, "B": 20.0},
             "equation_symbol": {
@@ -22,7 +21,7 @@ class StubComponentConstantsSource:
                 "B": {"value": 40.0, "unit": "J/mol"},
             },
         }
-        return ConstantResult(value=values[symbol], unit="J/mol", symbol=symbol)
+        return CustomConstant(value=values[symbol], unit="J/mol", symbol=symbol)
 
 
 class StubDataSource:
@@ -87,7 +86,7 @@ def test_component_constants_merge_with_existing_data_and_equations():
 
     data_entry = source.thermo_src["data_symbol"]
     equation_entry = source.thermo_src["equation_symbol"]
-    assert isinstance(data_entry["src"], ConstantResult)
+    assert isinstance(data_entry["src"], CustomConstant)
     assert data_entry["mode"] == ["data", "constants"]
     assert data_entry["comp"] == {"A": 10.0, "B": 20.0}
     np.testing.assert_allclose(data_entry["value"], [10.0, 20.0])
