@@ -1,7 +1,7 @@
 # import libs
-from pythermodb_settings.models import CustomProperty
+from pythermodb_settings.models import CustomProperty, CustomConstant
 # ! from pyThermoLinkDB
-from pyThermoLinkDB.models import CustomConstant
+
 
 # ====================================================
 # SECTION: custom thermo
