@@ -1,16 +1,13 @@
 # import libs
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, TypeVar
 from pythermodb_settings.models import (
     Component,
     ComponentKey,
     CustomProperty,
-    CustomConstant
 )
 from pythermodb_settings.utils import (
-    generate_component_references,
     find_component_by_id,
-    find_components_by_ids,
     set_component_id
 )
 # locals
@@ -19,145 +16,131 @@ from ..thermo import EquationSourceCore
 # NOTE: set logger
 logger = logging.getLogger(__name__)
 
+SourceValue = TypeVar("SourceValue")
+
+
+def _component_ordered_data(
+        data: Dict[str, SourceValue],
+        components: List[Component],
+        component_key: ComponentKey,
+        case_sensitive: bool = True
+) -> Dict[str, Tuple[str, SourceValue]]:
+    """
+    Match source entries to components and return them keyed by output id.
+
+    Input keys may use any component identifier supported by
+    ``find_component_by_id``. Output keys always use ``component_key``.
+    """
+    matched_data: Dict[str, Tuple[str, SourceValue]] = {}
+
+    for source_id, value in data.items():
+        comp = find_component_by_id(
+            id=source_id,
+            components=components,
+            case_sensitive=case_sensitive
+        )
+
+        if comp is None:
+            logger.warning(
+                f"Component with id '{source_id}' not found in provided components. "
+                f"Skipping this entry."
+            )
+            continue
+
+        output_id = set_component_id(comp, component_key)
+        if output_id in matched_data:
+            logger.warning(
+                f"Multiple source entries matched component '{output_id}'. "
+                f"Keeping the first entry and skipping '{source_id}'."
+            )
+            continue
+
+        matched_data[output_id] = (source_id, value)
+
+    return matched_data
+
 
 # SECTION: map component property
-def map_component_property(
+def map_prop(
         data: Dict[str, CustomProperty],
-        components: Optional[List[Component]],
-        component_key: Optional[ComponentKey] = None,
+        components: List[Component],
+        component_key: ComponentKey,
         case_sensitive: bool = True
-) -> Optional[Tuple[Dict[str, float], List[float]]]:
+) -> Tuple[Dict[str, float], List[float]]:
     # NOTE: result initialization
     res_comp: Dict[str, float] = {}
     res_values: List[float] = []
 
-    # NOTE: component ids
-    component_ids: List[str] = list(data.keys())
-    components_ = None
-    component_refs: Optional[Dict[str, Any]] = None
+    if not data:
+        return res_comp, res_values
 
-    # ! find components by ids
-    if components is not None:
-        components_ = find_components_by_ids(
-            ids=component_ids,
-            components=components,
-            case_sensitive=case_sensitive
-        )
+    # NOTE: data keys can use any known component id format
+    matched_data = _component_ordered_data(
+        data=data,
+        components=components,
+        component_key=component_key,
+        case_sensitive=case_sensitive
+    )
 
-        # >> check
-        if not components_:
+    # NOTE: output order follows the provided components list
+    for comp in components:
+        output_id = set_component_id(comp, component_key)
+        matched_entry = matched_data.get(output_id)
+        if matched_entry is None:
             logger.warning(
-                f"No components found for ids: {component_ids}. "
-                f"Returning empty results."
+                f"Property source for component '{output_id}' not found."
             )
-            return None
+            continue
 
-    # NOTE: no components means no id is required anymore
-    if not components:
-        # iterate over the data and extract values
-        for id, prop in data.items():
-            if prop.value is not None:
-                res_comp[id] = prop.value
-                res_values.append(prop.value)
-            else:
-                logger.warning(
-                    f"Property '{id}' has no value and will be skipped.")
+        source_id, prop = matched_entry
+        if prop.value is None:
+            logger.warning(
+                f"Property '{source_id}' has no value and will be skipped."
+            )
+            continue
 
-    # NOTE: components are provided, so we need to transform the data
-    if (
-        components is not None and
-        components_ is not None
-    ):
-        # iterate over data (component ids) and find corresponding components
-        for comp, (id, prop) in zip(components_, data.items()):
-            # >> check if component is found
-            if comp is None:
-                logger.warning(
-                    f"Component with id '{id}' not found in provided components. "
-                    f"Skipping this entry."
-                )
-                continue
-
-            # >> check if property value is None
-            if prop.value is None:
-                logger.warning(
-                    f"Property '{id}' has no value and will be skipped.")
-                continue
-
-            # set id
-            id_ = id
-            value_ = prop.value
-
-            # >> set component id if not already set
-            if comp is not None and component_key is not None:
-                id_ = set_component_id(comp, component_key)
-
-            # >> add to results
-            res_comp[id_] = value_
-            res_values.append(value_)
+        res_comp[output_id] = prop.value
+        res_values.append(prop.value)
 
     return res_comp, res_values
 
-# SECTION: extract component equation source
+# SECTION: map component equation source
 
 
-def map_component_equation(
+def map_eq(
         data: Dict[str, EquationSourceCore],
-        components: Optional[List[Component]],
-        component_key: Optional[ComponentKey] = None,
+        components: List[Component],
+        component_key: ComponentKey,
         case_sensitive: bool = True
-) -> Optional[Dict[str, EquationSourceCore]]:
+) -> Tuple[Dict[str, EquationSourceCore], List[EquationSourceCore]]:
     # NOTE: result initialization
     # ! id defined as component id or component reference
     res_comp: Dict[str, EquationSourceCore] = {}
+    res_values: List[EquationSourceCore] = []
 
-    # NOTE: component ids
-    component_ids: List[str] = list(data.keys())
-    components_ = None
+    if not data:
+        return res_comp, res_values
 
-    # ! find components by ids
-    if components is not None:
-        components_ = find_components_by_ids(
-            ids=component_ids,
-            components=components,
-            case_sensitive=case_sensitive
-        )
+    # NOTE: data keys can use any known component id format
+    matched_data = _component_ordered_data(
+        data=data,
+        components=components,
+        component_key=component_key,
+        case_sensitive=case_sensitive
+    )
 
-        # >> check
-        if not components_:
+    # NOTE: output order follows the provided components list
+    for comp in components:
+        output_id = set_component_id(comp, component_key)
+        matched_entry = matched_data.get(output_id)
+        if matched_entry is None:
             logger.warning(
-                f"No components found for ids: {component_ids}. "
-                f"Returning empty results."
+                f"Equation source for component '{output_id}' not found."
             )
-            return None
+            continue
 
-    # NOTE: no components means no transformation is needed
-    if not components:
-        res_comp = data
+        _, eq = matched_entry
+        res_comp[output_id] = eq
+        res_values.append(eq)
 
-    # NOTE: components are provided, so we need to transform the data
-    if (
-        components is not None and
-        components_ is not None
-    ):
-        # iterate over data (component ids) and find corresponding components
-        for comp, (id, prop) in zip(components_, data.items()):
-            # >> check if component is found
-            if comp is None:
-                logger.warning(
-                    f"Component with id '{id}' not found in provided components. "
-                    f"Skipping this entry."
-                )
-                continue
-
-            # set id
-            id_ = id
-
-            # >> set component id if not already set
-            if comp is not None and component_key is not None:
-                id_ = set_component_id(comp, component_key)
-
-            # >> add to results
-            res_comp[id_] = prop
-
-    return res_comp
+    return res_comp, res_values
