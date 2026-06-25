@@ -41,6 +41,30 @@ def test_thermo_source_allows_either_source_to_be_none():
     assert custom_only.thermo_custom_source is custom
 
 
+def test_thermo_source_hub_types_uses_non_empty_groups():
+    model = SimpleNamespace(thermo_src={"Tc": {"value": 300.0}})
+    custom = SimpleNamespace(thermo_src={})
+
+    source, _ = make_container(model=model, custom=custom)
+
+    assert source.thermo_source_hub_types == "model_source"
+
+
+def test_thermo_source_hub_types_raises_when_groups_are_empty():
+    model = SimpleNamespace(thermo_src={})
+    custom = SimpleNamespace(thermo_src={})
+
+    source, _ = make_container(model=model, custom=custom)
+
+    try:
+        source.thermo_source_hub_types
+    except ValueError as exc:
+        assert str(exc) == "No thermo source is available in the hub."
+    else:
+        raise AssertionError(
+            "Expected thermo_source_hub_types to raise ValueError.")
+
+
 def test_thermo_source_has_no_management_api():
     source, _ = make_container()
     removed_names = (
