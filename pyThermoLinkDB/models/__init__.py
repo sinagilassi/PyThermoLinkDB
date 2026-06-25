@@ -17,11 +17,6 @@ from .component_models import (
     ConstantResult,
 )
 
-# constant models
-from .constants_models import (
-    CustomConstant,
-)
-
 __all__ = [
     "ComponentModelSource",
     "DataSource",
@@ -31,7 +26,6 @@ __all__ = [
     "MixtureModelSource",
     "ConstantsModelSource",
     "ConstantResult",
-    "CustomConstant",
     "CustomSource",
     "ModelSourceConfig",
     "CustomSourceConfig",
