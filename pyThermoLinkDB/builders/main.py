@@ -200,7 +200,7 @@ def build_custom_model_source(
 # SECTION: build thermo source hub
 
 @measure_time
-def build_thermo_source(
+def build_thermo_source_hub(
         components: List[Component],
         component_key: ComponentKey,
         model_source: Optional[ModelSource],
