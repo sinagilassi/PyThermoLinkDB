@@ -12,10 +12,6 @@ from .source import (
     CustomSourceConfig,
 )
 
-# component models
-from .component_models import (
-    ConstantResult,
-)
 
 __all__ = [
     "ComponentModelSource",
@@ -25,7 +21,6 @@ __all__ = [
     "ModelSource",
     "MixtureModelSource",
     "ConstantsModelSource",
-    "ConstantResult",
     "CustomSource",
     "ModelSourceConfig",
     "CustomSourceConfig",
