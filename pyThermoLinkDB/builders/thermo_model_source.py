@@ -466,7 +466,7 @@ class ThermoModelSource:
                         f"Data source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
 
-            # set
+            # ! >>> set thermo source entry for the symbol
             self.thermo_src[symbol].update({
                 "src": dt_src,
                 "comp": dt_comp,
@@ -511,6 +511,8 @@ class ThermoModelSource:
                     logger.warning(
                         f"Equation source for symbol '{symbol}' not found for component '{comp_id}'."
                     )
+
+            # ! >>> set thermo source entry for the symbol
             self.thermo_src[symbol]["eq"] = eqn_src
             self._add_symbol_mode(symbol, "equation")
 
@@ -585,8 +587,15 @@ class ThermoModelSource:
                 else None
             )
 
-            if component_values is not None and symbol in self.requested_data:
+            # >> check
+            if (
+                component_values is not None and
+                symbol in self.requested_data
+            ):
+                # extract component-wise values and set in thermo source
                 const_comp, const_value = component_values
+
+                # ! >>> set thermo source entry for the symbol
                 self.thermo_src[symbol].update({
                     "src": const_src,
                     "comp": const_comp,
@@ -601,15 +610,27 @@ class ThermoModelSource:
                 continue
 
             # >>> check symbol conflicts with previously configured data or equations
-            if symbol in self.requested_data or symbol in self.requested_equations:
-                if component_values is not None and symbol in self.requested_equations:
+            if (
+                symbol in self.requested_data or
+                symbol in self.requested_equations
+            ):
+                if (
+                    component_values is not None and
+                    symbol in self.requested_equations
+                ):
+                    # the equation source is already configured, but the constant source provides component-wise values; preserve the equation source and add the component-wise values
                     const_comp, const_value = component_values
+
+                    # ! >>> set thermo source entry for the symbol
                     self.thermo_src[symbol].update({
                         "comp": const_comp,
                         "value": const_value,
                     })
+                    # ! >>>> add mode
                     self._add_symbol_mode(symbol, "constants")
                     consumed_constant_symbols.append(symbol)
+
+                    # log
                     logger.warning(
                         f"Equation symbol '{symbol}' received component-wise "
                         "comp and value attributes from the constant source; "
@@ -633,10 +654,13 @@ class ThermoModelSource:
 
             # >> check if constant source for the symbol was found
             if const_src is not None:
+
+                # ! >>> set thermo source entry for the symbol
                 self.thermo_src[symbol].update({
                     "src": const_src,
                     "value": const_src.value,
                 })
+                # ! >>>> add mode
                 self._add_symbol_mode(symbol, "constants")
             else:
                 logger.warning(
