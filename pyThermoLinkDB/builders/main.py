@@ -6,7 +6,7 @@ from pythermodb_settings.utils import generate_component_references, measure_tim
 # locals
 from .thermo_model_source import ThermoModelSource
 from .thermo_custom_source import ThermoCustomSource
-from .thermo_source import ThermoSource
+from .thermo_source_hub import ThermoSourceHub
 from ..models import ModelSource, CustomSource
 from ..models.source import ModelSourceConfig, CustomSourceConfig
 
@@ -197,7 +197,7 @@ def build_custom_model_source(
         return None
 
 
-# SECTION: main build function
+# SECTION: build thermo source hub
 
 @measure_time
 def build_thermo_source(
@@ -209,9 +209,9 @@ def build_thermo_source(
         custom_source_config: Optional[CustomSourceConfig],
         description: Optional[str] = None,
         **kwargs
-) -> Optional[ThermoSource]:
+) -> Optional[ThermoSourceHub]:
     """
-    Build a thermodynamic source, which can be either a model source or a custom source.
+    Build a thermodynamic source hub, which can be either a model source or a custom source.
 
     Parameters
     ----------
@@ -244,7 +244,7 @@ def build_thermo_source(
 
     Returns
     -------
-    Optional[ThermoSource]
+    Optional[ThermoSourceHub]
         An instance of ThermoSource if successful, None otherwise.
 
     Notes
@@ -298,15 +298,19 @@ def build_thermo_source(
             )
 
         # NOTE: create ThermoSource container
-        thermo_source = ThermoSource(
+        thermo_source_hub = ThermoSourceHub(
             components=components,
             component_key=component_key,
             thermo_model_source=thermo_model_source,
             thermo_custom_source=thermo_custom_source,
             description=description,
         )
-        thermo_source._configure_thermo_source()
-        return thermo_source
+
+        # ! configure thermo source hub
+        thermo_source_hub._configure_thermo_source()
+
+        # res
+        return thermo_source_hub
     except Exception as e:
-        logger.error(f"Error building thermodynamic source: {e}")
+        logger.error(f"Error building thermodynamic source hub: {e}")
         return None
