@@ -7,11 +7,10 @@ import logging
 from typing import Any, Dict, List, Optional, cast
 
 import numpy as np
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
 from pythermodb_settings.utils import generate_component_references
 # locals
 from ..thermo import EquationSourceCore
-from ..models.component_models import ConstantResult
 
 
 # NOTE: set logger
@@ -89,7 +88,9 @@ class ThermoSourceExtractor:
             components: List[Component] | None = None
     ) -> Dict[str, Any] | None:
         # NOTE: select source group
-        source = self.thermo_source.get(source_name)
+        source: Dict[str, Any] | None = self.thermo_source.get(source_name)
+
+        # >> check if source group is found
         if not isinstance(source, dict):
             logger.warning(f"Thermo source '{source_name}' not found.")
             return None
@@ -117,6 +118,25 @@ class ThermoSourceExtractor:
             item: str,
             components: List[Component] | None = None
     ) -> Any:
+        """
+        Get a specific item from a thermo source entry.
+
+        Parameters
+        ----------
+        source_type : str
+            The thermo source type (e.g., "model_source", "custom_source").
+        symbol : str
+            The symbol for which to retrieve the item such as "Tc", "Cp_IG", etc.
+        item : str
+            The specific item to retrieve from the thermo source entry (e.g., "value", "src", "comp", "eq", "mode").
+        components : List[Component] | None, optional
+            A list of components to reorder the component-wise data. If None, no reordering is performed.
+
+        Returns
+        -------
+        Any
+            The requested item from the thermo source entry, or None if not found.
+        """
         # NOTE: extract the symbol entry first, then return the requested item
         value = self.get(
             source_name=source_type,
@@ -155,7 +175,7 @@ class ThermoSourceExtractor:
             components=components
         )
 
-    # ! get component dt
+    # ! get component data (dict of values)
     def get_comp_dt(
             self,
             source_type: str,
@@ -222,7 +242,7 @@ class ThermoSourceExtractor:
             self,
             source_type: str,
             symbol: str
-    ) -> Optional[ConstantResult]:
+    ) -> Optional[CustomConstant]:
         return self.get_item(
             source_type=source_type,
             symbol=symbol,
