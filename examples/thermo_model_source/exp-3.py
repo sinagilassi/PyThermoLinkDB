@@ -3,9 +3,8 @@ import os
 from rich import print
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
-from pythermodb_settings.models import CustomProperty, Component
+from pythermodb_settings.models import CustomProperty, Component, CustomConstant
 # ! from pyThermoLinkDB
-from pyThermoLinkDB.models import CustomConstant
 from pyThermoLinkDB.builders import build_custom_model_source, ThermoCustomSource
 
 # ====================================================
