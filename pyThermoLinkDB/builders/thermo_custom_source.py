@@ -10,7 +10,6 @@ from pythermodb_settings.models import (
 )
 # locals
 from ..models import CustomSource
-from ..models.component_models import ConstantResult
 from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
 # NOTE: logger setup
@@ -34,7 +33,7 @@ class ThermoCustomSource:
 
     General constants may be scalar values, lists, dictionaries,
     ``CustomProperty`` instances, or ``CustomConstant`` instances. For each
-    requested constant, ``src`` contains its ``ConstantResult`` and ``value``
+    requested constant, ``src`` contains its ``CustomConstant`` and ``value``
     contains the raw value with its original shape.
 
     Parameters
@@ -76,7 +75,7 @@ class ThermoCustomSource:
 
         # NOTE: normalized custom source
         self.thermo_data_source: Dict[str, Dict[str, CustomProperty]] = {}
-        self.thermo_constants_source: Dict[str, ConstantResult] = {}
+        self.thermo_constants_source: Dict[str, CustomConstant] = {}
 
         # NOTE: canonical symbol source mapping
         self.thermo_src: Dict[str, Dict[str, Any]] = {}
@@ -268,15 +267,15 @@ class ThermoCustomSource:
             self,
             key: str,
             value: Any
-    ) -> ConstantResult:
+    ) -> CustomConstant:
         """
-        Build a ConstantResult while preserving the raw constant value shape.
+        Build a CustomConstant while preserving the raw constant value shape.
         """
         symbol = self._get_entry_symbol(key=key, value=value)
         unit = getattr(value, "unit", None)
 
         if isinstance(value, (CustomProperty, CustomConstant)):
-            return ConstantResult(
+            return CustomConstant(
                 value=value.value,
                 unit=value.unit,
                 symbol=value.symbol
@@ -284,7 +283,7 @@ class ThermoCustomSource:
 
         if isinstance(value, dict):
             if "value" in value:
-                return ConstantResult(
+                return CustomConstant(
                     value=value.get("value"),
                     unit=value.get("unit", unit),
                     symbol=value.get("symbol", symbol)
@@ -298,7 +297,7 @@ class ThermoCustomSource:
             if len(nested_units) == 1:
                 unit = next(iter(nested_units))
 
-        return ConstantResult(
+        return CustomConstant(
             value=value,
             unit=unit,
             symbol=symbol
