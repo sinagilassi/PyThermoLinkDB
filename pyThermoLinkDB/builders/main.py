@@ -253,7 +253,10 @@ def build_thermo_source_hub(
     """
     try:
         # NOTE: validate that at least one source is provided
-        if model_source is None and custom_source is None:
+        if (
+            model_source is None and
+            custom_source is None
+        ):
             logger.error(
                 "At least one of model_source or custom_source must be provided."
             )
