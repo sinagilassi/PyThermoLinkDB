@@ -28,11 +28,32 @@ def _component_ordered_data(
         case_sensitive: bool = True
 ) -> Dict[str, Tuple[str, SourceValue]]:
     """
-    Match source entries to requested components and return them keyed by output id.
+    Match source entries to requested components.
 
-    Input keys may use any component identifier supported by
-    ``find_component_by_id``. Output keys always use ``component_key``. Entries
-    that do not match any requested component are ignored.
+    Parameters
+    ----------
+    data : Dict[str, SourceValue]
+        Source records keyed by component identifier. The key may use any
+        identifier format recognized by ``find_component_by_id``.
+    components : List[Component]
+        Components requested by the caller. Only records matching these
+        components are retained.
+    component_key : ComponentKey
+        Identifier format used for output keys.
+    case_sensitive : bool, optional
+        Whether source key matching should be case-sensitive, by default True.
+
+    Returns
+    -------
+    Dict[str, Tuple[str, SourceValue]]
+        Mapping keyed by output component id. Each value is a tuple containing
+        the original source id and the matched source value.
+
+    Notes
+    -----
+    Extra records in ``data`` that do not match a requested component are
+    ignored. If multiple records match the same requested component, the first
+    record is retained and later duplicates are skipped with a warning.
     """
     matched_data: Dict[str, Tuple[str, SourceValue]] = {}
 
@@ -70,6 +91,47 @@ def map_prop(
         unit_conversion_fn: Optional[UnitConversionFn] = None,
         **kwargs
 ) -> Optional[Tuple[Dict[str, float], List[float]]]:
+    """
+    Map component property sources into component order.
+
+    Parameters
+    ----------
+    data : Dict[str, CustomProperty]
+        Property records keyed by component identifier. Keys may use any
+        component id format recognized by ``find_component_by_id``.
+    components : List[Component]
+        Components to extract, in the desired output order.
+    component_key : ComponentKey
+        Identifier format used for output dictionary keys.
+    case_sensitive : bool, optional
+        Whether source key matching should be case-sensitive, by default True.
+    output_unit : Optional[str], optional
+        Target unit for all returned values. Required when
+        ``unit_conversion_fn`` is provided.
+    unit_conversion_fn : Optional[UnitConversionFn], optional
+        Conversion function called as
+        ``unit_conversion_fn(value=value, from_unit=prop.unit, to_unit=output_unit)``.
+        If omitted, values are returned in their source units.
+    **kwargs
+        Reserved for compatibility with timed-call wrappers and future options.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
+
+    Returns
+    -------
+    Optional[Tuple[Dict[str, float], List[float]]]
+        A tuple containing:
+        - component-keyed values using ``component_key``;
+        - values ordered exactly like ``components``.
+        Returns ``None`` if source data is empty, any requested component is
+        missing, a property value is missing, or unit conversion cannot be
+        performed.
+
+    Notes
+    -----
+    Extra records in ``data`` are ignored. All requested components must be
+    available in ``data``; otherwise no partial result is returned.
+    """
     # NOTE: result initialization
     res_comp: Dict[str, float] = {}
     res_values: List[float] = []
@@ -142,12 +204,47 @@ def map_prop(
 # SECTION: map component equation source
 
 
+@measure_time
 def map_eq(
         data: Dict[str, EquationSourceCore],
         components: List[Component],
         component_key: ComponentKey,
-        case_sensitive: bool = True
+        case_sensitive: bool = True,
+        **kwargs
 ) -> Optional[Tuple[Dict[str, EquationSourceCore], List[EquationSourceCore]]]:
+    """
+    Map component equation sources into component order.
+
+    Parameters
+    ----------
+    data : Dict[str, EquationSourceCore]
+        Equation sources keyed by component identifier. Keys may use any
+        component id format recognized by ``find_component_by_id``.
+    components : List[Component]
+        Components to extract, in the desired output order.
+    component_key : ComponentKey
+        Identifier format used for output dictionary keys.
+    case_sensitive : bool, optional
+        Whether source key matching should be case-sensitive, by default True.
+    **kwargs : Dict[str, Any]
+        Additional keyword arguments for future extensibility.
+            - mode : Literal['silent', 'log', 'attach'], optional
+                Mode for time measurement logging. Default is 'silent'.
+
+    Returns
+    -------
+    Optional[Tuple[Dict[str, EquationSourceCore], List[EquationSourceCore]]]
+        A tuple containing:
+        - component-keyed equation sources using ``component_key``;
+        - equation sources ordered exactly like ``components``.
+        Returns ``None`` if source data is empty or any requested component is
+        missing.
+
+    Notes
+    -----
+    Extra records in ``data`` are ignored. All requested components must be
+    available in ``data``; otherwise no partial result is returned.
+    """
     # NOTE: result initialization
     # ! id defined as component id or component reference
     res_comp: Dict[str, EquationSourceCore] = {}
