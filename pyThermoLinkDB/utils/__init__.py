@@ -12,6 +12,8 @@ from .properties import (
     extract_labels_from_constants_rules
 )
 from .loader import create_rules_from_str
+# protocols
+from .unit_tools import UnitAvailabilityFn, UnitConversionFn
 
 __all__ = [
     "set_component_key",
@@ -24,5 +26,7 @@ __all__ = [
     "look_up_constants_rules",
     "look_up_default_rules",
     "combine_rules_into_constants_key",
-    "extract_labels_from_constants_rules"
+    "extract_labels_from_constants_rules",
+    "UnitAvailabilityFn",
+    "UnitConversionFn",
 ]
