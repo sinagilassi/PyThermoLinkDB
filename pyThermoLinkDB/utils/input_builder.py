@@ -2,6 +2,8 @@
 import logging
 from typing import Dict, Any, Protocol, Tuple, List
 from pythermodb_settings.utils import measure_time
+# locals
+from .unit_tools import UnitAvailabilityFn, UnitConversionFn
 
 # locals
 
@@ -50,21 +52,6 @@ def _extract_input_symbols(inputs: Dict[str, Any]) -> List[str]:
         return []
 
 # SECTION: Check unit availability
-# NOTE: Protocol for unit availability function used by check_unit_availability
-
-
-class UnitAvailabilityFn(Protocol):
-    """
-    Callable unit availability interface used by ``check_unit_availability``.
-
-    The callable must accept a unit label and return a boolean indicating
-    whether the unit is recognized and supported for conversion. This allows
-    the input builder to verify that all required units are available before
-    attempting conversions.
-    """
-
-    def __call__(self, unit: str) -> bool:
-        ...
 
 # NOTE: check_unit_availability function
 
@@ -218,28 +205,6 @@ def validate_inputs_availability_and_units(
     except Exception as e:
         logger.error(f"Error validating inputs and units availability: {e}")
         return False, {}, False, {}
-
-# NOTE: Protocol for unit conversion function used by build_inputs
-
-
-class UnitConversionFn(Protocol):
-    """
-    Callable unit conversion interface used by ``build_inputs``.
-
-    The callable must accept a numeric value, a source unit, and a target unit,
-    then return the value converted to the target unit. Callers must ensure the
-    provided conversion function supports every unit pair that may appear in the
-    equation input definitions and runtime inputs.
-    """
-
-    def __call__(
-        self,
-        *,
-        value: float,
-        from_unit: str,
-        to_unit: str,
-    ) -> float:
-        ...
 
 # NOTE: build_inputs function
 
