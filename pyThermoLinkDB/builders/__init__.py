@@ -18,13 +18,13 @@ from .thermo_source_validator import (
 from .main import (
     build_thermo_model_source,
     build_custom_model_source,
-    build_thermo_source
+    build_thermo_source_hub
 )
 
 __all__ = [
     "build_thermo_model_source",
     "build_custom_model_source",
-    "build_thermo_source",
+    "build_thermo_source_hub",
     "ThermoModelSource",
     "ThermoCustomSource",
     "ThermoSourceHub",
