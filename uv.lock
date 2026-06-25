@@ -248,15 +248,15 @@ wheels = [
 
 [[package]]
 name = "pythermodb-settings"
-version = "0.2.13"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/27/3bb2af1366d6e0e07385928c550c4ce762b6bae02e336821883ede5a97f1/pythermodb_settings-0.2.13.tar.gz", hash = "sha256:88afece1121e204e7e6a7e1b115c68f9a15ba641abcc18599a132f0f56f44892", size = 25168, upload-time = "2026-06-16T20:02:24.943Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/15/bbf5669b57f3542e12b2306d06a1b0f2dc2c0e42289824ce06e3432ca3ad/pythermodb_settings-0.3.0.tar.gz", hash = "sha256:eaa388a824ba822ace45fdf02d17e7b19b67a0f8d5e328b3cd40d81424c57a6c", size = 26010, upload-time = "2026-06-25T05:27:52.372Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/18/d793adbb1d8797e1e2e255e2f71c1c69aa059d4dec97111d41823b94130d/pythermodb_settings-0.2.13-py3-none-any.whl", hash = "sha256:c456aed558202c2c783e1bb989e93da5942d3f3973d3f4bfc64d361b56ddfc3e", size = 29259, upload-time = "2026-06-16T20:02:23.913Z" },
+    { url = "https://files.pythonhosted.org/packages/73/0c/0a186a2e9b289eec07c27f8c1628d6d4cb3fa9e8f930cd9fa182fd94b277/pythermodb_settings-0.3.0-py3-none-any.whl", hash = "sha256:76b041d55590c1d32e7d5bfb269367e1386f43b6b18d942ca1c98bd3edba3299", size = 30537, upload-time = "2026-06-25T05:27:51.483Z" },
 ]
 
 [[package]]
