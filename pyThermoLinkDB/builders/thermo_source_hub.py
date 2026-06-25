@@ -1,6 +1,6 @@
 """Container for built model and custom thermodynamic sources."""
 
-from typing import List, Optional, Dict, Any, cast
+from typing import List, Optional, Dict, Any, cast, Literal
 
 from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
 
@@ -67,8 +67,34 @@ class ThermoSourceHub:
     # SECTION: Properties
     @property
     def thermo_source(self) -> Dict[str, Dict[str, Any]]:
-        """Return thermo source dictionary."""
+        """Return the built thermo source."""
         return self._thermo_source
+
+    # ! model source
+    @property
+    def thermo_model_source_hub(self) -> Dict[str, Any]:
+        """Return the built thermo source, containing model source entries."""
+        return self.thermo_source['model_source']
+
+    # ! custom source
+    @property
+    def thermo_custom_source_hub(self) -> Dict[str, Any]:
+        """return the built thermo source, containing custom source entries."""
+        return self.thermo_source['custom_source']
+
+    @property
+    def thermo_source_hub_types(
+        self
+    ) -> Literal["model_source", "custom_source", "both"]:
+        """Return the available thermo source hub types."""
+        if self.thermo_model_source is not None and self.thermo_custom_source is not None:
+            return "both"
+        elif self.thermo_model_source is not None:
+            return "model_source"
+        elif self.thermo_custom_source is not None:
+            return "custom_source"
+        else:
+            raise ValueError("No thermo source is available in the hub.")
 
     # SECTION: Thermo source configuration
     # ! to be called
