@@ -54,11 +54,12 @@ inputs = {
     "V": {"value": 0.001, "unit": "m3"},
     "Q": {"value": 500.0, "unit": "J"},
 }
+input_list = list(inputs.keys())
 
 # NOTE: check inputs availability
 inputs_available, inputs_availability_details = check_inputs_availability(
     eq_inputs,
-    inputs
+    input_list
 )
 # >> log
 print(inputs_available)
