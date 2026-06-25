@@ -2,10 +2,9 @@
 import logging
 import numpy as np
 from typing import List, Optional, Dict, Any, cast
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty
+from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
 # locals
 from ..models import ModelSource
-from ..models.component_models import ConstantResult
 from ..thermo import (
     mkdts,
     mkeqss,
@@ -520,7 +519,7 @@ class ThermoModelSource:
     # ! utility
     def _component_constant_values(
             self,
-            const_src: ConstantResult
+            const_src: CustomConstant
     ) -> tuple[Dict[str, Any], np.ndarray] | None:
         """Return component-aligned constant values when all component IDs exist."""
         component_ids = self.component_references.get('component_ids', [])
@@ -575,7 +574,7 @@ class ThermoModelSource:
         # iterate over thermo constants and set attributes
         for symbol in self.requested_constants:
             # > select constant source for the symbol
-            const_src: ConstantResult | None = constants_source.select(
+            const_src: CustomConstant | None = constants_source.select(
                 symbol=symbol
             )
 
