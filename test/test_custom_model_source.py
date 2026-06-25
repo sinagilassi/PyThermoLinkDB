@@ -1,8 +1,7 @@
 import numpy as np
-from pythermodb_settings.models import Component, CustomProperty
+from pythermodb_settings.models import Component, CustomProperty, CustomConstant
 
 from pyThermoLinkDB.builders import build_custom_model_source
-from pyThermoLinkDB.models import CustomConstant
 
 
 def test_custom_model_source_builds_component_data_and_constants():
