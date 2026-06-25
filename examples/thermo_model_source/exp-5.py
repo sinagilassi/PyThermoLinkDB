@@ -15,6 +15,7 @@ from rich import print
 from pathlib import Path
 import sys
 from typing import Dict
+import pycuc
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -75,6 +76,10 @@ if validation_reports["custom_source"] is not None:
 
 print("\n[bold cyan]Thermo source extraction[/bold cyan]")
 
+# SECTION: Unit conversion function
+# NOTE: create unit conversion function using pycuc
+unit_conversion_fn = pycuc.convert_from_to
+
 # NOTE: get MW source from custom source
 mw_source = thermo_source.get_comp_src(
     source_type="custom_source",
@@ -82,16 +87,20 @@ mw_source = thermo_source.get_comp_src(
 )
 # >> check
 if mw_source is not None:
-    # NOTE: map_prop returns a tuple of a component-keyed dictionary and a list of
-    mw_comp, mw_values = map_prop(
+    # NOTE: map_prop returns a component-keyed dictionary and ordered values.
+    mapped_mw = map_prop(
         data=mw_source,
         components=components,
         component_key="Formula-State",
+        output_unit="kg/mol",
+        unit_conversion_fn=unit_conversion_fn
     )
-    print("[bold]Mapped MW component data[/bold]")
-    print(mw_comp)
-    print("[bold]Mapped MW values in component order[/bold]")
-    print(mw_values)
+    if mapped_mw is not None:
+        mw_comp, mw_values = mapped_mw
+        print("[bold]Mapped MW component data[/bold]")
+        print(mw_comp)
+        print("[bold]Mapped MW values in component order[/bold]")
+        print(mw_values)
 
 # NOTE: get Cp_IG equation source from model source
 model_cp_ig_eq: Dict[str, EquationSourceCore] | None = thermo_source.get_comp_eq(
@@ -105,12 +114,14 @@ if model_cp_ig_eq is not None:
         "ethylene-g": model_cp_ig_eq["C2H4-g"],
         "ethane": model_cp_ig_eq["C2H6-g"],
     }
-    cp_ig_eq_comp, cp_ig_eq_values = map_eq(
+    mapped_cp_ig_eq = map_eq(
         data=cp_ig_eq_source,
         components=components,
         component_key="Formula-State",
     )
-    print("[bold]Mapped Cp_IG equation data[/bold]")
-    print(cp_ig_eq_comp)
-    print("[bold]Mapped Cp_IG equations in component order[/bold]")
-    print(cp_ig_eq_values)
+    if mapped_cp_ig_eq is not None:
+        cp_ig_eq_comp, cp_ig_eq_values = mapped_cp_ig_eq
+        print("[bold]Mapped Cp_IG equation data[/bold]")
+        print(cp_ig_eq_comp)
+        print("[bold]Mapped Cp_IG equations in component order[/bold]")
+        print(cp_ig_eq_values)
