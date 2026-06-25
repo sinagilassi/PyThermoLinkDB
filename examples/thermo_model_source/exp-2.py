@@ -86,7 +86,7 @@ print("\n[bold green]Thermo model source[/bold green]")
 print(thermo_model_src.thermo_src)
 
 # =======================================
-# â˜‘ï¸ BUILD MODEL SOURCE (no configuration)
+# ! BUILD MODEL SOURCE (no configuration)
 # =======================================
 # NOTE: build thermo model source
 thermo_model_src: ThermoModelSource | None = build_thermo_model_source(
