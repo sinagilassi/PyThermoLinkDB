@@ -5,10 +5,11 @@ from typing import List, Optional, Dict, Any
 from pythermodb_settings.models import (
     Component,
     ComponentKey,
-    CustomProperty
+    CustomProperty,
+    CustomConstant
 )
 # locals
-from ..models import CustomConstant, CustomSource
+from ..models import CustomSource
 from ..models.component_models import ConstantResult
 from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
