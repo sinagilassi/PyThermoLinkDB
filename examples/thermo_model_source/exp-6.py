@@ -1,5 +1,12 @@
 """Build a container holding model and custom thermodynamic sources."""
 
+from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from examples.thermo_model_source.model_source_1 import model_source
 from examples.thermo_model_source.custom_source_1 import custom_source
 from examples.thermo_model_source.components_1 import components
@@ -12,16 +19,13 @@ from pyThermoLinkDB.models import (
     SourceConfig,
     ThermoSourceHubConfig,
 )
-from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
+from pyThermoLinkDB.builders import (
+    ThermoSourceHub,
+    build_thermo_source_hub,
+)
 from rich import print
-from pathlib import Path
-import sys
 from typing import Dict
 import pycuc
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 thermo_source_hub: ThermoSourceHub | None = build_thermo_source_hub(
@@ -78,5 +82,20 @@ thermo_source_hub_config: ThermoSourceHubConfig = {
     "Tc": SourceConfig(),
     "Pc": SourceConfig(),
     "EnFo_IG": SourceConfig(),
-    "Cp_IG": SourceConfig()
+    "Cp_IG": SourceConfig(
+        property_source="custom_source",
+        equation_source="model_source",
+    ),
+    "R": SourceConfig(constants_source="model_source"),
 }
+
+print("\n[bold cyan]Thermo source registry[/bold cyan]")
+print(thermo_source_hub.register_thermo_source(
+    thermo_source_hub_config=thermo_source_hub_config,
+))
+
+print("\n[bold cyan]Thermo source registry with missing fields[/bold cyan]")
+print(thermo_source_hub.register_thermo_source(
+    thermo_source_hub_config=thermo_source_hub_config,
+    include_missing=True,
+))
