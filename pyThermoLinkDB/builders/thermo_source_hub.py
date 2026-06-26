@@ -112,6 +112,16 @@ class ThermoSourceHub:
         """Return available symbols from the custom source group."""
         return self._ensure_thermo_source_extractor().custom_symbols()
 
+    @property
+    def model_source_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return model-source symbols mapped to their modes."""
+        return self._ensure_thermo_source_extractor().model_symbol_modes()
+
+    @property
+    def custom_source_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return custom-source symbols mapped to their modes."""
+        return self._ensure_thermo_source_extractor().custom_symbol_modes()
+
     # SECTION: Thermo source configuration
     # ! to be called
     def _configure_thermo_source(self) -> None:
@@ -271,6 +281,34 @@ class ThermoSourceHub:
     def get_custom_source_symbols(self) -> List[str]:
         """Return available symbols from the custom source group."""
         return self._ensure_thermo_source_extractor().custom_symbols()
+
+    def available_symbol_modes(self, source_type: str) -> Dict[str, List[str]]:
+        """
+        Return available symbols mapped to their source modes.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            Dictionary keyed by symbol, with each value set to the symbol's
+            ``mode`` list.
+        """
+        return self._ensure_thermo_source_extractor().available_symbol_modes(
+            source_type=source_type
+        )
+
+    def get_model_source_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return model-source symbols mapped to their modes."""
+        return self._ensure_thermo_source_extractor().model_symbol_modes()
+
+    def get_custom_source_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return custom-source symbols mapped to their modes."""
+        return self._ensure_thermo_source_extractor().custom_symbol_modes()
 
     def get(
             self,
