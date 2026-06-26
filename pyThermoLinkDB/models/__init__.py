@@ -12,6 +12,12 @@ from .source import (
     CustomSourceConfig,
 )
 
+# thermo models
+from .thermo_models import (
+    SourceConfig,
+    ThermoSourceHubConfig,
+)
+
 
 __all__ = [
     "ComponentModelSource",
@@ -24,4 +30,6 @@ __all__ = [
     "CustomSource",
     "ModelSourceConfig",
     "CustomSourceConfig",
+    "SourceConfig",
+    "ThermoSourceHubConfig",
 ]
