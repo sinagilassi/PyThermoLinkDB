@@ -1,11 +1,13 @@
 from types import SimpleNamespace
+from typing import List, Literal, Optional
+from pythermodb_settings.models import Component
 
-from pyThermoLinkDB.builders import ThermoSource, build_thermo_source
+from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
 
 
 def make_container(model=None, custom=None, description="container"):
-    components = [SimpleNamespace(name="A"), SimpleNamespace(name="B")]
-    source = ThermoSource(
+    components = [Component(name="A"), Component(name="B")]
+    source = ThermoSourceHub(
         components=components,
         component_key="Formula-State",
         thermo_model_source=model,
@@ -65,6 +67,23 @@ def test_thermo_source_hub_types_raises_when_groups_are_empty():
             "Expected thermo_source_hub_types to raise ValueError.")
 
 
+def test_thermo_source_lists_available_symbols_by_source_group():
+    model = SimpleNamespace(thermo_src={
+        "Tc": {"value": 300.0},
+        "Cp_IG": {"eq": object()},
+    })
+    custom = SimpleNamespace(thermo_src={
+        "R": {"value": 8.314},
+    })
+
+    source, _ = make_container(model=model, custom=custom)
+
+    assert source.available_symbols("model_source") == ["Tc", "Cp_IG"]
+    assert source.available_props("custom_source") == ["R"]
+    assert source.model_symbols() == ["Tc", "Cp_IG"]
+    assert source.custom_symbols() == ["R"]
+
+
 def test_thermo_source_has_no_management_api():
     source, _ = make_container()
     removed_names = (
@@ -74,7 +93,6 @@ def test_thermo_source_has_no_management_api():
         "source",
         "refresh",
         "_extract_attributes",
-        "get",
         "resolve",
         "validate",
         "to_dict",
