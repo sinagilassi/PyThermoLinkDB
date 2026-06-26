@@ -8,6 +8,8 @@ from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
 from .thermo_source_validator import ValidationReport
 from .thermo_source_extractor import ThermoSourceExtractor
+from .thermo_source_registry import ThermoSourceRegistry
+from ..models import ThermoSourceHubConfig
 from ..thermo import EquationSourceCore
 
 
@@ -147,6 +149,39 @@ class ThermoSourceHub:
         if not hasattr(self, "thermo_source_extractor"):
             self._configure_thermo_source()
         return self.thermo_source_extractor
+
+    def register_thermo_source(
+            self,
+            thermo_source_hub_config: ThermoSourceHubConfig,
+            components: Optional[List[Component]] = None,
+            include_missing: bool = False,
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Register configured thermo source records and return the registry.
+
+        Parameters
+        ----------
+        thermo_source_hub_config : ThermoSourceHubConfig
+            Symbol-level source selection config.
+        components : Optional[List[Component]], optional
+            Optional component order for component-wise source entries.
+        include_missing : bool, optional
+            When ``True``, include configured fields that are unavailable as
+            ``None`` values.
+
+        Returns
+        -------
+        Dict[str, Dict[str, Any]]
+            Registry keyed by configured symbol.
+        """
+        self.thermo_source_registry = ThermoSourceRegistry(
+            thermo_src=self,
+            thermo_source_hub_config=thermo_source_hub_config,
+        )
+        return self.thermo_source_registry.extract_sources(
+            components=components,
+            include_missing=include_missing,
+        )
 
     # SECTION: validation
     # NOTE: validation methods return None if the source is not built
