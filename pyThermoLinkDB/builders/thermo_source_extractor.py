@@ -119,6 +119,51 @@ class ThermoSourceExtractor:
         """Return available symbols from the custom source group."""
         return self.available_symbols(source_type="custom_source")
 
+    def available_symbol_modes(self, source_type: str) -> Dict[str, List[str]]:
+        """
+        Return available symbols mapped to their source modes.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            Dictionary keyed by symbol, with each value set to the symbol's
+            ``mode`` list. Missing modes are returned as empty lists.
+        """
+        source: Dict[str, Any] | None = self.thermo_source.get(source_type)
+        if not isinstance(source, dict):
+            logger.warning(f"Thermo source '{source_type}' not found.")
+            return {}
+
+        symbol_modes: Dict[str, List[str]] = {}
+        for symbol, entry in source.items():
+            if not isinstance(entry, dict):
+                symbol_modes[symbol] = []
+                continue
+
+            mode = entry.get("mode")
+            if mode is None:
+                symbol_modes[symbol] = []
+            elif isinstance(mode, list):
+                symbol_modes[symbol] = mode
+            else:
+                symbol_modes[symbol] = [str(mode)]
+
+        return symbol_modes
+
+    def model_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return model-source symbols mapped to their modes."""
+        return self.available_symbol_modes(source_type="model_source")
+
+    def custom_symbol_modes(self) -> Dict[str, List[str]]:
+        """Return custom-source symbols mapped to their modes."""
+        return self.available_symbol_modes(source_type="custom_source")
+
     # ! get all
     def get(
             self,
