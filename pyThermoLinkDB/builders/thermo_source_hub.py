@@ -102,6 +102,16 @@ class ThermoSourceHub:
         else:
             raise ValueError("No thermo source is available in the hub.")
 
+    @property
+    def model_source_symbols(self) -> List[str]:
+        """Return available symbols from the model source group."""
+        return self._ensure_thermo_source_extractor().model_symbols()
+
+    @property
+    def custom_source_symbols(self) -> List[str]:
+        """Return available symbols from the custom source group."""
+        return self._ensure_thermo_source_extractor().custom_symbols()
+
     # SECTION: Thermo source configuration
     # ! to be called
     def _configure_thermo_source(self) -> None:
@@ -223,6 +233,45 @@ class ThermoSourceHub:
         )
 
     # SECTION: access to thermo source
+    def available_symbols(self, source_type: str) -> List[str]:
+        """
+        Return available symbol keys from a source group.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+
+        Returns
+        -------
+        List[str]
+            Symbols available in the requested source group.
+        """
+        return self._ensure_thermo_source_extractor().available_symbols(
+            source_type=source_type
+        )
+
+    def available_props(self, source_type: str) -> List[str]:
+        """
+        Return available property/symbol keys from a source group.
+
+        This is an alias for :meth:`available_symbols` for callers that use
+        ``props`` terminology for thermodynamic property symbols.
+        """
+        return self._ensure_thermo_source_extractor().available_props(
+            source_type=source_type
+        )
+
+    # NOTE: access to thermo source symbols
+    def get_model_source_symbols(self) -> List[str]:
+        """Return available symbols from the model source group."""
+        return self._ensure_thermo_source_extractor().model_symbols()
+
+    def get_custom_source_symbols(self) -> List[str]:
+        """Return available symbols from the custom source group."""
+        return self._ensure_thermo_source_extractor().custom_symbols()
+
     def get(
             self,
             source_name: str,
