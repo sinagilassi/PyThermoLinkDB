@@ -57,6 +57,11 @@ print(thermo_source_hub.thermo_source_hub_types)
 print("\n[bold cyan]Thermo source[/bold cyan]")
 print(thermo_source_hub.thermo_source)
 
+# NOTE: symbols
+print("\n[bold cyan]Thermo source symbols[/bold cyan]")
+print(thermo_source_hub.model_source_symbols)
+print(thermo_source_hub.custom_source_symbols)
+
 # SECTION: Validation checks
 
 print("\n[bold green]Validation quick checks[/bold green]")
