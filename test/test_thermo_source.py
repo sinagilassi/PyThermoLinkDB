@@ -80,8 +80,36 @@ def test_thermo_source_lists_available_symbols_by_source_group():
 
     assert source.available_symbols("model_source") == ["Tc", "Cp_IG"]
     assert source.available_props("custom_source") == ["R"]
-    assert source.model_symbols() == ["Tc", "Cp_IG"]
-    assert source.custom_symbols() == ["R"]
+    assert source.get_model_source_symbols() == ["Tc", "Cp_IG"]
+    assert source.get_custom_source_symbols() == ["R"]
+    assert source.model_source_symbols == ["Tc", "Cp_IG"]
+    assert source.custom_source_symbols == ["R"]
+
+
+def test_thermo_source_lists_available_symbol_modes_by_source_group():
+    model = SimpleNamespace(thermo_src={
+        "Tc": {"mode": ["data"]},
+        "Cp_IG": {"mode": ["data", "equation"]},
+        "MW": {},
+    })
+    custom = SimpleNamespace(thermo_src={
+        "R": {"mode": "constants"},
+    })
+
+    source, _ = make_container(model=model, custom=custom)
+
+    assert source.available_symbol_modes("model_source") == {
+        "Tc": ["data"],
+        "Cp_IG": ["data", "equation"],
+        "MW": [],
+    }
+    assert source.get_custom_source_symbol_modes() == {"R": ["constants"]}
+    assert source.model_source_symbol_modes == {
+        "Tc": ["data"],
+        "Cp_IG": ["data", "equation"],
+        "MW": [],
+    }
+    assert source.custom_source_symbol_modes == {"R": ["constants"]}
 
 
 def test_thermo_source_has_no_management_api():
