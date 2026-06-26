@@ -80,6 +80,45 @@ class ThermoSourceExtractor:
         return reordered
 
     # SECTION: access to thermo source
+    def available_symbols(self, source_type: str) -> List[str]:
+        """
+        Return available symbol keys for a thermo source group.
+
+        Parameters
+        ----------
+        source_type : str
+            Source group name. Expected values are ``"model_source"`` or
+            ``"custom_source"``.
+
+        Returns
+        -------
+        List[str]
+            Symbols available in the requested source group. An empty list is
+            returned when the source group is missing or empty.
+        """
+        source: Dict[str, Any] | None = self.thermo_source.get(source_type)
+        if not isinstance(source, dict):
+            logger.warning(f"Thermo source '{source_type}' not found.")
+            return []
+        return list(source)
+
+    def available_props(self, source_type: str) -> List[str]:
+        """
+        Return available property/symbol keys for a thermo source group.
+
+        This is an alias for :meth:`available_symbols` for callers that use
+        ``props`` terminology for thermodynamic property symbols.
+        """
+        return self.available_symbols(source_type=source_type)
+
+    def model_symbols(self) -> List[str]:
+        """Return available symbols from the model source group."""
+        return self.available_symbols(source_type="model_source")
+
+    def custom_symbols(self) -> List[str]:
+        """Return available symbols from the custom source group."""
+        return self.available_symbols(source_type="custom_source")
+
     # ! get all
     def get(
             self,
