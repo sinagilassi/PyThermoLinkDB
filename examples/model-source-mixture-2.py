@@ -240,4 +240,15 @@ print(model_source)
 # ☑️ ACCESS MIXTURE MODEL SOURCE
 # ====================================
 # NOTE: access a
-# a_src
+# inspect what mixtures are available
+print(model_source.data_source.keys())
+print(model_source.equation_source.keys())
+
+# access one mixture by its mixture id
+# names are sorted inside build_mixture_model_source()
+mixture_id = "ethanol|methane|methanol"
+mixture_data = model_source.data_source[mixture_id]
+mixture_equations = model_source.equation_source[mixture_id]
+
+print(mixture_data.keys())
+print(mixture_equations.keys())
