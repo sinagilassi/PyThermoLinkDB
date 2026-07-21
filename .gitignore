@@ -175,3 +175,6 @@ private
 # notes
 notes/
 notes
+
+# pickle files
+*.pkl
