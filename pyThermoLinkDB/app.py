@@ -570,7 +570,7 @@ def build_mixture_model_source(
 
         # SECTION: set ids
         # >> name states
-        name_states = [
+        name_states_original = [
             set_component_key(
                 component,
                 component_key='Name'
@@ -579,10 +579,10 @@ def build_mixture_model_source(
 
         # NOTE: sort name states alphabetically
         # >> sort alphabetically
-        name_states.sort()
+        name_states = sorted(name_states_original)
 
         # >> formula states
-        formula_states = [
+        formula_states_original = [
             set_component_key(
                 component,
                 component_key='Formula'
@@ -591,11 +591,13 @@ def build_mixture_model_source(
 
         # NOTE: sort formula states alphabetically
         # >> sort alphabetically
-        formula_states.sort()
+        formula_states = sorted(formula_states_original)
 
         # ! mixture name
+        mixture_name_original = delimiter.join(name_states_original)
         mixture_name = delimiter.join(name_states)
         # ! mixture formula
+        mixture_formula_original = delimiter.join(formula_states_original)
         mixture_formula = delimiter.join(formula_states)
 
         # NOTE: component rules
