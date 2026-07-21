@@ -235,3 +235,9 @@ model_source: ModelSource = build_model_source(
 )
 print(f"model_source:")
 print(model_source)
+
+# ====================================
+# ☑️ ACCESS MIXTURE MODEL SOURCE
+# ====================================
+# NOTE: access a
+# a_src
