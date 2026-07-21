@@ -576,6 +576,8 @@ def build_mixture_model_source(
                 component_key='Name'
             ) for component in components
         ]
+
+        # NOTE: sort name states alphabetically
         # >> sort alphabetically
         name_states.sort()
 
@@ -586,6 +588,8 @@ def build_mixture_model_source(
                 component_key='Formula'
             ) for component in components
         ]
+
+        # NOTE: sort formula states alphabetically
         # >> sort alphabetically
         formula_states.sort()
 
