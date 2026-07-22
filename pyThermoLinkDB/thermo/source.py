@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Optional, Any, Tuple, cast
 from pyThermoDB.core import TableEquation
 from pyThermoDB.models import EquationResult
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, MixtureKey
 from pythermodb_settings.utils import set_component_id, build_component_mapper, is_component_key
 from pyThermoLinkDB.models import ModelSource
 # local
@@ -96,10 +96,17 @@ class Source:
         'Formula-Name-State'
     ]
 
+    # ! mixture keys
+    _mixture_keys: List[MixtureKey] = [
+        'Name',
+        'Formula',
+    ]
+
     def __init__(
         self,
         model_source: Optional[ModelSource] = None,
         component_key: ComponentKey = 'Name-State',
+        mixture_key: MixtureKey = 'Name',
         **kwargs
     ):
         '''
@@ -113,11 +120,14 @@ class Source:
             The key to identify the component, default is 'Name-State'.
         component_keys : Optional[List[ComponentKey]]
             List of component keys to build the equation for, default is None which means it will use the component_key defined in the Source class.
+        mixture_key : Literal['Name', 'Formula']
+            The key to identify the mixture, default is 'Name'.
 
         '''
         # NOTE: set
         self.model_source: ModelSource | None = model_source
         self.component_key: ComponentKey = component_key
+        self.mixture_key: MixtureKey = mixture_key
 
         # NOTE: source
         if model_source is None:
