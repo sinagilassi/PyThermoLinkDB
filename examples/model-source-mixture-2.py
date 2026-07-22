@@ -225,6 +225,10 @@ if mixture_thermodb_ is None:
 # NOTE: build mixture model source
 mixture_model_source: MixtureModelSource = build_mixture_model_source(
     mixture_thermodb=mixture_thermodb_,
+    mixture_custom_ids=[
+        "ethanol~methane~methanol",
+        "methanol~ethanol~methane"
+    ]
 )
 print(f"mixture_model_source:")
 print(mixture_model_source)
