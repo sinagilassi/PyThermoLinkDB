@@ -472,6 +472,7 @@ def build_mixture_model_source(
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
     check_labels: bool = True,
+    mixture_custom_ids: Optional[List[str]] = None,
     mixture_key: Literal['Name', 'Formula'] = 'Name',
     delimiter: str = '|',
     overwrite_rules: bool = False,
@@ -488,6 +489,8 @@ def build_mixture_model_source(
         Rules to map data/equations in the thermodb to the model source.
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
+    mixture_custom_ids: Optional[List[str]], optional
+        List of custom ids for the mixture thermodb, by default None
     mixture_key: Literal['Name', 'Formula'], optional
         Key to use for mixture id, either 'Name' or 'Formula', by default '
     delimiter: str, optional
@@ -799,6 +802,25 @@ def build_mixture_model_source(
             else:
                 logger.warning(
                     f"Failed to add thermodb for mixture components: {mixture_formula}")
+
+        # NOTE: mixture custom id as id
+        if mixture_custom_ids:
+            for mixture_custom_id in mixture_custom_ids:
+                # >> add
+                add_thermodb_res_ = thermodb_hub.add_thermodb(
+                    name=mixture_custom_id,
+                    data=thermodb,
+                    rules=rule_,
+                )
+
+                # >> log
+                if verbose:
+                    if add_thermodb_res_:
+                        logger.info(
+                            f"Added thermodb for mixture components: {mixture_custom_id}")
+                    else:
+                        logger.warning(
+                            f"Failed to add thermodb for mixture components: {mixture_custom_id}")
 
         # SECTION: build mixture model source
         datasource, equationsource = thermodb_hub.build()
