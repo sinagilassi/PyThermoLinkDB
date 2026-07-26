@@ -1,10 +1,15 @@
 # import libs
 import logging
-from typing import List, Dict, Optional, Any, Tuple, cast
+from typing import List, Dict, Optional, Any, Tuple, Literal, cast
 from pyThermoDB.core import TableEquation, TableMatrixData
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component, ComponentKey, MixtureKey
-from pythermodb_settings.utils import set_component_id, build_component_mapper, is_component_key
+from pythermodb_settings.utils import (
+    set_component_id,
+    build_component_mapper,
+    is_component_key,
+    create_mixture_id
+)
 from pyThermoLinkDB.models import ModelSource
 # local
 from ..config.constants import DATASOURCE, EQUATIONSOURCE, CONSTANTSSOURCE
@@ -611,6 +616,210 @@ class Source:
             prop_name=prop_name
         )
 
+    # SECTION: matrix data extractor
+    def matrix_data_extractor(
+            self,
+            mixture_name: str,
+            prop_name: str
+    ) -> Optional[TableMatrixData]:
+        '''
+        Extract a TableMatrixData datasource entry.
+
+        Parameters
+        ----------
+        mixture_name : str
+            Mixture id registered in the datasource.
+        prop_name : str
+            Matrix property symbol registered in the datasource.
+
+        Returns
+        -------
+        TableMatrixData or None
+            The matrix datasource object when available.
+        '''
+        try:
+            if self.datasource is None:
+                return None
+
+            if mixture_name not in self.datasource.keys():
+                logger.error(
+                    f"Mixture '{mixture_name}' not found in model datasource.")
+                return None
+
+            mixture_datasource = self.datasource[mixture_name]
+            if prop_name not in mixture_datasource.keys():
+                logger.error(
+                    f"Matrix property '{prop_name}' not found in model datasource registered for {mixture_name}.")
+                return None
+
+            data = mixture_datasource[prop_name]
+            if not isinstance(data, TableMatrixData):
+                logger.error(
+                    f"Property '{prop_name}' for mixture '{mixture_name}' is not TableMatrixData.")
+                return None
+
+            return data
+        except Exception as e:
+            logger.error(f"Matrix data extraction failed: {e}")
+            return None
+
+    # SECTION: matrix data alias
+    def get_matrix(
+            self,
+            mixture_name: str,
+            prop_name: str
+    ) -> Optional[TableMatrixData]:
+        '''
+        Get a TableMatrixData datasource entry.
+
+        Alias for matrix_data_extractor.
+        '''
+        return self.matrix_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+
+    # SECTION: matrix ij extractor
+    def matrix_ij(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            property: str,
+            symbol_format: Literal['alphabetic', 'numeric'] = 'alphabetic',
+            message: Optional[str] = None,
+            **kwargs
+    ) -> Optional[Any]:
+        '''
+        Extract one i,j matrix value from a TableMatrixData datasource entry.
+        '''
+        matrix_data = self.matrix_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if matrix_data is None:
+            return None
+
+        return matrix_data.ij(
+            property=property,
+            symbol_format=symbol_format,
+            message=message,
+            **kwargs
+        )
+
+    # SECTION: matrix property extractor
+    def matrix_property(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            property: str,
+            component_names: List[str],
+            symbol_format: Literal['alphabetic', 'numeric'] = 'alphabetic',
+            component_key: ComponentKey = 'Name',
+            message: str = 'Get a component property from data table structure',
+            **kwargs
+    ) -> Optional[Any]:
+        '''
+        Extract an i,j matrix property using TableMatrixData.get_matrix_property.
+        '''
+        matrix_data = self.matrix_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if matrix_data is None:
+            return None
+
+        return matrix_data.get_matrix_property(
+            property=property,
+            component_names=component_names,
+            symbol_format=symbol_format,
+            message=message,
+            **kwargs
+        )
+
+    # SECTION: matrix builder
+    def mat(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            property_name: str,
+            component_names: List[str],
+            symbol_format: Literal['alphabetic', 'numeric'] = 'numeric',
+            component_key: ComponentKey = 'Name',
+    ) -> Optional[Any]:
+        '''
+        Build a numeric or labelled matrix using TableMatrixData.mat.
+        '''
+        matrix_data = self.matrix_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if matrix_data is None:
+            return None
+
+        try:
+            return matrix_data.mat(
+                property_name=property_name,
+                component_names=component_names,
+                symbol_format=symbol_format,
+                component_key=component_key,
+            )
+        except TypeError as e:
+            if "component_key" not in str(e):
+                raise
+            return matrix_data.mat(
+                property_name=property_name,
+                component_names=component_names,
+                symbol_format=symbol_format,
+            )
+
+    # SECTION: matrix builder with Component objects
+    def matX(
+            self,
+            prop_name: str,
+            property_name: str,
+            components: List[Component],
+            symbol_format: Literal['alphabetic', 'numeric'] = 'numeric',
+            component_key: ComponentKey = 'Name',
+            mixture_key: Optional[MixtureKey] = None,
+            delimiter: str = '|',
+    ) -> Optional[Any]:
+        '''
+        Build a numeric or labelled matrix using TableMatrixData.matX.
+
+        The mixture name is generated from components with create_mixture_id,
+        matching the sorted mixture id used by mixture model sources.
+        '''
+        selected_mixture_key = mixture_key if mixture_key is not None else self.mixture_key
+        mixture_name = create_mixture_id(
+            components=components,
+            mixture_key=selected_mixture_key,
+            delimiter=delimiter,
+            case=None
+        )
+
+        matrix_data = self.matrix_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if matrix_data is None:
+            return None
+
+        try:
+            return matrix_data.matX(
+                property_name=property_name,
+                components=components,
+                symbol_format=symbol_format,
+                component_key=component_key,
+            )
+        except TypeError as e:
+            if "component_key" not in str(e):
+                raise
+            return matrix_data.matX(
+                property_name=property_name,
+                components=components,
+                symbol_format=symbol_format,
+            )
+
     # SECTION: get property symbol alias
     def get_prop_symbol(
             self,
@@ -932,6 +1141,14 @@ class Source:
                         # check in component database
                         for key, value in component_datasource.items():
                             if symbol == key:
+                                if isinstance(value, TableMatrixData):
+                                    res[symbol] = {
+                                        'value': value,
+                                        'symbol': symbol,
+                                        'unit': unit
+                                    }
+                                    continue
+
                                 res[symbol] = {
                                     # ? taken from datasource
                                     'value': value['value'],
@@ -952,6 +1169,14 @@ class Source:
                     # ! check in component database
                     for key, value in component_datasource.items():
                         if symbol == key:
+                            if isinstance(value, TableMatrixData):
+                                res[symbol] = {
+                                    'value': value,
+                                    'symbol': symbol,
+                                    'unit': unit
+                                }
+                                continue
+
                             # update
                             # >> extract value
                             res[symbol] = {
