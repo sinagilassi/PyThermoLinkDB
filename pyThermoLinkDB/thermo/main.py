@@ -1,15 +1,16 @@
 # import libs
 import logging
-from typing import Optional
+from typing import Literal, Optional
 from pyThermoLinkDB.models import ModelSource
-from pythermodb_settings.models import Component, ComponentKey
-from pythermodb_settings.utils import set_component_id
+from pythermodb_settings.models import Component, ComponentKey, MixtureKey
+from pythermodb_settings.utils import create_mixture_id, set_component_id
 # local
 from ..thermo import Source
 from .equation_sources import EquationSourcesCore
 from .equation_source import EquationSourceCore
 from .data_source import DataSourceCore
 from .constants_source import ConstantsSourceCore
+from .matrixdata_source import MatrixDataSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -437,4 +438,195 @@ def mkct(
         )
     except Exception as e:
         logger.error(f"Error creating constants source: {e}")
+        return None
+
+
+# SECTION: Matrix data source maker
+def mkmdt(
+    components: list[Component],
+    model_source: ModelSource,
+    mixture_key: MixtureKey = 'Name',
+    extract_list: Optional[list[str]] = None,
+    delimiter: str = '|',
+    case: Optional[Literal['lower', 'upper']] = None,
+) -> Optional[MatrixDataSourceCore]:
+    """
+    Make a matrix data source core for a given mixture.
+
+    Parameters
+    ----------
+    components : list[Component]
+        Components used to generate the mixture id registered in the
+        datasource.
+    model_source : ModelSource
+        The source containing matrix data.
+    mixture_key : Literal
+        The key to identify mixtures in the source data. Defaults to 'Name'.
+    extract_list : Optional[list[str]]
+        A list of matrix property names to extract. Defaults to None, which
+        means all available matrix properties will be extracted.
+    delimiter : str
+        Delimiter used in mixture ids. Defaults to '|'.
+    case : Optional[Literal['lower', 'upper']]
+        Optional case normalization for the generated mixture id.
+
+    Returns
+    -------
+    Optional[MatrixDataSourceCore]
+        A MatrixDataSourceCore object if the matrix data source can be created;
+        otherwise, None.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+
+        if not isinstance(components, list):
+            logger.error("Invalid components provided.")
+            return None
+
+        if not components:
+            logger.error("Components must be provided.")
+            return None
+
+        if not all(isinstance(component, Component) for component in components):
+            logger.error("Invalid component found in components.")
+            return None
+
+        # SECTION: Prepare source
+        Source_ = Source(
+            model_source=model_source,
+            mixture_key=mixture_key,
+        )
+
+        # SECTION: Create MatrixDataSourceCore object
+        return MatrixDataSourceCore(
+            components=components,
+            source=Source_,
+            mixture_key=mixture_key,
+            extract_list=extract_list,
+            delimiter=delimiter,
+            case=case,
+        )
+    except Exception as e:
+        logger.error(f"Error creating matrix data source: {e}")
+        return None
+
+
+# NOTE: Multiple Matrix Data Source Maker
+def mkmdts(
+    mixture_components: list[list[Component]],
+    model_source: ModelSource,
+    mixture_key: MixtureKey = 'Name',
+    extract_list: Optional[list[str]] = None,
+    check_build: bool = False,
+    delimiter: str = '|',
+    case: Optional[Literal['lower', 'upper']] = None,
+) -> Optional[dict[str, MatrixDataSourceCore]]:
+    """
+    Make matrix data source cores for multiple mixtures.
+
+    Parameters
+    ----------
+    mixture_components : list[list[Component]]
+        List of mixtures, where each mixture is represented by a list of
+        Component objects used to generate the datasource mixture id.
+    model_source : ModelSource
+        The source containing matrix data.
+    mixture_key : Literal
+        The key to identify mixtures in the source data. Defaults to 'Name'.
+    extract_list : Optional[list[str]]
+        A list of matrix property names to extract for each mixture. Defaults
+        to None, which means all available matrix properties will be extracted.
+    check_build : bool
+        Whether to check the build status of each matrix data source after
+        creation. Defaults to False.
+    delimiter : str
+        Delimiter used in mixture ids. Defaults to '|'.
+    case : Optional[Literal['lower', 'upper']]
+        Optional case normalization for each generated mixture id.
+
+    Returns
+    -------
+    Optional[dict[str, MatrixDataSourceCore]]
+        A dictionary of MatrixDataSourceCore objects keyed by generated mixture
+        id; otherwise, None.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+
+        if not isinstance(mixture_components, list):
+            logger.error("Invalid mixture_components provided.")
+            return None
+
+        if not mixture_components:
+            logger.error("Mixture components must be provided.")
+            return None
+
+        for components in mixture_components:
+            if not isinstance(components, list) or not components:
+                logger.error("Each mixture must be a non-empty list of components.")
+                return None
+
+            if not all(isinstance(component, Component) for component in components):
+                logger.error("Invalid component found in mixture_components.")
+                return None
+
+        # SECTION: Prepare source
+        Source_ = Source(
+            model_source=model_source,
+            mixture_key=mixture_key,
+        )
+
+        # SECTION: Create MatrixDataSourceCore objects
+        res: dict[str, MatrixDataSourceCore] = {}
+
+        # iterate mixtures
+        for components in mixture_components:
+            # create matrix data source
+            matrix_data_source = MatrixDataSourceCore(
+                components=components,
+                source=Source_,
+                mixture_key=mixture_key,
+                extract_list=extract_list,
+                delimiter=delimiter,
+                case=case,
+            )
+
+            # set mixture id
+            mixture_id: str = create_mixture_id(
+                components=components,
+                mixture_key=mixture_key,
+                delimiter=delimiter,
+                case=case,
+            )
+
+            # check build status if requested
+            if check_build:
+                # build status
+                build_status: bool = matrix_data_source.build_status()
+
+                # >> check result
+                if not build_status:
+                    # build summary
+                    summary = matrix_data_source.summary()
+
+                    error_msg = """
+                    Failed to build matrix data source for mixture '{mixture_id}'.
+                    Build summary:
+                    {summary}
+                    """.format(mixture_id=mixture_id, summary=summary)
+
+                    logger.error(error_msg)
+
+            # add to results
+            res[mixture_id] = matrix_data_source
+
+        return res
+    except Exception as e:
+        logger.error(f"Error creating matrix data sources: {e}")
         return None
