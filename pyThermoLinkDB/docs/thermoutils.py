@@ -1,7 +1,7 @@
 # import libs
 import logging
 from typing import Dict, Optional
-from pyThermoDB.core import TableEquation
+from pyThermoDB.core import TableEquation, TableMatrixData
 # locals
 from ..models.source import DataSymbol, EquationSymbol, EqSym
 
@@ -53,6 +53,13 @@ class ThermoUtils:
                             'name': value.get('name', None) or value.get('property_name', None) or 'not found',
                             'symbol': value['symbol'],
                             'unit': value.get('unit', '-')
+                        }
+                    elif isinstance(value, TableMatrixData):
+                        data_symbols[comp][prop] = {
+                            'name': value.table_name,
+                            'symbol': prop,
+                            'unit': '-',
+                            'matrix_symbol': value.matrix_symbol
                         }
 
             # >> check
