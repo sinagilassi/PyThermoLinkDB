@@ -1,7 +1,7 @@
 # import libs
 import logging
 from typing import List, Dict, Optional, Any, Tuple, cast
-from pyThermoDB.core import TableEquation
+from pyThermoDB.core import TableEquation, TableMatrixData
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component, ComponentKey, MixtureKey
 from pythermodb_settings.utils import set_component_id, build_component_mapper, is_component_key
