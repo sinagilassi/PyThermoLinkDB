@@ -70,6 +70,11 @@ butyl_methyl_ether = Component(
 )
 
 components = [methanol, ethanol, butyl_methyl_ether]
+
+# alphabetically sort components by name for consistency
+components_sorted = sorted(components, key=lambda c: c.name)
+
+# create a list of component names for reference
 component_names = [component.name for component in components]
 
 # ====================================================
@@ -152,8 +157,6 @@ print("alpha ternary matrix:")
 alpha_matrix = source.mat(
     mixture_name=mixture_id,
     prop_name=matrix_prop,
-    property_name='alpha',
-    component_names=component_names,
     symbol_format='numeric',
 )
 print(alpha_matrix)
@@ -165,8 +168,6 @@ print("alpha ternary matrix as dict by formula-state:")
 print(source.mat(
     mixture_name=mixture_id,
     prop_name=matrix_prop,
-    property_name='alpha',
-    component_names=component_names,
     symbol_format='alphabetic',
     component_key='Formula',
 ))
@@ -174,7 +175,14 @@ print(source.mat(
 print("alpha ternary matrix using Component objects:")
 print(source.matX(
     prop_name=matrix_prop,
-    property_name='alpha',
     components=components,
     symbol_format='numeric',
+))
+
+print("alpha ternary matrix using Component objects (alphabetic):")
+print(source.matX(
+    prop_name=matrix_prop,
+    components=components_sorted,
+    symbol_format='numeric',
+    component_key='Formula',
 ))
