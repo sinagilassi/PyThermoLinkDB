@@ -14,6 +14,7 @@ from pyThermoLinkDB.models import ModelSource
 # local
 from ..config.constants import DATASOURCE, EQUATIONSOURCE, CONSTANTSSOURCE
 from ..models.component_models import ComponentEquationSource
+from ..utils.mixture_tools import canonicalize_mixture_name
 
 # logger
 logger = logging.getLogger(__name__)
@@ -741,14 +742,38 @@ class Source:
             self,
             mixture_name: str,
             prop_name: str,
-            property_name: str,
-            component_names: List[str],
             symbol_format: Literal['alphabetic', 'numeric'] = 'numeric',
             component_key: ComponentKey = 'Name',
+            delimiter: str = '|',
+            case: Literal['lower', 'upper'] | None = None
     ) -> Optional[Any]:
         '''
         Build a numeric or labelled matrix using TableMatrixData.mat.
+
+        Parameters
+        ----------
+        mixture_name : str
+            The mixture name registered in the datasource.
+        prop_name : str
+            The matrix property symbol registered in the datasource and the
+            property name to extract from the matrix.
+        symbol_format : Literal['alphabetic', 'numeric'], optional
+            The format of the symbols in the matrix, by default 'numeric'.
+        component_key : ComponentKey, optional
+            The key to identify the component, by default 'Name'.
+        delimiter : str, optional
+            The delimiter used to split the mixture name into component names, by default '|'.
+        case : Literal['lower', 'upper'] | None, optional
+            The case to apply to the component names, by default None (no case change).
         '''
+        # canonicalize mixture name
+        mixture_name, component_names = canonicalize_mixture_name(
+            mixture_name=mixture_name,
+            delimiter=delimiter,
+            case=case
+        )
+
+        # extract matrix data
         matrix_data = self.matrix_data_extractor(
             mixture_name=mixture_name,
             prop_name=prop_name
@@ -758,7 +783,7 @@ class Source:
 
         try:
             return matrix_data.mat(
-                property_name=property_name,
+                property_name=prop_name,
                 component_names=component_names,
                 symbol_format=symbol_format,
                 component_key=component_key,
@@ -767,7 +792,7 @@ class Source:
             if "component_key" not in str(e):
                 raise
             return matrix_data.mat(
-                property_name=property_name,
+                property_name=prop_name,
                 component_names=component_names,
                 symbol_format=symbol_format,
             )
@@ -776,25 +801,51 @@ class Source:
     def matX(
             self,
             prop_name: str,
-            property_name: str,
             components: List[Component],
             symbol_format: Literal['alphabetic', 'numeric'] = 'numeric',
             component_key: ComponentKey = 'Name',
             mixture_key: Optional[MixtureKey] = None,
             delimiter: str = '|',
+            case: Literal['lower', 'upper'] | None = None
     ) -> Optional[Any]:
         '''
         Build a numeric or labelled matrix using TableMatrixData.matX.
 
         The mixture name is generated from components with create_mixture_id,
         matching the sorted mixture id used by mixture model sources.
+
+        Parameters
+        ----------
+        prop_name : str
+            The matrix property symbol registered in the datasource and the
+            property name to extract from the matrix.
+        components : List[Component]
+            The list of Component objects used to generate the mixture name.
+        symbol_format : Literal['alphabetic', 'numeric'], optional
+            The format of the symbols in the matrix, by default 'numeric'.
+        component_key : ComponentKey, optional
+            The key to identify the component, by default 'Name'.
+        mixture_key : Optional[MixtureKey], optional
+            The key to identify the mixture, by default None (uses self.mixture_key).
+        delimiter : str, optional
+            The delimiter used to join the component names into a mixture name, by default '|'.
+        case : Literal['lower', 'upper'] | None, optional
+            The case to apply to the component names, by default None (no case change).
+
+        Returns
+        -------
+        Any or None
+            The matrix data extracted from the TableMatrixData object, or None if not found.
         '''
+        # determine mixture key to use
         selected_mixture_key = mixture_key if mixture_key is not None else self.mixture_key
+
+        # generate mixture name from components
         mixture_name = create_mixture_id(
             components=components,
             mixture_key=selected_mixture_key,
             delimiter=delimiter,
-            case=None
+            case=case
         )
 
         matrix_data = self.matrix_data_extractor(
@@ -806,7 +857,7 @@ class Source:
 
         try:
             return matrix_data.matX(
-                property_name=property_name,
+                property_name=prop_name,
                 components=components,
                 symbol_format=symbol_format,
                 component_key=component_key,
@@ -815,7 +866,7 @@ class Source:
             if "component_key" not in str(e):
                 raise
             return matrix_data.matX(
-                property_name=property_name,
+                property_name=prop_name,
                 components=components,
                 symbol_format=symbol_format,
             )
