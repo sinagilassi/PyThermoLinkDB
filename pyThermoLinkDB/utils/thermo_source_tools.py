@@ -1,6 +1,7 @@
 # import libs
+from __future__ import annotations
 import logging
-from typing import Dict, List, Optional, Tuple, TypeVar
+from typing import Dict, List, Optional, Tuple, TypeVar, TYPE_CHECKING
 from pythermodb_settings.models import (
     Component,
     ComponentKey,
@@ -12,8 +13,10 @@ from pythermodb_settings.utils import (
     measure_time,
 )
 # locals
-from ..thermo import EquationSourceCore
 from .unit_tools import UnitConversionFn
+
+if TYPE_CHECKING:
+    from ..thermo import EquationSourceCore
 
 # NOTE: set logger
 logger = logging.getLogger(__name__)
