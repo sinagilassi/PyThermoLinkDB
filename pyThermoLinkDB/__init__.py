@@ -22,9 +22,12 @@ from .thermo import (
     mkeqs,
     mkeqss,
     mkct,
+    mkmdt,
+    mkmdts,
     EquationSourceCore,
     EquationSourcesCore,
     DataSourceCore,
+    MatrixDataSourceCore,
     ConstantsSourceCore,
     Context
 )
@@ -51,9 +54,12 @@ __all__ = [
     "mkeqs",
     "mkeqss",
     "mkct",
+    "mkmdt",
+    "mkmdts",
     "EquationSourceCore",
     "EquationSourcesCore",
     "DataSourceCore",
+    "MatrixDataSourceCore",
     "ConstantsSourceCore",
     "Context"
 ]
