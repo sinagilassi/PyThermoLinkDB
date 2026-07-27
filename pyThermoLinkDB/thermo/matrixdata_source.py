@@ -56,6 +56,7 @@ class MatrixDataSourceCore:
         self.delimiter = delimiter
         self.case = case
 
+        # NOTE: create the mixture id from the components and mixture key
         mixture_name = create_mixture_id(
             components=self.components,
             mixture_key=self.mixture_key,
@@ -63,12 +64,14 @@ class MatrixDataSourceCore:
             case=case,
         )
 
-        self.mixture_name, self.component_names = canonicalize_mixture_name(
-            mixture_name=mixture_name,
-            delimiter=delimiter,
-            case=case,
-        )
+        # ! mixture name
+        self.mixture_name = mixture_name
+        # ! component names
+        self.component_names = [
+            component.strip() for component in mixture_name.split(delimiter)
+        ]
 
+        # NOTE: retrieve the matrix data for the mixture from the source
         self.matrix_data: Dict[str, TableMatrixData] = self._get_matrix_data()
 
         if (
@@ -87,6 +90,7 @@ class MatrixDataSourceCore:
 
                 extracted_props[prop_name] = self.matrix_data[prop_name]
 
+            # set the matrix data to the extracted properties
             self.matrix_data = extracted_props
 
         self._props: List[str] = self.all_props()
@@ -198,6 +202,7 @@ class MatrixDataSourceCore:
             no matrix data entries.
         """
         try:
+            # NOTE: extract the mixture data from the source's datasource dictionary
             mixture_data = self.source.datasource.get(self.mixture_name)
 
             if mixture_data is None:
