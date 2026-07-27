@@ -715,7 +715,6 @@ class Source:
             property: str,
             component_names: List[str],
             symbol_format: Literal['alphabetic', 'numeric'] = 'alphabetic',
-            component_key: ComponentKey = 'Name',
             message: str = 'Get a component property from data table structure',
             **kwargs
     ) -> Optional[Any]:
