@@ -1,4 +1,11 @@
 # import packages/modules
+from examples.sources.source_2 import (
+    butyl_methyl_ether,
+    ethanol,
+    methanol,
+    components,
+    model_source,
+)
 import os
 import sys
 
@@ -9,18 +16,12 @@ from pythermodb_settings.utils import create_mixture_id
 from rich import print
 
 # NOTE: allow running this file directly from examples/mks
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '..', '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # ! model source & components
-from examples.sources.source_2 import (
-    butyl_methyl_ether,
-    components,
-    ethanol,
-    methanol,
-    model_source,
-)
 
 
 # version
