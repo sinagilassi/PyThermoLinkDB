@@ -1,4 +1,18 @@
 # import packages/modules
+from rich import print
+from pythermodb_settings.utils import create_mixture_id
+from pythermodb_settings.models import MixtureKey
+from pyThermoLinkDB import MatrixDataSourceCore, mkmdt
+import pyThermoLinkDB as ptdblink
+import pyThermoDB as ptdb
+import numpy as np
+from examples.sources.source_2 import (
+    butyl_methyl_ether,
+    ethanol,
+    methanol,
+    components,
+    model_source,
+)
 import os
 import sys
 
@@ -8,21 +22,6 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from examples.sources.source_2 import (
-    butyl_methyl_ether,
-    ethanol,
-    methanol,
-    components,
-    model_source,
-)
-
-import numpy as np
-import pyThermoDB as ptdb
-import pyThermoLinkDB as ptdblink
-from pyThermoLinkDB import MatrixDataSourceCore, mkmdt
-from pythermodb_settings.models import MixtureKey
-from pythermodb_settings.utils import create_mixture_id
-from rich import print
 
 # ! model source & components
 
@@ -136,12 +135,15 @@ print(matrix_data_source.matX(
 # =======================================
 # MATRIX ORDER COMPARISON
 # =======================================
+
+
 def show_b_matrix_order(
     title: str,
     mixture_components_ordered: list,
 ) -> None:
     print(f"\n[bold cyan]{title}[/bold cyan]")
-    print(f"Component order: {[component.name for component in mixture_components_ordered]}")
+    print(
+        f"Component order: {[component.name for component in mixture_components_ordered]}")
 
     matrix_data_source_ordered: MatrixDataSourceCore | None = mkmdt(
         components=mixture_components_ordered,
@@ -162,6 +164,8 @@ def show_b_matrix_order(
         for component in mixture_components_ordered
     ]
 
+    # NOTE: b matrix using mat() and matX()
+    # ! numeric
     b_matrix = b_data.mat(
         property_name='b',
         component_names=component_names,
@@ -183,16 +187,43 @@ def show_b_matrix_order(
     print("\nb matrix from matX() using components order:")
     print(b_matrix_x)
 
+    # ! alphabetic
+    b_matrix_alpha = b_data.mat(
+        property_name='b',
+        component_names=component_names,
+        symbol_format='alphabetic',
+        component_key='Name',
+    )
+    print("\nb matrix from mat() using component_names order (alphabetic):")
+    print(b_matrix_alpha)
+
+    b_matrix_x_alpha = b_data.matX(
+        property_name='b',
+        components=mixture_components_ordered,
+        symbol_format='alphabetic',
+        component_key='Name',
+    )
+    print("\nb matrix from matX() using components order (alphabetic):")
+    print(b_matrix_x_alpha)
+
     if isinstance(b_matrix_x, np.ndarray):
         print(f"matX() b matrix shape: {b_matrix_x.shape}")
 
 
+# NOTE: case 1
 show_b_matrix_order(
     title='Order 1: methanol, ethanol, butyl-methyl-ether',
     mixture_components_ordered=[methanol, ethanol, butyl_methyl_ether],
 )
 
+# NOTE: case 2
 show_b_matrix_order(
     title='Order 2: butyl-methyl-ether, ethanol, methanol',
     mixture_components_ordered=[butyl_methyl_ether, ethanol, methanol],
+)
+
+# NOTE: case 3
+show_b_matrix_order(
+    title='Order 3: ethanol, methanol, butyl-methyl-ether',
+    mixture_components_ordered=[ethanol, methanol, butyl_methyl_ether],
 )
