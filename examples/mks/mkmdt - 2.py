@@ -135,34 +135,41 @@ def show_matrix_access(
         property='b | ethanol | methanol',
     ))
 
-    def matrix_value(row_component: Component, column_component: Component) -> float:
-        if row_component.name == column_component.name:
-            return 0.0
+    b_data = matrix_data_source.prop(name='b')
 
-        result = matrix_data_source.matrix_property(
-            name='b',
-            property='b_i_j',
-            component_names=[row_component.name, column_component.name],
-        )
+    if b_data is None:
+        raise ValueError("Missing b matrix data.")
 
-        if result is None:
-            raise ValueError(
-                "Missing b_i_j value for "
-                f"{row_component.name} -> {column_component.name}."
-            )
+    component_names = [
+        component.name
+        for component in components
+    ]
 
-        return result['value']
+    b_matrix = b_data.mat(
+        property_name='b',
+        component_names=component_names,
+        symbol_format='numeric',
+        component_key='Name',
+    )
 
-    b_matrix = np.array([
-        [
-            matrix_value(row_component, column_component)
-            for column_component in components
-        ]
-        for row_component in components
-    ])
-
-    print("\nNumeric b matrix using the component definition order:")
+    print("\nNumeric b matrix from mat() using component_names order:")
     print(b_matrix)
+
+    if isinstance(b_matrix, np.ndarray):
+        print(f"mat() b matrix shape: {b_matrix.shape}")
+
+    b_matrix_x = b_data.matX(
+        property_name='b',
+        components=components,
+        symbol_format='numeric',
+        component_key='Name',
+    )
+
+    print("\nNumeric b matrix from matX() using the supplied component order:")
+    print(b_matrix_x)
+
+    if isinstance(b_matrix_x, np.ndarray):
+        print(f"matX() b matrix shape: {b_matrix_x.shape}")
 
 
 # =======================================
