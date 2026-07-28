@@ -56,7 +56,7 @@ class MatrixDataSourceCore:
         self.delimiter = delimiter
         self.case = case
 
-        # NOTE: create the mixture id from the components and mixture key
+        # NOTE: create the mixture id from the components and mixture key (alphabetically sorted)
         mixture_name = create_mixture_id(
             components=self.components,
             mixture_key=self.mixture_key,
