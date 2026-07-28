@@ -179,10 +179,23 @@ print(source.matX(
     symbol_format='numeric',
 ))
 
+print(source.matX(
+    prop_name=matrix_prop,
+    components=components,
+    symbol_format='alphabetic',
+))
+
 print("alpha ternary matrix using Component objects (alphabetic):")
 print(source.matX(
     prop_name=matrix_prop,
     components=components_sorted,
     symbol_format='numeric',
+    component_key='Formula',
+))
+
+print(source.matX(
+    prop_name=matrix_prop,
+    components=components_sorted,
+    symbol_format='alphabetic',
     component_key='Formula',
 ))
