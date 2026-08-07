@@ -44,7 +44,7 @@ unit_conversion_fn = pycuc.convert_from_to
 unit_availability_fn = pycuc.is_unit_available
 
 # =======================================
-# âœ… inputs
+# 🟦 Inputs
 # =======================================
 # NOTE: universal inputs
 runtime_inputs = {
@@ -54,7 +54,6 @@ runtime_inputs = {
 }
 
 runtime_inputs_symbols = list(runtime_inputs.keys())
-
 
 # =======================================
 # BUILD MODEL SOURCE
