@@ -256,3 +256,48 @@ class CustomSourceConfig(BaseModel):
         default_factory=list,
         description="List of constants to be extracted from the custom source"
     )
+
+
+# SECTION: Custom matrix data model
+class CustomMatrixData(BaseModel):
+    '''
+    Custom matrix data model for input validation.
+
+    Attributes
+    ----------
+    name : str
+        Name of the matrix data, e.g., 'alpha', 'tau'.
+    description : str | None
+        Description of the matrix data, e.g., 'Interaction parameter matrix for binary mixture', 'Binary interaction parameter matrix for activity coefficient model'.
+    value : Any
+        Value of the matrix data, e.g., a 2D array, a list of lists, a dictionary of dictionaries, or any other data structure that represents the matrix data.
+    unit : str | None
+        Unit of the matrix data, e.g., 'J/mol.K', 'Pa', or None if the matrix data is dimensionless.
+    symbol : str
+        Symbol of the matrix data, e.g., 'alpha' for interaction parameter matrix, 'tau' for binary interaction parameter matrix.
+    '''
+    name: str = Field(
+        ...,
+        description="Name of the matrix data, e.g., 'alpha', 'tau'"
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Description of the matrix data, e.g., 'Interaction parameter matrix for binary mixture', 'Binary interaction parameter matrix for activity coefficient model'"
+    )
+    value: Any = Field(
+        ...,
+        description="Value of the matrix data, e.g., a 2D array, a list of lists, a dictionary of dictionaries, or any other data structure that represents the matrix data"
+    )
+    unit: Optional[str] = Field(
+        default=None,
+        description="Unit of the matrix data, e.g., 'J/mol.K', 'Pa', or None if the matrix data is dimensionless"
+    )
+    symbol: str = Field(
+        ...,
+        description="Symbol of the matrix data, e.g., 'alpha' for interaction parameter matrix, 'tau' for binary interaction parameter matrix"
+    )
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        extra="allow"
+    )
