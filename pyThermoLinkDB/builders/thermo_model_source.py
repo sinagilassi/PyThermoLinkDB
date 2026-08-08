@@ -2,7 +2,14 @@
 import logging
 import numpy as np
 from typing import List, Optional, Dict, Any, cast
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
+from pythermodb_settings.models import (
+    Component,
+    ComponentKey,
+    CustomProperty,
+    CustomConstant,
+    Mixture,
+    MixtureKey
+)
 # locals
 from ..models import ModelSource
 from ..thermo import (
@@ -13,7 +20,8 @@ from ..thermo import (
     EquationSourceCore,
     EquationSourcesCore,
     DataSourceCore,
-    ConstantsSourceCore
+    ConstantsSourceCore,
+    MatrixDataSourceCore,
 )
 from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
@@ -59,6 +67,8 @@ class ThermoModelSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
+            mixtures: List[Mixture],
+            mixture_key: MixtureKey,
             requested_data: List[str],
             requested_equations: List[str],
             requested_constants: List[str],
@@ -82,6 +92,14 @@ class ThermoModelSource:
                 - 'Formula': Use the component formula.
                 - 'Name-Formula-State': Use the name, formula, and state.
                 - 'Formula-Name-State': Use the formula, name, and state.
+        mixtures : List[Mixture]
+            List of mixtures involved in the thermodynamic model.
+        mixture_key : MixtureKey
+            The key to determine which identifier to use for mixtures.
+            Options are:
+                - 'Name': Use the mixture name.
+                - 'Formula': Use the mixture formula.
+                - 'Name-Formula': Use the mixture name and formula.
         requested_data : List[str]
             List of thermodynamic data symbol to be extracted from the model source.
         requested_equations : List[str]
@@ -96,6 +114,8 @@ class ThermoModelSource:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
+        self.mixtures = mixtures
+        self.mixture_key = mixture_key
         self.requested_data = requested_data
         self.requested_equations = requested_equations
         self.requested_constants = requested_constants
