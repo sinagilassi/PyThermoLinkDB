@@ -91,13 +91,13 @@ custom_matrix_data_2 = CustomMatrixData(
     name="custom_matrix_data_2",
     description="This is another custom matrix data for demonstration purposes.",
     value={
-        'CH4 | C2H6': 1.0,
+        'CH4|C2H6': 1.0,
         'CH4 | CH4': 0.0,
         'C2H6 | CH4': 0.5,
         'C2H6 | C2H6': 0.0
     },
     unit=None,
-    symbol="CUSTOM_MATRIX_2"
+    symbol="CH4|C2H6"
 )
 
 
