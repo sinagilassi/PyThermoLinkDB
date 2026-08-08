@@ -7,6 +7,7 @@ from pythermodb_settings.models import Component, ComponentKey, CustomProperty, 
 from ..models import ModelSource
 from ..thermo import (
     mkdts,
+    mkmdts,
     mkeqss,
     mkct,
     EquationSourceCore,
