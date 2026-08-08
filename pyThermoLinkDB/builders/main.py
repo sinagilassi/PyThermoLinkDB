@@ -1,7 +1,7 @@
 # import libs
 import logging
 from typing import List, Optional, Dict, Any
-from pythermodb_settings.models import Component, ComponentKey
+from pythermodb_settings.models import Component, ComponentKey, Mixture, MixtureKey
 from pythermodb_settings.utils import generate_component_references, measure_time
 # locals
 from .thermo_model_source import ThermoModelSource
@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 def build_thermo_model_source(
         components: List[Component],
         component_key: ComponentKey,
+        mixtures: List[Mixture],
+        mixture_key: MixtureKey,
         model_source: ModelSource,
         requested_data: Optional[List[str]] = None,
         requested_equations: Optional[List[str]] = None,
@@ -45,6 +47,14 @@ def build_thermo_model_source(
             - 'Formula': Use the component formula.
             - 'Name-Formula-State': Use the name, formula, and state.
             - 'Formula-Name-State': Use the formula, name, and state.
+    mixtures : List[Mixture]
+        List of mixtures involved in the thermodynamic model.
+    mixture_key : MixtureKey
+        The key to determine which identifier to use for mixtures.
+        Options are:
+            - 'Name': Use the mixture name.
+            - 'Formula': Use the mixture formula.
+            - 'Name-Formula': Use the mixture name and formula.
     model_source : ModelSource
         The source of the thermodynamic model data.
     requested_data : List[str] | None
@@ -86,6 +96,8 @@ def build_thermo_model_source(
         thermo_model_source = ThermoModelSource(
             components=components,
             component_key=component_key,
+            mixtures=mixtures,
+            mixture_key=mixture_key,
             requested_data=requested_data,
             requested_equations=requested_equations,
             requested_constants=requested_constants,
@@ -203,6 +215,8 @@ def build_custom_model_source(
 def build_thermo_source_hub(
         components: List[Component],
         component_key: ComponentKey,
+        mixtures: List[Mixture],
+        mixture_key: MixtureKey,
         model_source: Optional[ModelSource],
         custom_source: Optional[CustomSource],
         model_source_config: Optional[ModelSourceConfig],
@@ -227,6 +241,10 @@ def build_thermo_source_hub(
             - 'Formula': Use the component formula.
             - 'Name-Formula-State': Use the name, formula, and state.
             - 'Formula-Name-State': Use the formula, name, and state.
+    mixtures : List[Mixture]
+        List of mixtures involved in the thermodynamic model.
+    mixture_key : MixtureKey
+        The key to determine which identifier to use for mixtures.
     model_source : Optional[ModelSource]
         The source of the thermodynamic model data, or None if not applicable.
     custom_source : Optional[CustomSource]
@@ -277,6 +295,8 @@ def build_thermo_source_hub(
             thermo_model_source: Optional[ThermoModelSource] = build_thermo_model_source(
                 components=components,
                 component_key=component_key,
+                mixtures=mixtures,
+                mixture_key=mixture_key,
                 model_source=model_source,
                 requested_data=requested_data,
                 requested_equations=requested_equations,
