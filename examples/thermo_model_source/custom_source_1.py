@@ -1,6 +1,7 @@
 # import libs
 from pythermodb_settings.models import CustomProperty, CustomConstant
 # ! from pyThermoLinkDB
+from pyThermoLinkDB.models import CustomMatrixData
 
 
 # ====================================================
@@ -77,6 +78,29 @@ custom_3 = CustomConstant(
     symbol="THIRD_CONST"
 )
 
+# NOTE: custom matrix data for demonstration purposes
+custom_matrix_data_1 = CustomMatrixData(
+    name="custom_matrix_data",
+    description="This is a custom matrix data for demonstration purposes.",
+    value=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+    unit=None,
+    symbol="CUSTOM_MATRIX"
+)
+
+custom_matrix_data_2 = CustomMatrixData(
+    name="custom_matrix_data_2",
+    description="This is another custom matrix data for demonstration purposes.",
+    value={
+        'CH4 | C2H6': 1.0,
+        'CH4 | CH4': 0.0,
+        'C2H6 | CH4': 0.5,
+        'C2H6 | C2H6': 0.0
+    },
+    unit=None,
+    symbol="CUSTOM_MATRIX_2"
+)
+
+
 # ! thermo inputs
 custom_source = {
     "molecular_weight": molecular_weight,
@@ -89,4 +113,6 @@ custom_source = {
     "custom_constant_1": custom_1,
     "custom_constant_2": custom_2,
     "custom_constant_3": custom_3,
+    "custom_matrix_data_1": custom_matrix_data_1,
+    "custom_matrix_data_2": custom_matrix_data_2
 }
