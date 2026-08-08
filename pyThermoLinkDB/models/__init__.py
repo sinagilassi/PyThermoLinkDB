@@ -10,6 +10,7 @@ from .source import (
     CustomSource,
     ModelSourceConfig,
     CustomSourceConfig,
+    CustomMatrixData
 )
 
 # thermo models
@@ -32,4 +33,5 @@ __all__ = [
     "CustomSourceConfig",
     "SourceConfig",
     "ThermoSourceHubConfig",
+    "CustomMatrixData"
 ]
