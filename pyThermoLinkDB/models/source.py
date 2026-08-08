@@ -1,6 +1,6 @@
 # import libs
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Dict, Optional, List, Any, Literal
+from typing import Dict, Optional, List, Any, TypeAlias
 from pyThermoDB import (
     TableEquation,
     TableMatrixData,
@@ -12,8 +12,8 @@ from pythermodb_settings.models import Component
 
 
 # NOTE: data source
-PropertyData = Dict[str, str | float | int | bool | None]
-DataSource = Dict[str, PropertyData | TableMatrixData]
+PropertyData: TypeAlias = Dict[str, str | float | int | bool | None]
+DataSource: TypeAlias = Dict[str, PropertyData | TableMatrixData]
 # ?? defines as:
 #   'Tc': {
 #     'property_name': 'critical-temperature',
@@ -26,7 +26,7 @@ DataSource = Dict[str, PropertyData | TableMatrixData]
 # }
 
 # NOTE: equation source
-EquationSource = Dict[str, TableEquation | TableMatrixEquation]
+EquationSource: TypeAlias = Dict[str, TableEquation | TableMatrixEquation]
 # ?? defines as:
 #  {
 #     'Cp_IG': <pyThermoDB.core.tableequation.TableEquation object at 0x000002105ED8C990>,
@@ -36,7 +36,7 @@ EquationSource = Dict[str, TableEquation | TableMatrixEquation]
 # }
 
 # NOTE: constants source
-ConstantsSource = Dict[str, Any]
+ConstantsSource: TypeAlias = Dict[str, Any]
 # ?? defines as:
 # 'R': 8.31446261815324
 # 'dH_rxn': {
@@ -55,7 +55,7 @@ ConstantsSource = Dict[str, Any]
 
 # NOTE: symbol
 # ?? data source symbol
-DataSymbol = Dict[str, Dict[str, str]]
+DataSymbol: TypeAlias = Dict[str, Dict[str, str]]
 # ?? defines as:
 data_symbol_example = {
     'CO2-g': {
@@ -72,10 +72,10 @@ class EqSym(BaseModel):
     rets: Dict[str, Dict[str, str]]
 
 
-EquationSymbol = Dict[str, EqSym]
+EquationSymbol: TypeAlias = Dict[str, EqSym]
 
 # ?? constants source symbol
-ConstantsSymbol = Dict[str, Dict[str, Any]]
+ConstantsSymbol: TypeAlias = Dict[str, Dict[str, Any]]
 
 # SECTION: component model source
 
@@ -242,7 +242,7 @@ class ModelSourceConfig(BaseModel):
 
 
 # SECTION: Custom Source Model
-CustomSource = Dict[str, Any]
+CustomSource: TypeAlias = Dict[str, Any]
 
 # NOTE: custom source config
 
