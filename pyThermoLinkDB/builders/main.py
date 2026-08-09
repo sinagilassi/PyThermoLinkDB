@@ -2,7 +2,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 from pythermodb_settings.models import Component, ComponentKey, Mixture, MixtureKey
-from pythermodb_settings.utils import generate_component_references, measure_time
+from pythermodb_settings.utils import (
+    generate_component_references,
+    generate_mixture_references,
+    measure_time
+)
 # locals
 from .thermo_model_source import ThermoModelSource
 from .thermo_custom_source import ThermoCustomSource
@@ -20,12 +24,13 @@ logger = logging.getLogger(__name__)
 @measure_time
 def build_thermo_model_source(
         components: List[Component],
-        component_key: ComponentKey,
-        mixtures: List[Mixture],
-        mixture_key: MixtureKey,
         model_source: ModelSource,
+        component_key: ComponentKey = "Name-State",
+        mixtures: Optional[List[Mixture]] = None,
+        mixture_key: MixtureKey = "Name",
         requested_data: Optional[List[str]] = None,
         requested_equations: Optional[List[str]] = None,
+        requested_matrix_data: Optional[List[str]] = None,
         requested_constants: Optional[List[str]] = None,
         description: Optional[str] = None,
         **kwargs
@@ -37,8 +42,10 @@ def build_thermo_model_source(
     ----------
     components : List[Component]
         List of components involved in the thermodynamic model.
+    model_source : ModelSource
+        The source of the thermodynamic model data.
     component_key : ComponentKey
-        The key to determine which identifier to use.
+        The key to determine which identifier to use for components, the default is 'Name-State'.
         Options are:
             - 'Name-State': Use the name-state identifier.
             - 'Formula-State': Use the formula-state identifier.
@@ -47,20 +54,20 @@ def build_thermo_model_source(
             - 'Formula': Use the component formula.
             - 'Name-Formula-State': Use the name, formula, and state.
             - 'Formula-Name-State': Use the formula, name, and state.
-    mixtures : List[Mixture]
-        List of mixtures involved in the thermodynamic model.
+    mixtures : Optional[List[Mixture]]
+        Optional list of mixtures involved in the thermodynamic model. If None, no mixtures will be considered.
     mixture_key : MixtureKey
-        The key to determine which identifier to use for mixtures.
+        The key to determine which identifier to use for mixtures, the default is 'Name'.
         Options are:
             - 'Name': Use the mixture name.
             - 'Formula': Use the mixture formula.
             - 'Name-Formula': Use the mixture name and formula.
-    model_source : ModelSource
-        The source of the thermodynamic model data.
     requested_data : List[str] | None
         List of thermodynamic data symbols to be extracted from the model source, or None to extract all available data.
     requested_equations : List[str] | None
         List of thermodynamic equations symbols to be extracted from the model source, or None to extract all available equations.
+    requested_matrix_data : List[str] | None
+        List of thermodynamic matrix data symbols to be extracted from the model source, or None to extract all available matrix data.
     requested_constants : List[str] | None
         List of thermodynamic constants symbols to be extracted from the model source, or None to extract all available constants.
     description : Optional[str]
@@ -81,15 +88,26 @@ def build_thermo_model_source(
     - requested_data, requested_equations, and requested_constants will be normalized to empty lists if they are None, which means all available data/equations/constants will be extracted from the model source.
     """
     try:
-        # NOTE: generate component references
+        # NOTE: mixture config
+        mixtures = [] if mixtures is None else mixtures
+
+        # NOTE: generate references
+        # ! component references
         component_references = generate_component_references(
             components=components,
             component_key=component_key
         )
 
+        # ! mixture references
+        mixture_references = generate_mixture_references(
+            mixtures=mixtures,
+            mixture_key=mixture_key
+        )
+
         # NOTE: normalize
         requested_data = [] if requested_data is None else requested_data
         requested_equations = [] if requested_equations is None else requested_equations
+        requested_matrix_data = [] if requested_matrix_data is None else requested_matrix_data
         requested_constants = [] if requested_constants is None else requested_constants
 
         # NOTE: create ThermoModelSource instance
@@ -100,8 +118,10 @@ def build_thermo_model_source(
             mixture_key=mixture_key,
             requested_data=requested_data,
             requested_equations=requested_equations,
+            requested_matrix_data=requested_matrix_data,
             requested_constants=requested_constants,
             component_references=component_references,
+            mixture_references=mixture_references,
             description=description
         )
 
