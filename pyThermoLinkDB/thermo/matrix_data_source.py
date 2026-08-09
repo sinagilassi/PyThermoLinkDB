@@ -435,6 +435,25 @@ class MatrixDataSourceCore:
         """
         return self.prop(name=name)
 
+    def select(
+        self,
+        symbol: str,
+    ) -> Optional[TableMatrixData]:
+        """
+        Select a matrix property from the source.
+
+        Parameters
+        ----------
+        symbol : str
+            Matrix property symbol/name to retrieve.
+
+        Returns
+        -------
+        Optional[TableMatrixData]
+            The selected matrix data table, or ``None`` when unavailable.
+        """
+        return self.prop(name=symbol)
+
     def table(
         self,
         name: str,
