@@ -5,7 +5,7 @@ from .matrix_data_source import MatrixDataSourceCore
 from .constants_source import ConstantsSourceCore
 from .equation_sources import EquationSourcesCore
 from .matrix_data_sources import MatrixDataSourcesCore
-from .main import mkeqs, mkeqss, mkeq, mkdt, mkdts, mkct, mkmdt, mkmdts
+from .main import mkeqs, mkeqss, mkeq, mkdt, mkdts, mkct, mkmdt, mkmdts, mkmdtss
 from .context import Context
 
 __all__ = [
@@ -24,5 +24,6 @@ __all__ = [
     "mkct",
     "mkmdt",
     "mkmdts",
+    "mkmdtss",
     "Context"
 ]
