@@ -214,6 +214,7 @@ class ThermoModelSource:
         symbols = dict.fromkeys([
             *self.requested_data,
             *self.requested_equations,
+            *self.requested_matrix_data,
             *self.requested_constants,
         ])
 
@@ -331,6 +332,7 @@ class ThermoModelSource:
 
             # NOTE: set thermo equations in the thermo source
             # iterate over results and set in thermo source
+            # ! key: component ID; value: equation sources (EquationSourcesCore) for the component
             for key, value in res_.items():
                 self.thermo_equations_source[key] = value
 
@@ -383,6 +385,7 @@ class ThermoModelSource:
 
             # NOTE: set thermo mixture data in the thermo source
             # iterate over results and set in thermo source
+            # ! key: mixture ID; value: matrix data sources (MatrixDataSourcesCore) for the mixture
             for key, value in res_.items():
                 self.thermo_mixture_data_source[key] = value
 
