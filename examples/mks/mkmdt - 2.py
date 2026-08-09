@@ -15,10 +15,10 @@ from pythermodb_settings.models import Component
 from rich import print
 
 from pyThermoLinkDB import (  # noqa: E402
-    MatrixDataSourceCore,
+    MatrixDataSourcesCore,
     build_mixture_model_source,
     build_model_source,
-    mkmdt,
+    mkmdts,
 )
 from pyThermoLinkDB.models import MixtureModelSource, ModelSource  # noqa: E402
 
@@ -76,7 +76,7 @@ def show_matrix_access(
     print(f"\n[bold cyan]{title}[/bold cyan]")
     print(f"Component definition order: {[component.name for component in components]}")
 
-    matrix_data_source: MatrixDataSourceCore | None = mkmdt(
+    matrix_data_source: MatrixDataSourcesCore | None = mkmdts(
         components=components,
         model_source=model_source,
         mixture_key='Name',
@@ -140,14 +140,8 @@ def show_matrix_access(
     if b_data is None:
         raise ValueError("Missing b matrix data.")
 
-    component_names = [
-        component.name
-        for component in components
-    ]
-
-    b_matrix = b_data.mat(
-        property_name='b',
-        component_names=component_names,
+    b_matrix = matrix_data_source.mat(
+        name='b',
         symbol_format='numeric',
         component_key='Name',
     )
@@ -158,8 +152,8 @@ def show_matrix_access(
     if isinstance(b_matrix, np.ndarray):
         print(f"mat() b matrix shape: {b_matrix.shape}")
 
-    b_matrix_x = b_data.matX(
-        property_name='b',
+    b_matrix_x = matrix_data_source.matX(
+        name='b',
         components=components,
         symbol_format='numeric',
         component_key='Name',

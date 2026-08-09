@@ -9,7 +9,7 @@ if PROJECT_ROOT not in sys.path:
 
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
-from pyThermoLinkDB import MatrixDataSourcesCore, mkmdts
+from pyThermoLinkDB import MatrixDataSourcesCore, mkmdtss
 from pythermodb_settings.utils import create_mixture_id
 from rich import print
 
@@ -36,34 +36,51 @@ print(datasource.keys())
 print(equationsource.keys())
 
 # =======================================
-# MAKE MATRIX DATA SOURCE DIRECTLY
+# MAKE MATRIX DATA SOURCES DIRECTLY
 # =======================================
 mixture_key = 'Name'
 
-mixture_components = [methanol, ethanol, butyl_methyl_ether]
+mixture_components = [
+    [methanol, ethanol, butyl_methyl_ether],
+]
 
-matrix_data_source: MatrixDataSourcesCore | None = mkmdts(
-    components=mixture_components,
+matrix_data_sources: dict[str, MatrixDataSourcesCore] | None = mkmdtss(
+    mixture_components=mixture_components,
     model_source=model_source,
     mixture_key=mixture_key,
     extract_list=['alpha', 'b'],
+    check_build=True,
 )
 
-print(matrix_data_source)
+print(matrix_data_sources)
 
 # >> check
-if matrix_data_source is None:
-    raise ValueError("Failed to create matrix data source.")
+if matrix_data_sources is None:
+    raise ValueError("Failed to create matrix data sources.")
 
 # =======================================
 # DICTIONARY KEYS
 # =======================================
-mixture_id = create_mixture_id(
-    components=mixture_components,
-    mixture_key=mixture_key,
-)
+mixture_ids = [
+    create_mixture_id(
+        components=components,
+        mixture_key=mixture_key,
+    )
+    for components in mixture_components
+]
 
-print(mixture_id)
+print(mixture_ids)
+print(matrix_data_sources.keys())
+
+# =======================================
+# ACCESS MATRIX DATA SOURCE
+# =======================================
+mixture_id = mixture_ids[0]
+matrix_data_source: MatrixDataSourcesCore | None = matrix_data_sources.get(mixture_id)
+
+if matrix_data_source is None:
+    raise ValueError(f"Failed to select matrix data source for {mixture_id}.")
+
 print(matrix_data_source.mixture_name)
 print(matrix_data_source.component_names)
 
@@ -101,15 +118,7 @@ print(matrix_data_source.ij(
 ))
 
 print(matrix_data_source.matrix_property(
-    name='alpha',
-    property='alpha_i_j',
-    component_names=['methanol', 'ethanol'],
+    name='b',
+    property='b_i_j',
+    component_names=['methanol', 'butyl-methyl-ether'],
 ))
-
-# =======================================
-# MATRIX BUILDERS
-# =======================================
-print(
-    "Matrix builders are skipped for this ternary pair-row table; "
-    "use table(), structure(), ij(), or matrix_property() for this source."
-)
