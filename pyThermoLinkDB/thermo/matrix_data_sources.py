@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, List, Literal, Optional, cast
 
-from pythermodb_settings.models import Component, Mixture, MixtureKey
+from pythermodb_settings.models import Component, MixtureKey
 from pythermodb_settings.utils import create_mixture_id
 
 from . import Source
@@ -23,7 +23,7 @@ class MatrixDataSourcesCore:
 
     def __init__(
         self,
-        mixture_components: List[Mixture],
+        mixture_components: List[List[Component]],
         source: Source,
         mixture_key: MixtureKey = 'Name',
         extract_list: Optional[list[str]] = None,
@@ -36,7 +36,7 @@ class MatrixDataSourcesCore:
 
         Parameters
         ----------
-        mixture_components : List[Mixture]
+        mixture_components : List[List[Component]]
             List of mixtures, where each mixture is a non-empty list of
             ``Component`` objects.
         source : Source
