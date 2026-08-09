@@ -19,6 +19,10 @@ from .thermo_models import (
     ThermoSourceHubConfig,
 )
 
+from .mixture_models import (
+    MixtureMatrixDataSource,
+)
+
 
 __all__ = [
     "ComponentModelSource",
@@ -33,5 +37,6 @@ __all__ = [
     "CustomSourceConfig",
     "SourceConfig",
     "ThermoSourceHubConfig",
-    "CustomMatrixData"
+    "CustomMatrixData",
+    "MixtureMatrixDataSource"
 ]
