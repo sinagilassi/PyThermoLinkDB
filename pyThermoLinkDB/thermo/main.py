@@ -443,6 +443,8 @@ def mkct(
 
 
 # SECTION: Matrix data source maker
+
+# NOTE: Single Matrix Data Source Maker
 def mkmdt(
     components: list[Component],
     model_source: ModelSource,
