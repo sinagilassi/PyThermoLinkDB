@@ -22,6 +22,7 @@ from ..thermo import (
     DataSourceCore,
     ConstantsSourceCore,
     MatrixDataSourceCore,
+    MatrixDataSourcesCore
 )
 from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
@@ -135,7 +136,7 @@ class ThermoModelSource:
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
         # ! key: mixture ID; value: matrix data source for the mixture
-        self.thermo_mixture_data_source: Dict[str, MatrixDataSourceCore] = {}
+        self.thermo_mixture_data_source: Dict[str, MatrixDataSourcesCore] = {}
         # ! constants source (not component-specific)
         self.thermo_constants_source: ConstantsSourceCore | None = None
 
