@@ -865,6 +865,18 @@ class Source:
         if matrix_data is None:
             return None
 
+        if not hasattr(matrix_data, "matX"):
+            component_names = [
+                set_component_id(component, cast(ComponentKey, component_key))
+                for component in components
+            ]
+
+            return matrix_data.mat(
+                property_name=prop_name,
+                component_names=component_names,
+                symbol_format=symbol_format,
+            )
+
         try:
             return matrix_data.matX(
                 property_name=prop_name,
