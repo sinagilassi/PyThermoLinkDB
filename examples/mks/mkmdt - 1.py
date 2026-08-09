@@ -8,6 +8,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # import packages/modules
+import numpy as np
 import pyThermoDB as ptdb
 import pyThermoLinkDB as ptdblink
 from examples.sources.source_2 import (
@@ -108,7 +109,22 @@ print(matrix_data_source.matrix_property(
 # =======================================
 # MATRIX BUILDERS
 # =======================================
-print(
-    "Matrix builders are skipped for this ternary pair-row table; "
-    "use table(), structure(), ij(), or matrix_property() for this source."
+alpha_matrix = matrix_data_source.mat(
+    symbol_format='numeric',
+    component_key='Name',
 )
+print(alpha_matrix)
+
+if isinstance(alpha_matrix, np.ndarray):
+    print(f"alpha matrix shape: {alpha_matrix.shape}")
+
+print(matrix_data_source.mat(
+    symbol_format='alphabetic',
+    component_key='Name',
+))
+
+print(matrix_data_source.matX(
+    components=mixture_components,
+    symbol_format='numeric',
+    component_key='Name',
+))
