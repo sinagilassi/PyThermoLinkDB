@@ -1,93 +1,53 @@
 from pythermodb_settings.models import Component
 
+import pyThermoLinkDB
 from pyThermoLinkDB.models import ModelSource
-from pyThermoLinkDB.thermo.main import mkmdts
-from pyThermoLinkDB.thermo.matrix_data_sources import MatrixDataSourcesCore
+from pyThermoLinkDB.thermo.main import mkmdt, mkmdts, mkmdtss
 
 
-class FakeSource:
-    pass
+def test_mkmdt_builds_one_property_matrix_data_source(monkeypatch):
+    built_args = []
 
+    class FakeMatrixDataSourceCore:
+        def __init__(self, **kwargs):
+            built_args.append(kwargs)
 
-class FakeMatrixDataSource:
-    def __init__(
-        self,
-        components,
-        source,
-        mixture_key="Name",
-        extract_list=None,
-        delimiter="|",
-        case=None,
-    ):
-        self.components = components
-        self.source = source
-        self.mixture_key = mixture_key
-        self.extract_list = extract_list
-        self.delimiter = delimiter
-        self.case = case
-
-    def summary(self):
-        return {
-            prop_name: prop_name != "missing"
-            for prop_name in self.extract_list or []
-        }
-
-    def build_status(self):
-        return all(self.summary().values())
-
-
-def test_matrix_data_sources_builds_sources_by_mixture_id(monkeypatch):
     monkeypatch.setattr(
-        "pyThermoLinkDB.thermo.matrix_data_sources.MatrixDataSourceCore",
-        FakeMatrixDataSource,
+        "pyThermoLinkDB.thermo.main.MatrixDataSourceCore",
+        FakeMatrixDataSourceCore,
     )
     methanol = Component(name="methanol", formula="CH3OH", state="l")
     ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    model_source = ModelSource(data_source={}, equation_source={})
 
-    matrix_sources = MatrixDataSourcesCore(
-        mixture_components=[[methanol, ethanol]],
-        source=FakeSource(),
+    matrix_source = mkmdt(
+        name="alpha",
+        components=[methanol, ethanol],
+        model_source=model_source,
         mixture_key="Name",
-        extract_list=["alpha"],
     )
 
-    assert list(matrix_sources.src) == ["ethanol|methanol"]
-    assert matrix_sources.summary() == {
-        "ethanol|methanol": {"alpha": True},
-    }
-    assert matrix_sources.build_status() is True
-    assert matrix_sources.select("ethanol|methanol") is matrix_sources.src["ethanol|methanol"]
+    assert matrix_source is not None
+    assert isinstance(matrix_source, FakeMatrixDataSourceCore)
+    assert built_args[0]["prop_name"] == "alpha"
+    assert built_args[0]["components"] == [methanol, ethanol]
 
 
-def test_matrix_data_sources_reports_failed_property(monkeypatch):
-    monkeypatch.setattr(
-        "pyThermoLinkDB.thermo.matrix_data_sources.MatrixDataSourceCore",
-        FakeMatrixDataSource,
-    )
+def test_mkmdt_returns_none_for_invalid_inputs():
+    model_source = ModelSource(data_source={}, equation_source={})
     methanol = Component(name="methanol", formula="CH3OH", state="l")
-    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
 
-    matrix_sources = MatrixDataSourcesCore(
-        mixture_components=[[methanol, ethanol]],
-        source=FakeSource(),
-        mixture_key="Name",
-        extract_list=["alpha", "missing"],
-    )
-
-    assert matrix_sources.summary() == {
-        "ethanol|methanol": {"alpha": True, "missing": False},
-    }
-    assert matrix_sources.build_status() is False
-    assert matrix_sources.select("unknown") is None
+    assert mkmdt(name="", components=[methanol], model_source=model_source) is None
+    assert mkmdt(name="alpha", components=[], model_source=model_source) is None
+    assert mkmdt(name="alpha", components=[methanol], model_source=None) is None
 
 
-def test_mkmdts_returns_matrix_data_sources_core_by_mixture_id(monkeypatch):
+def test_mkmdts_returns_matrix_data_sources_core(monkeypatch):
     built_args = []
 
     class FakeMatrixDataSourcesCore:
         def __init__(self, **kwargs):
             built_args.append(kwargs)
-            self.mixture_ids = ["ethanol|methanol"]
 
     monkeypatch.setattr(
         "pyThermoLinkDB.thermo.main.MatrixDataSourcesCore",
@@ -98,6 +58,41 @@ def test_mkmdts_returns_matrix_data_sources_core_by_mixture_id(monkeypatch):
     model_source = ModelSource(data_source={}, equation_source={})
 
     matrix_sources = mkmdts(
+        components=[methanol, ethanol],
+        model_source=model_source,
+        mixture_key="Name",
+        extract_list=["alpha", "b"],
+    )
+
+    assert matrix_sources is not None
+    assert isinstance(matrix_sources, FakeMatrixDataSourcesCore)
+    assert built_args[0]["components"] == [methanol, ethanol]
+    assert built_args[0]["extract_list"] == ["alpha", "b"]
+
+
+def test_mkmdtss_returns_matrix_data_sources_core_by_mixture_id(monkeypatch):
+    built_args = []
+
+    class FakeMatrixDataSourcesCore:
+        def __init__(self, **kwargs):
+            built_args.append(kwargs)
+            self.mixture_name = "ethanol|methanol"
+
+        def build_status(self):
+            return True
+
+        def summary(self):
+            return {"alpha": True}
+
+    monkeypatch.setattr(
+        "pyThermoLinkDB.thermo.main.MatrixDataSourcesCore",
+        FakeMatrixDataSourcesCore,
+    )
+    methanol = Component(name="methanol", formula="CH3OH", state="l")
+    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    model_source = ModelSource(data_source={}, equation_source={})
+
+    matrix_sources = mkmdtss(
         mixture_components=[[methanol, ethanol]],
         model_source=model_source,
         mixture_key="Name",
@@ -111,6 +106,9 @@ def test_mkmdts_returns_matrix_data_sources_core_by_mixture_id(monkeypatch):
         matrix_sources["ethanol|methanol"],
         FakeMatrixDataSourcesCore,
     )
-    assert built_args[0]["mixture_components"] == [[methanol, ethanol]]
+    assert built_args[0]["components"] == [methanol, ethanol]
     assert built_args[0]["extract_list"] == ["alpha"]
-    assert built_args[0]["check_build"] is True
+
+
+def test_mkmdtss_is_publicly_exported():
+    assert pyThermoLinkDB.mkmdtss is mkmdtss
