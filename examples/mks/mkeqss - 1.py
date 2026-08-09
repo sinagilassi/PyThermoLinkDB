@@ -102,7 +102,7 @@ print(equation_sources.keys())
 # ACCESS ETHANOL EQUATION SOURCES
 # =======================================
 ethanol_id = set_component_id(C2H5OH, component_key)
-ethanol_eqs = equation_sources[ethanol_id]
+ethanol_eqs: EquationSourcesCore = equation_sources[ethanol_id]
 
 # ! all available equations
 print(ethanol_eqs.all_available_equations())
