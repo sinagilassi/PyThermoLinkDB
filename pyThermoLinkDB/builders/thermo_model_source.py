@@ -14,7 +14,7 @@ from pythermodb_settings.models import (
 from ..models import ModelSource
 from ..thermo import (
     mkdts,
-    mkmdts,
+    mkmdtss,
     mkeqss,
     mkct,
     EquationSourceCore,
@@ -354,7 +354,7 @@ class ThermoModelSource:
 
         Notes
         -----
-        - The mkmdts function is used to build the mixture data sources in which each mixture is processed to extract the requested matrix data symbols.
+        - The mkmdtss function is used to build the mixture data sources in which each mixture is processed to extract the requested matrix data symbols.
         - Each mixture record (MatrixDataSourceCore) is stored in the thermo_mixture_data_source dictionary with the mixture ID as the key.
         """
         try:
@@ -365,7 +365,7 @@ class ThermoModelSource:
                 )
 
             # NOTE: build thermo mixture data
-            res_: Dict[str, MatrixDataSourcesCore] | None = mkmdts(
+            res_: Dict[str, MatrixDataSourcesCore] | None = mkmdtss(
                 mixture_components=self.mixtures,
                 model_source=model_source,
                 mixture_key=cast(MixtureKey, self.mixture_key),
@@ -499,7 +499,7 @@ class ThermoModelSource:
             self.requested_matrix_data: list[str] = list(dict.fromkeys(
                 matrix_data
                 for mixture_data_source in self.thermo_mixture_data_source.values()
-                for matrix_data in mixture_data_source.
+                for matrix_data in mixture_data_source.props
             ))
 
         # ? constants source
@@ -649,26 +649,24 @@ class ThermoModelSource:
         # iterate over thermo mixture data and set attributes
         for symbol in self.requested_matrix_data:
             # > extract matrix data for the symbol for all mixtures
-            md_src: Dict[str, MatrixDataSourceCore] = {}
+            md_src: Dict[str, Any] = {}
 
             # iterate over mixtures and extract matrix data source for the symbol
             for mix_id in mixture_ids:
-                res_md: MatrixDataSourceCore | None = self.thermo_mixture_data_source.get(
+                res_md: MatrixDataSourcesCore | None = self.thermo_mixture_data_source.get(
                     mix_id, None
                 )
 
                 # >> check
                 if res_md is not None:
                     # >>> select matrix data source for the symbol for the mixture
-                    res_md_: CustomProperty | None = res_md.select(
+                    res_md_: MatrixDataSourceCore | None = res_md.select(
                         symbol=symbol
                     )
 
                     # >> check
                     if res_md_ is not None:
                         md_src[mix_id] = res_md_
-                        md_mix[mix_id] = float(res_md_.value)
-                        md_value.append(float(res_md_.value))
                     else:
                         logger.warning(
                             f"Matrix data source for symbol '{symbol}' not found for mixture '{mix_id}'."
@@ -681,8 +679,6 @@ class ThermoModelSource:
             # ! >>> set thermo source entry for the symbol
             self.thermo_src[symbol].update({
                 "src": md_src,
-                "comp": md_mix,
-                "value": np.array(md_value),
             })
             self._add_symbol_mode(symbol, "matrix_data")
 
