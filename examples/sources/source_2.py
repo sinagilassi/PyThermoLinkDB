@@ -15,8 +15,9 @@ from pyThermoLinkDB.models import MixtureModelSource, ModelSource
 from pyThermoLinkDB.thermo import Source
 
 # ! version
-print(ptdb.__version__)
-print(ptdblink.__version__)
+if __name__ == "__main__":
+    print(ptdb.__version__)
+    print(ptdblink.__version__)
 
 # ====================================================
 # SECTION: REFERENCE CONTENT
@@ -86,7 +87,8 @@ mixture_thermodb: MixtureThermoDB | None = build_mixture_thermodb_from_reference
     component_key='Name-State',
     mixture_key='Name',
 )
-print(f"mixture_thermodb: {type(mixture_thermodb)}")
+if __name__ == "__main__":
+    print(f"mixture_thermodb: {type(mixture_thermodb)}")
 
 if mixture_thermodb is None:
     raise ValueError("mixture_thermodb is None")
@@ -107,95 +109,97 @@ source = Source(
     model_source=model_source,
     mixture_key='Name',
 )
-print(source)
 
-print("Data symbols:")
-print(source.data_symbols)
+if __name__ == "__main__":
+    print(source)
 
-# NOTE: build_mixture_model_source sorts mixture ids alphabetically.
-mixture_id = 'butyl-methyl-ether|ethanol|methanol'
-matrix_prop = 'alpha'
+    print("Data symbols:")
+    print(source.data_symbols)
 
-# ====================================================
-# SECTION: TABLE MATRIX DATA ACCESS
-# ====================================================
-matrix_data = source.get_matrix(
-    mixture_name=mixture_id,
-    prop_name=matrix_prop,
-)
+    # NOTE: build_mixture_model_source sorts mixture ids alphabetically.
+    mixture_id = 'butyl-methyl-ether|ethanol|methanol'
+    matrix_prop = 'alpha'
 
-if not isinstance(matrix_data, TableMatrixData):
-    raise TypeError(
-        f"Expected TableMatrixData for {mixture_id}:{matrix_prop}, got {type(matrix_data)}"
+    # ====================================================
+    # SECTION: TABLE MATRIX DATA ACCESS
+    # ====================================================
+    matrix_data = source.get_matrix(
+        mixture_name=mixture_id,
+        prop_name=matrix_prop,
     )
 
-print("Matrix symbols:")
-print(matrix_data.matrix_symbol)
+    if not isinstance(matrix_data, TableMatrixData):
+        raise TypeError(
+            f"Expected TableMatrixData for {mixture_id}:{matrix_prop}, got {type(matrix_data)}"
+        )
 
-print("Matrix data structure:")
-print(matrix_data.matrix_data_structure())
+    print("Matrix symbols:")
+    print(matrix_data.matrix_symbol)
 
-print("Matrix table - selected:")
-print(matrix_data.get_matrix_table(mode='selected'))
+    print("Matrix data structure:")
+    print(matrix_data.matrix_data_structure())
 
-print("alpha methanol -> ethanol:")
-print(source.matrix_ij(
-    mixture_name=mixture_id,
-    prop_name=matrix_prop,
-    property='alpha | methanol | ethanol',
-))
+    print("Matrix table - selected:")
+    print(matrix_data.get_matrix_table(mode='selected'))
 
-print("b methanol -> butyl-methyl-ether:")
-print(source.matrix_property(
-    mixture_name=mixture_id,
-    prop_name='b',
-    property='b_i_j',
-    component_names=['methanol', 'butyl-methyl-ether'],
-))
+    print("alpha methanol -> ethanol:")
+    print(source.matrix_ij(
+        mixture_name=mixture_id,
+        prop_name=matrix_prop,
+        property='alpha | methanol | ethanol',
+    ))
 
-print("alpha ternary matrix:")
-alpha_matrix = source.mat(
-    mixture_name=mixture_id,
-    prop_name=matrix_prop,
-    symbol_format='numeric',
-)
-print(alpha_matrix)
+    print("b methanol -> butyl-methyl-ether:")
+    print(source.matrix_property(
+        mixture_name=mixture_id,
+        prop_name='b',
+        property='b_i_j',
+        component_names=['methanol', 'butyl-methyl-ether'],
+    ))
 
-if isinstance(alpha_matrix, np.ndarray):
-    print(f"alpha ternary matrix shape: {alpha_matrix.shape}")
+    print("alpha ternary matrix:")
+    alpha_matrix = source.mat(
+        mixture_name=mixture_id,
+        prop_name=matrix_prop,
+        symbol_format='numeric',
+    )
+    print(alpha_matrix)
 
-print("alpha ternary matrix as dict by formula-state:")
-print(source.mat(
-    mixture_name=mixture_id,
-    prop_name=matrix_prop,
-    symbol_format='alphabetic',
-    component_key='Formula',
-))
+    if isinstance(alpha_matrix, np.ndarray):
+        print(f"alpha ternary matrix shape: {alpha_matrix.shape}")
 
-print("alpha ternary matrix using Component objects:")
-print(source.matX(
-    prop_name=matrix_prop,
-    components=components,
-    symbol_format='numeric',
-))
+    print("alpha ternary matrix as dict by formula-state:")
+    print(source.mat(
+        mixture_name=mixture_id,
+        prop_name=matrix_prop,
+        symbol_format='alphabetic',
+        component_key='Formula',
+    ))
 
-print(source.matX(
-    prop_name=matrix_prop,
-    components=components,
-    symbol_format='alphabetic',
-))
+    print("alpha ternary matrix using Component objects:")
+    print(source.matX(
+        prop_name=matrix_prop,
+        components=components,
+        symbol_format='numeric',
+    ))
 
-print("alpha ternary matrix using Component objects (alphabetic):")
-print(source.matX(
-    prop_name=matrix_prop,
-    components=components_sorted,
-    symbol_format='numeric',
-    component_key='Formula',
-))
+    print(source.matX(
+        prop_name=matrix_prop,
+        components=components,
+        symbol_format='alphabetic',
+    ))
 
-print(source.matX(
-    prop_name=matrix_prop,
-    components=components_sorted,
-    symbol_format='alphabetic',
-    component_key='Formula',
-))
+    print("alpha ternary matrix using Component objects (alphabetic):")
+    print(source.matX(
+        prop_name=matrix_prop,
+        components=components_sorted,
+        symbol_format='numeric',
+        component_key='Formula',
+    ))
+
+    print(source.matX(
+        prop_name=matrix_prop,
+        components=components_sorted,
+        symbol_format='alphabetic',
+        component_key='Formula',
+    ))
