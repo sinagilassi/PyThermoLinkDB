@@ -1,7 +1,7 @@
 # import libs
 import logging
 import numpy as np
-from typing import List, Optional, Dict, Any, cast
+from typing import List, Optional, Dict, Any, cast, Literal
 from pythermodb_settings.models import (
     Component,
     ComponentKey,
@@ -76,7 +76,8 @@ class ThermoModelSource:
             requested_constants: List[str],
             component_references: Dict[str, Any],
             mixture_references: Dict[str, Any],
-            description: Optional[str] = None
+            description: Optional[str] = None,
+            **kwargs
     ):
         """
         Initialize the ThermoModelSource.
@@ -117,6 +118,12 @@ class ThermoModelSource:
             Dictionary containing references for each mixture.
         description : Optional[str]
             Optional description of the thermodynamic model source.
+        **kwargs
+            Additional keyword arguments for future extensions.
+            - delimiter : str, optional
+                Delimiter used for parsing mixture data symbols. Default is '-'.
+            - case: Literal['upper', 'lower'], optional
+                Case transformation for symbols. Default is None (no transformation).
         """
         # NOTE: set attributes
         self.components = components
@@ -130,6 +137,14 @@ class ThermoModelSource:
         self.component_references = component_references
         self.mixture_references = mixture_references
         self.description = description
+
+        # >>> additional kwargs
+        # ? delimiter
+        self.delimiter: str = kwargs.get('delimiter', '-')
+        # ? case
+        self.case: Optional[
+            Literal['lower', 'upper']
+        ] = kwargs.get('case', None)
 
         # NOTE: thermo source
         # ! key: component ID; value: data/equation source for the component
@@ -220,6 +235,7 @@ class ThermoModelSource:
         for mode, requested_symbols in (
             ("data", self.requested_data),
             ("equation", self.requested_equations),
+            ("matrix_data", self.requested_matrix_data),
             ("constants", self.requested_constants),
         ):
             if symbol in requested_symbols:
@@ -349,11 +365,13 @@ class ThermoModelSource:
                 )
 
             # NOTE: build thermo mixture data
-            res_: Dict[str, MatrixDataSourceCore] | None = mkmdts(
+            res_: Dict[str, MatrixDataSourcesCore] | None = mkmdts(
                 mixture_components=self.mixtures,
                 model_source=model_source,
                 mixture_key=cast(MixtureKey, self.mixture_key),
                 extract_list=self.requested_matrix_data,
+                delimiter=self.delimiter,
+
             )
 
             # >> check if thermo mixture data was successfully built
@@ -481,7 +499,7 @@ class ThermoModelSource:
             self.requested_matrix_data: list[str] = list(dict.fromkeys(
                 matrix_data
                 for mixture_data_source in self.thermo_mixture_data_source.values()
-                for matrix_data in mixture_data_source.props
+                for matrix_data in mixture_data_source.
             ))
 
         # ? constants source
