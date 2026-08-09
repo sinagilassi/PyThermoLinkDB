@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict, List, Literal, Optional, cast
 
 from pyThermoDB.core import TableMatrixData
-from pythermodb_settings.models import Component, ComponentKey, MixtureKey
+from pythermodb_settings.models import Component, ComponentKey, Mixture, MixtureKey
 from pythermodb_settings.utils import create_mixture_id
 
 from . import Source
@@ -24,7 +24,7 @@ class MatrixDataSourcesCore:
 
     def __init__(
         self,
-        components: List[Component],
+        components: Mixture,
         source: Source,
         mixture_key: Optional[MixtureKey] = None,
         extract_list: Optional[list[str]] = None,
@@ -36,7 +36,7 @@ class MatrixDataSourcesCore:
 
         Parameters
         ----------
-        components : List[Component]
+        components : Mixture
             Components used to generate the mixture id registered in the
             datasource.
         source : Source
@@ -59,7 +59,8 @@ class MatrixDataSourcesCore:
         self.delimiter = delimiter
         self.case = case
 
-        # NOTE: create the mixture id from the components and mixture key (alphabetically sorted)
+        # NOTE: create the mixture id from the components and mixture key
+        # ! alphabetically sorted
         mixture_name = create_mixture_id(
             components=self.components,
             mixture_key=self.mixture_key,
@@ -521,7 +522,7 @@ class MatrixDataSourcesCore:
             The matrix table, typically a pandas ``DataFrame``, or ``None`` if
             the property cannot be retrieved.
         """
-        matrix_data = self.prop(name=name)
+        matrix_data: TableMatrixData | None = self.prop(name=name)
         if matrix_data is None:
             return None
 
@@ -549,7 +550,7 @@ class MatrixDataSourcesCore:
             The matrix data structure, typically a pandas ``DataFrame``, or
             ``None`` if the property cannot be retrieved.
         """
-        matrix_data = self.prop(name=name)
+        matrix_data: TableMatrixData | None = self.prop(name=name)
         if matrix_data is None:
             return None
 
