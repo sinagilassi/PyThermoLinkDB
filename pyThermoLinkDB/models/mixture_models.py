@@ -1,0 +1,46 @@
+# import libs
+from typing import Any, List
+from pydantic import BaseModel, ConfigDict, Field
+from pyThermoDB.core import TableMatrixData
+
+
+# NOTE: Mixture-level model used by MatrixDataSourceCore for one selected property.
+class MixtureMatrixDataSource(BaseModel):
+    '''
+    Matrix Data Builder Result Model
+
+    Attributes
+    ----------
+    source: TableMatrixData
+        The matrix data source from PyThermoDB.
+    matrix_symbol: List[Any]
+        Matrix data symbols available in the table.
+    mixture_name: str
+        Resolved mixture id used to retrieve the table.
+    prop_name: str
+        Matrix property name selected from the mixture source.
+    component_names: List[str]
+        Component names parsed from the resolved mixture id.
+    '''
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    source: TableMatrixData = Field(
+        ...,
+        description="The matrix data source."
+    )
+    matrix_symbol: List[Any] = Field(
+        default_factory=list,
+        description="The matrix data symbols."
+    )
+    mixture_name: str = Field(
+        ...,
+        description="The resolved mixture name."
+    )
+    prop_name: str = Field(
+        ...,
+        description="The selected matrix property name."
+    )
+    component_names: List[str] = Field(
+        default_factory=list,
+        description="The component names in the resolved mixture."
+    )
