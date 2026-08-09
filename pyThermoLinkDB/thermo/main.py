@@ -3,13 +3,14 @@ import logging
 from typing import Literal, Optional
 from pyThermoLinkDB.models import ModelSource
 from pythermodb_settings.models import Component, ComponentKey, MixtureKey
-from pythermodb_settings.utils import create_mixture_id, set_component_id
+from pythermodb_settings.utils import set_component_id
 # local
 from ..thermo import Source
 from .equation_sources import EquationSourcesCore
 from .equation_source import EquationSourceCore
 from .data_source import DataSourceCore
 from .constants_source import ConstantsSourceCore
+from .matrix_data_sources import MatrixDataSourcesCore
 from .matrix_data_source import MatrixDataSourceCore
 
 # NOTE: Logger
@@ -523,7 +524,7 @@ def mkmdts(
     check_build: bool = False,
     delimiter: str = '|',
     case: Optional[Literal['lower', 'upper']] = None,
-) -> Optional[dict[str, MatrixDataSourceCore]]:
+) -> Optional[dict[str, MatrixDataSourcesCore]]:
     """
     Make matrix data source cores for multiple mixtures.
 
@@ -549,8 +550,8 @@ def mkmdts(
 
     Returns
     -------
-    Optional[dict[str, MatrixDataSourceCore]]
-        A dictionary of MatrixDataSourceCore objects keyed by generated mixture
+    Optional[dict[str, MatrixDataSourcesCore]]
+        A dictionary of MatrixDataSourcesCore objects keyed by generated mixture
         id; otherwise, None.
     """
     try:
@@ -583,49 +584,27 @@ def mkmdts(
             mixture_key=mixture_key,
         )
 
-        # SECTION: Create MatrixDataSourceCore objects
-        res: dict[str, MatrixDataSourceCore] = {}
+        # SECTION: Create MatrixDataSourcesCore objects
+        res: dict[str, MatrixDataSourcesCore] = {}
 
         # iterate mixtures
         for components in mixture_components:
-            # create matrix data source
-            matrix_data_source = MatrixDataSourceCore(
-                components=components,
+            matrix_data_sources = MatrixDataSourcesCore(
+                mixture_components=[components],
                 source=Source_,
                 mixture_key=mixture_key,
                 extract_list=extract_list,
+                check_build=check_build,
                 delimiter=delimiter,
                 case=case,
             )
 
-            # set mixture id
-            mixture_id: str = create_mixture_id(
-                components=components,
-                mixture_key=mixture_key,
-                delimiter=delimiter,
-                case=case,
-            )
-
-            # check build status if requested
-            if check_build:
-                # build status
-                build_status: bool = matrix_data_source.build_status()
-
-                # >> check result
-                if not build_status:
-                    # build summary
-                    summary = matrix_data_source.summary()
-
-                    error_msg = """
-                    Failed to build matrix data source for mixture '{mixture_id}'.
-                    Build summary:
-                    {summary}
-                    """.format(mixture_id=mixture_id, summary=summary)
-
-                    logger.error(error_msg)
+            if not matrix_data_sources.mixture_ids:
+                logger.error("Failed to build matrix data source ids.")
+                return None
 
             # add to results
-            res[mixture_id] = matrix_data_source
+            res[matrix_data_sources.mixture_ids[0]] = matrix_data_sources
 
         return res
     except Exception as e:
