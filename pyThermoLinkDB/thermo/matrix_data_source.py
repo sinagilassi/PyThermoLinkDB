@@ -2,7 +2,7 @@ import logging
 from typing import Any, Dict, List, Literal, Optional, cast
 
 from pyThermoDB.core import TableMatrixData
-from pythermodb_settings.models import Component, ComponentKey, MixtureKey
+from pythermodb_settings.models import Component, Mixture, ComponentKey, MixtureKey
 from pythermodb_settings.utils import create_mixture_id
 
 from . import Source
@@ -17,7 +17,7 @@ class MatrixDataSourceCore:
     """
     Core adapter for retrieving one matrix data property for one mixture.
 
-    This mirrors ``EquationSourceCore``: the requested matrix property name is
+    The requested matrix property name is
     bound during initialization, and access methods operate on that bound
     property without requiring callers to pass the name repeatedly.
     """
@@ -25,7 +25,7 @@ class MatrixDataSourceCore:
     def __init__(
         self,
         prop_name: str,
-        components: List[Component],
+        components: Mixture,
         source: Source,
         mixture_key: Optional[MixtureKey] = None,
         delimiter: str = '|',
@@ -40,20 +40,29 @@ class MatrixDataSourceCore:
         self.case = case
 
         # NOTE: resolve the mixture id once so all accessors use the same key.
+        # ! sorted alphabetically by default
         self.mixture_name = create_mixture_id(
             components=self.components,
             mixture_key=self.mixture_key,
             delimiter=delimiter,
             case=case,
         )
+
+        # parse component names from the resolved mixture id for later use
         self.component_names = [
             component.strip() for component in self.mixture_name.split(delimiter)
         ]
 
-        #! selected matrix data source model
+        # ! selected matrix data source model
         self.matrix_data = self._get_matrix_data()
-        self.mixture_matrix_data_source = self._get_matrix_data_source()
-        self._matrix = (
+
+        # ? retrieve the selected matrix data source for the requested property
+        self.mixture_matrix_data_source: Optional[
+            MixtureMatrixDataSource
+        ] = self._get_matrix_data_source()
+
+        # ? store the selected matrix data source for the requested property
+        self._matrix: TableMatrixData | None = (
             self.mixture_matrix_data_source.source
             if self.mixture_matrix_data_source is not None
             else None
@@ -77,13 +86,22 @@ class MatrixDataSourceCore:
 
     # SECTION: Source model builder
     def _get_matrix_data_source(self) -> Optional[MixtureMatrixDataSource]:
-        matrix_source = self.matrix_data.get(self.prop_name)
+        """
+        Retrieve the matrix data source for the requested property name, matrix_data holds all available properties for the resolved mixture.
+        """
+        # ! retrieve the property from the matrix data dictionary
+        matrix_source:  TableMatrixData | None = self.matrix_data.get(
+            self.prop_name
+        )
+
+        # >> check
         if matrix_source is None:
             logger.warning(
                 f"Matrix property '{self.prop_name}' not found for mixture '{self.mixture_name}'."
             )
             return None
 
+        # get the matrix symbols from the source
         matrix_symbol = matrix_source.matrix_symbol
         if not isinstance(matrix_symbol, list):
             matrix_symbol = []
@@ -122,12 +140,15 @@ class MatrixDataSourceCore:
         return self.status
 
     # SECTION: Raw matrix access
+    # ! prop
     def prop(self) -> Optional[TableMatrixData]:
         return self._matrix
 
+    # ! matrix
     def matrix(self) -> Optional[TableMatrixData]:
         return self.prop()
 
+    # ! get_matrix
     def get_matrix(self) -> Optional[TableMatrixData]:
         return self.prop()
 
@@ -142,7 +163,8 @@ class MatrixDataSourceCore:
         try:
             return self._matrix.get_matrix_table(mode=mode)
         except Exception as e:
-            logger.error(f"Error retrieving matrix table '{self.prop_name}': {e}")
+            logger.error(
+                f"Error retrieving matrix table '{self.prop_name}': {e}")
             return None
 
     def structure(self) -> Optional[Any]:
@@ -152,7 +174,8 @@ class MatrixDataSourceCore:
         try:
             return self._matrix.matrix_data_structure()
         except Exception as e:
-            logger.error(f"Error retrieving matrix structure '{self.prop_name}': {e}")
+            logger.error(
+                f"Error retrieving matrix structure '{self.prop_name}': {e}")
             return None
 
     # SECTION: Cell/property lookup
@@ -226,22 +249,30 @@ class MatrixDataSourceCore:
 
     # SECTION: Internal source extraction
     def _get_matrix_data(self) -> Dict[str, TableMatrixData]:
+        """
+        Retrieve the matrix data dictionary for the resolved mixture name. All properties available for that mixture are returned as a dictionary of property name to TableMatrixData entries. If the mixture is not found or the data is not in the expected format, an empty dictionary is returned.
+        """
         try:
             mixture_data = self.source.datasource.get(self.mixture_name)
 
+            # >> check
             if mixture_data is None:
                 logger.warning(
                     f"Matrix data not found for mixture: {self.mixture_name}"
                 )
                 return {}
 
+            # >> check type
             if not isinstance(mixture_data, dict):
                 logger.error(
                     f"Datasource entry for mixture '{self.mixture_name}' is not a dictionary."
                 )
                 return {}
 
+            # >>> filter for TableMatrixData entries
             matrix_data: Dict[str, TableMatrixData] = {}
+
+            # iterate over the mixture data and extract TableMatrixData entries
             for prop_name, prop_data in mixture_data.items():
                 if isinstance(prop_data, TableMatrixData):
                     matrix_data[prop_name] = prop_data
