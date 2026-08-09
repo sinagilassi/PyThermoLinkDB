@@ -2,16 +2,16 @@
 import os
 import sys
 
-import pyThermoDB as ptdb
-import pyThermoLinkDB as ptdblink
-from pyThermoLinkDB import MatrixDataSourceCore, mkmdts
-from pythermodb_settings.utils import create_mixture_id
-from rich import print
-
 # NOTE: allow running this file directly from examples/mks
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+
+import pyThermoDB as ptdb
+import pyThermoLinkDB as ptdblink
+from pyThermoLinkDB import MatrixDataSourceCore, MatrixDataSourcesCore, mkmdts
+from pythermodb_settings.utils import create_mixture_id
+from rich import print
 
 # ! model source & components
 from examples.sources.source_2 import (
@@ -44,7 +44,7 @@ mixture_components = [
     [methanol, ethanol, butyl_methyl_ether],
 ]
 
-matrix_data_sources: dict[str, MatrixDataSourceCore] | None = mkmdts(
+matrix_data_sources: dict[str, MatrixDataSourcesCore] | None = mkmdts(
     mixture_components=mixture_components,
     model_source=model_source,
     mixture_key=mixture_key,
@@ -76,7 +76,16 @@ print(matrix_data_sources.keys())
 # ACCESS MATRIX DATA SOURCE
 # =======================================
 mixture_id = mixture_ids[0]
-matrix_data_source = matrix_data_sources[mixture_id]
+matrix_data_sources_core = matrix_data_sources[mixture_id]
+matrix_data_source: MatrixDataSourceCore | None = matrix_data_sources_core.select(
+    mixture_id=mixture_id,
+)
+
+if matrix_data_source is None:
+    raise ValueError(f"Failed to select matrix data source for {mixture_id}.")
+
+print(matrix_data_sources_core.summary())
+print(matrix_data_sources_core.build_status())
 
 print(matrix_data_source.mixture_name)
 print(matrix_data_source.component_names)
@@ -123,13 +132,7 @@ print(matrix_data_source.matrix_property(
 # =======================================
 # MATRIX BUILDERS
 # =======================================
-print(matrix_data_source.mat(
-    name='alpha',
-    symbol_format='numeric',
-))
-
-print(matrix_data_source.mat(
-    name='alpha',
-    symbol_format='alphabetic',
-    component_key='Formula',
-))
+print(
+    "Matrix builders are skipped for this ternary pair-row table; "
+    "use table(), structure(), ij(), or matrix_property() for this source."
+)
