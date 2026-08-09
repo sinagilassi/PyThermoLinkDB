@@ -71,8 +71,10 @@ class ThermoModelSource:
             mixture_key: MixtureKey,
             requested_data: List[str],
             requested_equations: List[str],
+            requested_matrix_data: List[str],
             requested_constants: List[str],
             component_references: Dict[str, Any],
+            mixture_references: Dict[str, Any],
             description: Optional[str] = None
     ):
         """
@@ -104,10 +106,14 @@ class ThermoModelSource:
             List of thermodynamic data symbol to be extracted from the model source.
         requested_equations : List[str]
             List of thermodynamic equations symbol to be extracted from the model source.
+        requested_matrix_data : List[str]
+            List of thermodynamic matrix data symbol to be extracted from the model source.
         requested_constants : List[str]
             List of thermodynamic constants symbol to be extracted from the model source.
         component_references : Dict[str, Any]
             Dictionary containing references for each component.
+        mixture_references : Dict[str, Any]
+            Dictionary containing references for each mixture.
         description : Optional[str]
             Optional description of the thermodynamic model source.
         """
@@ -118,14 +124,18 @@ class ThermoModelSource:
         self.mixture_key = mixture_key
         self.requested_data = requested_data
         self.requested_equations = requested_equations
+        self.requested_matrix_data = requested_matrix_data
         self.requested_constants = requested_constants
         self.component_references = component_references
+        self.mixture_references = mixture_references
         self.description = description
 
         # NOTE: thermo source
         # ! key: component ID; value: data/equation source for the component
         self.thermo_data_source: Dict[str, DataSourceCore] = {}
         self.thermo_equations_source: Dict[str, EquationSourcesCore] = {}
+        # ! key: mixture ID; value: matrix data source for the mixture
+        self.thermo_mixture_data_source: Dict[str, MatrixDataSourceCore] = {}
         # ! constants source (not component-specific)
         self.thermo_constants_source: ConstantsSourceCore | None = None
 
@@ -312,6 +322,57 @@ class ThermoModelSource:
                 f"An error occurred while building thermodynamic equations: {e}")
             raise
 
+    # ! build thermo mixture data
+    def _build_thermo_mixture_data(
+            self,
+            model_source: ModelSource
+    ):
+        """
+        Build thermodynamic mixture data from the model source.
+
+        Parameters
+        ----------
+        model_source : ModelSource
+            The source of the thermodynamic model data.
+
+        Notes
+        -----
+        - The mkmdts function is used to build the mixture data sources in which each mixture is processed to extract the requested matrix data symbols.
+        - Each mixture record (MatrixDataSourceCore) is stored in the thermo_mixture_data_source dictionary with the mixture ID as the key.
+        """
+        try:
+            # >> check if thermo mixture data is available
+            if len(self.mixtures) == 0:
+                logger.warning(
+                    "No mixtures specified for extraction."
+                )
+
+            # NOTE: build thermo mixture data
+            res_: Dict[str, MatrixDataSourceCore] | None = mkmdts(
+                mixture_components=self.mixtures,
+                model_source=model_source,
+                mixture_key=cast(MixtureKey, self.mixture_key),
+                extract_list=self.requested_matrix_data,
+            )
+
+            # >> check if thermo mixture data was successfully built
+            if res_ is None:
+                logger.warning(
+                    "Failed to build thermodynamic mixture data from the model source."
+                )
+                return
+
+            # NOTE: set thermo mixture data in the thermo source
+            # iterate over results and set in thermo source
+            for key, value in res_.items():
+                self.thermo_mixture_data_source[key] = value
+
+        except Exception as e:
+            logger.error(
+                f"An error occurred while building thermodynamic mixture data: {e}"
+            )
+            raise
+
     # ! build thermo constants
     def _build_thermo_constants(
             self,
@@ -365,6 +426,7 @@ class ThermoModelSource:
             # NOTE: thermo data and equations are built in the constructor
             self._build_thermo_data(model_source)
             self._build_thermo_equations(model_source)
+            self._build_thermo_mixture_data(model_source)
             self._build_thermo_constants(model_source)
 
         except Exception as e:
@@ -385,6 +447,7 @@ class ThermoModelSource:
         return {
             "thermo_data": self.requested_data,
             "thermo_equations": self.requested_equations,
+            "thermo_mixture_data": self.requested_matrix_data,
             "thermo_constants": self.requested_constants
         }
 
@@ -411,6 +474,15 @@ class ThermoModelSource:
                 for equation in equations_source.src
             ))
 
+        # ? matrix data source
+        if not self.requested_matrix_data:
+            # >>> get all matrix data symbols from x.mixture_data.matrix for all mixtures
+            self.requested_matrix_data: list[str] = list(dict.fromkeys(
+                matrix_data
+                for mixture_data_source in self.thermo_mixture_data_source.values()
+                for matrix_data in mixture_data_source.props
+            ))
+
         # ? constants source
         constants_source: ConstantsSourceCore | None = self.thermo_constants_source
 
@@ -426,7 +498,11 @@ class ThermoModelSource:
         This method populates the ``thermo_src`` attribute with data, equations,
         and constants based on the available sources and the requested symbols.
         """
+        # NOTE: id configuration
+        # >>> component IDs
         component_ids = self.component_references.get('component_ids', [])
+        # >> mixture IDs
+        mixture_ids = self.mixture_references.get('mixture_ids', [])
 
         # NOTE: config available thermo symbols and initialize thermo source
         self._config_available_thermo()
@@ -435,8 +511,13 @@ class ThermoModelSource:
         self._initialize_thermo_src()
 
         # NOTE: populate thermo source with data, equations, and constants
+        # ! data
         self._populate_data(component_ids)
+        # ! equations
         self._populate_equations(component_ids)
+        # ! mixture data
+        self._populate_mixture_data(mixture_ids)
+        # ! constants
         self._populate_constants()
 
         # NOTE: validate thermo source after population
@@ -535,6 +616,56 @@ class ThermoModelSource:
             # ! >>> set thermo source entry for the symbol
             self.thermo_src[symbol]["eq"] = eqn_src
             self._add_symbol_mode(symbol, "equation")
+
+    # NOTE: config mixture data attributes
+    def _populate_mixture_data(
+            self,
+            mixture_ids: List[str]
+    ) -> None:
+        """Populate mixture data entries."""
+        if not self.requested_matrix_data or not self.thermo_mixture_data_source:
+            return
+
+        # ! mixture data variables
+        # iterate over thermo mixture data and set attributes
+        for symbol in self.requested_matrix_data:
+            # > extract matrix data for the symbol for all mixtures
+            md_src: Dict[str, MatrixDataSourceCore] = {}
+
+            # iterate over mixtures and extract matrix data source for the symbol
+            for mix_id in mixture_ids:
+                res_md: MatrixDataSourceCore | None = self.thermo_mixture_data_source.get(
+                    mix_id, None
+                )
+
+                # >> check
+                if res_md is not None:
+                    # >>> select matrix data source for the symbol for the mixture
+                    res_md_: CustomProperty | None = res_md.select(
+                        symbol=symbol
+                    )
+
+                    # >> check
+                    if res_md_ is not None:
+                        md_src[mix_id] = res_md_
+                        md_mix[mix_id] = float(res_md_.value)
+                        md_value.append(float(res_md_.value))
+                    else:
+                        logger.warning(
+                            f"Matrix data source for symbol '{symbol}' not found for mixture '{mix_id}'."
+                        )
+                else:
+                    logger.warning(
+                        f"Matrix data source for symbol '{symbol}' not found for mixture '{mix_id}'."
+                    )
+
+            # ! >>> set thermo source entry for the symbol
+            self.thermo_src[symbol].update({
+                "src": md_src,
+                "comp": md_mix,
+                "value": np.array(md_value),
+            })
+            self._add_symbol_mode(symbol, "matrix_data")
 
     # NOTE: config constant attributes
     # ! utility
