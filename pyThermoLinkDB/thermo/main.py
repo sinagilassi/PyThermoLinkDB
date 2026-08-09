@@ -10,7 +10,7 @@ from .equation_sources import EquationSourcesCore
 from .equation_source import EquationSourceCore
 from .data_source import DataSourceCore
 from .constants_source import ConstantsSourceCore
-from .matrixdata_source import MatrixDataSourceCore
+from .matrix_data_source import MatrixDataSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -569,7 +569,8 @@ def mkmdts(
 
         for components in mixture_components:
             if not isinstance(components, list) or not components:
-                logger.error("Each mixture must be a non-empty list of components.")
+                logger.error(
+                    "Each mixture must be a non-empty list of components.")
                 return None
 
             if not all(isinstance(component, Component) for component in components):
