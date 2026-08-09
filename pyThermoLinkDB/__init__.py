@@ -28,6 +28,7 @@ from .thermo import (
     EquationSourcesCore,
     DataSourceCore,
     MatrixDataSourceCore,
+    MatrixDataSourcesCore,
     ConstantsSourceCore,
     Context
 )
@@ -60,6 +61,7 @@ __all__ = [
     "EquationSourcesCore",
     "DataSourceCore",
     "MatrixDataSourceCore",
+    "MatrixDataSourcesCore",
     "ConstantsSourceCore",
     "Context"
 ]
