@@ -2,6 +2,7 @@ import numpy as np
 from pythermodb_settings.models import Component, CustomProperty, CustomConstant
 
 from pyThermoLinkDB.builders import build_custom_model_source
+from pyThermoLinkDB.models import CustomMatrixData
 
 
 def test_custom_model_source_builds_component_data_and_constants():
@@ -165,3 +166,43 @@ def test_custom_thermo_src_preserves_order_and_merges_duplicate_symbols():
     np.testing.assert_allclose(source.thermo_src["B"]["value"], [1.0])
     assert source.thermo_src["C"]["mode"] == ["constants"]
     assert source.thermo_src["C"]["value"] == 3.0
+
+
+def test_custom_model_source_builds_matrix_data_separately_from_constants():
+    components = [Component(name="methane", formula="CH4", state="g")]
+    matrix_data = CustomMatrixData(
+        name="interaction_matrix",
+        description="Custom interaction parameters.",
+        value=[[0.0, 1.0], [0.5, 0.0]],
+        unit=None,
+        symbol="CUSTOM_MATRIX",
+    )
+
+    source = build_custom_model_source(
+        components=components,
+        component_key="Formula-State",
+        custom_source={
+            "component_value": {
+                "CH4-g": CustomProperty(value=16.04, unit="g/mol", symbol="MW"),
+            },
+            "matrix_value": matrix_data,
+            "constant_value": CustomConstant(
+                name="gas_constant",
+                description="Universal gas constant.",
+                value=8.314,
+                unit="J/mol.K",
+                symbol="R",
+            ),
+        },
+        requested_data=["MW"],
+        requested_matrix_data=["CUSTOM_MATRIX"],
+        requested_constants=[],
+    )
+
+    assert source is not None
+    assert source.requested_matrix_data == ["CUSTOM_MATRIX"]
+    assert source.thermo_src["CUSTOM_MATRIX"]["src"] is matrix_data
+    assert source.thermo_src["CUSTOM_MATRIX"]["value"] == [[0.0, 1.0], [0.5, 0.0]]
+    assert source.thermo_src["CUSTOM_MATRIX"]["mode"] == ["matrix_data"]
+    assert "CUSTOM_MATRIX" not in source.requested_constants
+    assert source.validation_summary()["missing_matrix_data"] == []
