@@ -149,6 +149,7 @@ def build_custom_model_source(
         custom_source: CustomSource,
         requested_data: Optional[List[str]],
         requested_constants: Optional[List[str]],
+        requested_matrix_data: Optional[List[str]] = None,
         description: Optional[str] = None,
         **kwargs
 ) -> Optional[ThermoCustomSource]:
@@ -175,6 +176,8 @@ def build_custom_model_source(
         List of thermodynamic data symbols to be extracted from the custom source, or None to extract all available data.
     requested_constants : List[str] | None
         List of thermodynamic constants symbols to be extracted from the custom source, or None to extract all available constants.
+    requested_matrix_data : List[str] | None
+        List of thermodynamic matrix data symbols to be extracted from the custom source, or None to extract all available matrix data.
     description : Optional[str]
         Optional description of the custom thermodynamic model source.
     **kwargs : Dict[str, Any]
@@ -202,6 +205,7 @@ def build_custom_model_source(
         # NOTE: normalize
         requested_data = [] if requested_data is None else requested_data
         requested_constants = [] if requested_constants is None else requested_constants
+        requested_matrix_data = [] if requested_matrix_data is None else requested_matrix_data
 
         # NOTE: create ThermoCustomSource instance
         thermo_custom_source = ThermoCustomSource(
@@ -211,6 +215,7 @@ def build_custom_model_source(
             requested_data=requested_data,
             requested_constants=requested_constants,
             component_references=component_references,
+            requested_matrix_data=requested_matrix_data,
             description=description
         )
 
@@ -330,6 +335,7 @@ def build_thermo_source_hub(
         if custom_source is not None:
             # ! extract custom source configuration
             requested_data = custom_source_config.data if custom_source_config else []
+            requested_matrix_data = custom_source_config.matrix_data if custom_source_config else []
             requested_constants = custom_source_config.constants if custom_source_config else []
 
             # build custom model source
@@ -338,6 +344,7 @@ def build_thermo_source_hub(
                 component_key=component_key,
                 custom_source=custom_source,
                 requested_data=requested_data,
+                requested_matrix_data=requested_matrix_data,
                 requested_constants=requested_constants,
                 description=description
             )
