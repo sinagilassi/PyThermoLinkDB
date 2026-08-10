@@ -68,14 +68,14 @@ class ThermoModelSource:
             self,
             components: List[Component],
             component_key: ComponentKey,
-            mixtures: List[Mixture],
-            mixture_key: MixtureKey,
-            requested_data: List[str],
-            requested_equations: List[str],
-            requested_matrix_data: List[str],
-            requested_constants: List[str],
-            component_references: Dict[str, Any],
-            mixture_references: Dict[str, Any],
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: MixtureKey = "Name",
+            requested_data: Optional[List[str]] = None,
+            requested_equations: Optional[List[str]] = None,
+            requested_matrix_data: Optional[List[str]] = None,
+            requested_constants: Optional[List[str]] = None,
+            component_references: Optional[Dict[str, Any]] = None,
+            mixture_references: Optional[Dict[str, Any]] = None,
             description: Optional[str] = None,
             **kwargs
     ):
@@ -121,26 +121,26 @@ class ThermoModelSource:
         **kwargs
             Additional keyword arguments for future extensions.
             - delimiter : str, optional
-                Delimiter used for parsing mixture data symbols. Default is '-'.
+                Delimiter used for parsing mixture data symbols. Default is '|'.
             - case: Literal['upper', 'lower'], optional
                 Case transformation for symbols. Default is None (no transformation).
         """
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
-        self.mixtures = mixtures
+        self.mixtures = [] if mixtures is None else mixtures
         self.mixture_key = mixture_key
-        self.requested_data = requested_data
-        self.requested_equations = requested_equations
-        self.requested_matrix_data = requested_matrix_data
-        self.requested_constants = requested_constants
-        self.component_references = component_references
-        self.mixture_references = mixture_references
+        self.requested_data = [] if requested_data is None else requested_data
+        self.requested_equations = [] if requested_equations is None else requested_equations
+        self.requested_matrix_data = [] if requested_matrix_data is None else requested_matrix_data
+        self.requested_constants = [] if requested_constants is None else requested_constants
+        self.component_references = {} if component_references is None else component_references
+        self.mixture_references = {} if mixture_references is None else mixture_references
         self.description = description
 
         # >>> additional kwargs
         # ? delimiter
-        self.delimiter: str = kwargs.get('delimiter', '-')
+        self.delimiter: str = kwargs.get('delimiter', '|')
         # ? case
         self.case: Optional[
             Literal['lower', 'upper']
@@ -360,11 +360,15 @@ class ThermoModelSource:
         - Each mixture record (MatrixDataSourceCore) is stored in the thermo_mixture_data_source dictionary with the mixture ID as the key.
         """
         try:
-            # >> check if thermo mixture data is available
+            # >> matrix data extraction is only needed when symbols are requested
+            if len(self.requested_matrix_data) == 0:
+                return
+
             if len(self.mixtures) == 0:
                 logger.warning(
-                    "No mixtures specified for extraction."
+                    "No mixtures specified for matrix data extraction."
                 )
+                return
 
             # NOTE: build thermo mixture data
             res_: Dict[str, MatrixDataSourcesCore] | None = mkmdtss(
@@ -524,7 +528,11 @@ class ThermoModelSource:
         # >>> component IDs
         component_ids = self.component_references.get('component_ids', [])
         # >> mixture IDs
-        mixture_ids = self.mixture_references.get('mixture_ids', [])
+        mixture_ids = (
+            self.mixture_references.get('mixture_ids')
+            or self.mixture_references.get('mixture_id')
+            or []
+        )
 
         # NOTE: config available thermo symbols and initialize thermo source
         self._config_available_thermo()
