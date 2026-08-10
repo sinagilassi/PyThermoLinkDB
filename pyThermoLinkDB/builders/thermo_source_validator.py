@@ -33,6 +33,7 @@ class ValidationReport:
     missing_requested: List[str] = field(default_factory=list)
     missing_data: Dict[str, List[str]] = field(default_factory=dict)
     missing_equations: Dict[str, List[str]] = field(default_factory=dict)
+    missing_matrix_data: List[str] = field(default_factory=list)
     missing_constants: List[str] = field(default_factory=list)
 
     @property
@@ -47,6 +48,7 @@ class ValidationReport:
             not self.missing_requested
             and not self.missing_data
             and not self.missing_equations
+            and not self.missing_matrix_data
             and not self.missing_constants
         )
 
@@ -95,6 +97,7 @@ class ValidationReport:
             "missing_requested": self.missing_requested,
             "missing_data": self.missing_data,
             "missing_equations": self.missing_equations,
+            "missing_matrix_data": self.missing_matrix_data,
             "missing_constants": self.missing_constants,
         }
 
@@ -131,6 +134,7 @@ class ThermoSourceValidator:
                 self.validate_requested_symbols,
                 self.validate_data_availability,
                 self.validate_equation_availability,
+                self.validate_matrix_data_availability,
                 self.validate_constant_availability,
                 self.validate_component_alignment,
                 self.validate_numeric_values,
@@ -184,6 +188,7 @@ class ThermoSourceValidator:
             requested_symbols = [
                 *self._requested("requested_data"),
                 *self._requested("requested_equations"),
+                *self._requested("requested_matrix_data"),
                 *self._requested("requested_constants"),
             ]
 
@@ -262,6 +267,30 @@ class ThermoSourceValidator:
             return self.report
         except Exception as exc:
             logger.error(f"Equation-availability validation failed: {exc}")
+            return None
+
+    def validate_matrix_data_availability(self) -> Optional[ValidationReport]:
+        """Check requested matrix data has source entries."""
+        try:
+            thermo_src = self._thermo_src() or {}
+
+            for symbol in self._requested("requested_matrix_data"):
+                entry = thermo_src.get(symbol)
+                if not isinstance(entry, dict):
+                    self._record_missing_matrix_data(symbol)
+                    continue
+
+                if self._is_empty(entry.get("src")):
+                    self._record_missing_matrix_data(symbol)
+                    self._add_error(
+                        "missing_matrix_data_source",
+                        f"Matrix data source for '{symbol}' is missing.",
+                        symbol=symbol,
+                    )
+
+            return self.report
+        except Exception as exc:
+            logger.error(f"Matrix-data availability validation failed: {exc}")
             return None
 
     def validate_constant_availability(self) -> Optional[ValidationReport]:
@@ -425,6 +454,10 @@ class ThermoSourceValidator:
     def _record_missing_constant(self, symbol: str) -> None:
         if symbol not in self.report.missing_constants:
             self.report.missing_constants.append(symbol)
+
+    def _record_missing_matrix_data(self, symbol: str) -> None:
+        if symbol not in self.report.missing_matrix_data:
+            self.report.missing_matrix_data.append(symbol)
 
     def _add_error(
             self,
