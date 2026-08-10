@@ -140,6 +140,37 @@ def show_thermo_constants(symbols: list[str]) -> None:
             )
 
 
+def show_thermo_matrix_data(symbols: list[str]) -> None:
+    print("\n[bold green]Thermo matrix data[/bold green]")
+
+    if thermo_model_src is None:
+        print("Thermo source is not available.")
+        raise RuntimeError("Thermo source is not available.")
+
+    for symbol in symbols:
+        entry = thermo_model_src.thermo_src[symbol]
+        matrix_sources = entry["src"] or {}
+
+        print(f"\n[bold cyan]{symbol}[/bold cyan]")
+        if not matrix_sources:
+            print("No matrix data source is available.")
+            continue
+
+        for mixture_id, matrix_source in matrix_sources.items():
+            print(mixture_id)
+            print("summary =", matrix_source.summary())
+            print("symbols =", matrix_source.props_symbols)
+            print(
+                "matrix =",
+                matrix_source.matX(
+                    components=mixture_1,
+                    symbol_format="alphabetic",
+                    component_key=mixture_key,
+                    mixture_key=mixture_key,
+                )
+            )
+
+
 def show_thermo_source_group(symbols: list[str]) -> None:
     if thermo_model_src is None:
         print("Thermo source is not available.")
@@ -152,6 +183,7 @@ def show_thermo_source_group(symbols: list[str]) -> None:
 
 
 show_thermo_data(requested_data)
+show_thermo_matrix_data(requested_matrix_data)
 show_thermo_constants(requested_constants)
 
 print("\n[bold green]Thermo model source[/bold green]")
