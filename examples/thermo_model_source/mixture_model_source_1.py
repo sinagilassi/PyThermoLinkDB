@@ -58,26 +58,26 @@ mixture_model_source: MixtureModelSource = build_mixture_model_source(
 print(f"mixture_model_source:")
 print(mixture_model_source)
 
-# SECTION: build model source
-model_source: ModelSource = build_model_source(
-    source=[mixture_model_source],
-)
-print(f"model_source:")
-print(model_source)
+# # SECTION: build model source
+# model_source: ModelSource = build_model_source(
+#     source=[mixture_model_source],
+# )
+# print(f"model_source:")
+# print(model_source)
 
-# ====================================
-# ☑️ ACCESS MIXTURE MODEL SOURCE
-# ====================================
-# NOTE: access a
-# inspect what mixtures are available
-print(model_source.data_source.keys())
-print(model_source.equation_source.keys())
+# # ====================================
+# # ☑️ ACCESS MIXTURE MODEL SOURCE
+# # ====================================
+# # NOTE: access a
+# # inspect what mixtures are available
+# print(model_source.data_source.keys())
+# print(model_source.equation_source.keys())
 
-# access one mixture by its mixture id
-# names are sorted inside build_mixture_model_source()
-mixture_id = "ethanol|methanol"
-mixture_data = model_source.data_source[mixture_id]
-mixture_equations = model_source.equation_source[mixture_id]
+# # access one mixture by its mixture id
+# # names are sorted inside build_mixture_model_source()
+# mixture_id = "ethanol|methanol"
+# mixture_data = model_source.data_source[mixture_id]
+# mixture_equations = model_source.equation_source[mixture_id]
 
-print(mixture_data.keys())
-print(mixture_equations.keys())
+# print(mixture_data.keys())
+# print(mixture_equations.keys())
