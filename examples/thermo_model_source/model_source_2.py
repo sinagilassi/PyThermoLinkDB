@@ -9,6 +9,8 @@ from pyThermoLinkDB import (
 )
 from pyThermoLinkDB.models import ModelSource
 # locals
+# ! components
+from examples.thermo_model_source.components_1 import *
 # ! component model source
 from examples.thermo_model_source.component_model_source_1 import (
     component_model_source,
