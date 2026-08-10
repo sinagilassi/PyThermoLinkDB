@@ -256,6 +256,10 @@ class CustomSourceConfig(BaseModel):
         default_factory=list,
         description="List of data properties to be extracted from the custom source"
     )
+    matrix_data: List[str] = Field(
+        default_factory=list,
+        description="List of matrix data properties to be extracted from the custom source"
+    )
     constants: List[str] = Field(
         default_factory=list,
         description="List of constants to be extracted from the custom source"
