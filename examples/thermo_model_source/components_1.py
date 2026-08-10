@@ -22,14 +22,14 @@ H2 = Component(
 CH3OH = Component(
     name='methanol',
     formula='CH3OH',
-    state='g',
+    state='l',
 )
 
 # ethanol
 C2H5OH = Component(
     name='ethanol',
     formula='C2H5OH',
-    state='g',
+    state='l',
 )
 
 # water
@@ -60,5 +60,12 @@ C2H6 = Component(
     state='g',
 )
 
+# CH4
+CH4 = Component(
+    name='methane',
+    formula='CH4',
+    state='g',
+)
+
 # ! components
-components = [C2H4, C2H6, CO2]
+components = [C2H4, C2H6, CO2, C2H5OH, CH3OH, CH4]
