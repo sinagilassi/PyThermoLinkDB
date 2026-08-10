@@ -9,7 +9,7 @@ from pythermodb_settings.models import (
     CustomConstant
 )
 # locals
-from ..models import CustomSource
+from ..models import CustomSource, CustomMatrixData
 from .thermo_source_validator import ThermoSourceValidator, ValidationReport
 
 # NOTE: logger setup
@@ -62,6 +62,7 @@ class ThermoCustomSource:
             requested_data: List[str],
             requested_constants: List[str],
             component_references: Dict[str, Any],
+            requested_matrix_data: Optional[List[str]] = None,
             description: Optional[str] = None,
             **kwargs
     ):
@@ -70,11 +71,13 @@ class ThermoCustomSource:
         self.component_key = component_key
         self.requested_data = requested_data
         self.requested_constants = requested_constants
+        self.requested_matrix_data = [] if requested_matrix_data is None else requested_matrix_data
         self.component_references = component_references
         self.description = description
 
         # NOTE: normalized custom source
         self.thermo_data_source: Dict[str, Dict[str, CustomProperty]] = {}
+        self.thermo_matrix_data_source: Dict[str, CustomMatrixData] = {}
         self.thermo_constants_source: Dict[str, CustomConstant] = {}
 
         # NOTE: canonical symbol source mapping
@@ -142,6 +145,7 @@ class ThermoCustomSource:
         """
         return {
             "thermo_data": self.requested_data,
+            "thermo_mixture_data": self.requested_matrix_data,
             "thermo_constants": self.requested_constants
         }
 
@@ -149,6 +153,7 @@ class ThermoCustomSource:
         """Initialize one fixed-shape entry for every available symbol."""
         symbols = dict.fromkeys([
             *self.requested_data,
+            *self.requested_matrix_data,
             *self.requested_constants,
         ])
         self.thermo_src = {
@@ -167,6 +172,7 @@ class ThermoCustomSource:
         modes: List[str] = []
         for mode, requested_symbols in (
             ("data", self.requested_data),
+            ("matrix_data", self.requested_matrix_data),
             ("constants", self.requested_constants),
         ):
             if symbol in requested_symbols:
@@ -227,6 +233,10 @@ class ThermoCustomSource:
                 return str(next(iter(nested_symbols)))
 
         return key
+
+    def _is_matrix_data(self, value: Any) -> bool:
+        """Check whether a custom source entry is matrix data."""
+        return isinstance(value, CustomMatrixData)
 
     def _to_custom_property(
             self,
@@ -367,7 +377,10 @@ class ThermoCustomSource:
             custom_source = self.select_custom_source()
 
             for key, value in custom_source.items():
-                if self._is_component_data(value=value, component_ids=component_ids):
+                if (
+                    self._is_component_data(value=value, component_ids=component_ids)
+                    or self._is_matrix_data(value=value)
+                ):
                     continue
 
                 const_source = self._build_constant_result(
@@ -393,6 +406,39 @@ class ThermoCustomSource:
                 f"An error occurred while building custom thermodynamic constants: {e}")
             raise
 
+    def _build_thermo_matrix_data(self) -> None:
+        try:
+            if len(self.requested_matrix_data) == 0:
+                logger.info(
+                    "No custom matrix data filter specified; extracting all available matrix data.")
+
+            # NOTE: select custom source
+            custom_source = self.select_custom_source()
+
+            for key, value in custom_source.items():
+                if not self._is_matrix_data(value=value):
+                    continue
+
+                symbol = self._get_entry_symbol(key=key, value=value)
+                if (
+                    self.requested_matrix_data
+                    and symbol not in self.requested_matrix_data
+                ):
+                    continue
+
+                self.thermo_matrix_data_source[symbol] = value
+
+            for symbol in self.requested_matrix_data:
+                if symbol not in self.thermo_matrix_data_source:
+                    logger.warning(
+                        f"Custom matrix data source for symbol '{symbol}' not found."
+                    )
+
+        except Exception as e:
+            logger.error(
+                f"An error occurred while building custom matrix data: {e}")
+            raise
+
     # SECTION: build
     def build_all(self) -> None:
         """
@@ -400,6 +446,7 @@ class ThermoCustomSource:
         """
         try:
             self._build_thermo_data()
+            self._build_thermo_matrix_data()
             self._build_thermo_constants()
 
         except Exception as e:
@@ -419,6 +466,7 @@ class ThermoCustomSource:
 
         # NOTE: populate data and constants
         self._populate_data(component_ids)
+        self._populate_matrix_data()
         self._populate_constants()
 
         # NOTE: validate thermo source after population
@@ -428,6 +476,9 @@ class ThermoCustomSource:
         """Populate empty thermo lists from the discovered custom sources."""
         if not self.requested_data:
             self.requested_data = list(self.thermo_data_source)
+
+        if not self.requested_matrix_data:
+            self.requested_matrix_data = list(self.thermo_matrix_data_source)
 
         if not self.requested_constants:
             self.requested_constants = list(self.thermo_constants_source)
@@ -465,6 +516,27 @@ class ThermoCustomSource:
             })
             self._add_symbol_mode(symbol, "data")
 
+    # NOTE: populate matrix data entries
+    def _populate_matrix_data(self) -> None:
+        """Populate available custom matrix data."""
+        if not self.requested_matrix_data or not self.thermo_matrix_data_source:
+            return
+
+        for symbol in self.requested_matrix_data:
+            matrix_src = self.thermo_matrix_data_source.get(symbol)
+
+            if matrix_src is None:
+                logger.warning(
+                    f"Custom matrix data source for symbol '{symbol}' not found."
+                )
+                continue
+
+            self.thermo_src[symbol].update({
+                "src": matrix_src,
+                "value": matrix_src.value,
+            })
+            self._add_symbol_mode(symbol, "matrix_data")
+
     # NOTE: populate constant entries
     def _populate_constants(self) -> None:
         """Populate custom constants without replacing component data."""
@@ -473,10 +545,10 @@ class ThermoCustomSource:
 
         # ! constants variables
         for symbol in self.requested_constants:
-            if symbol in self.requested_data:
+            if symbol in self.requested_data or symbol in self.requested_matrix_data:
                 logger.warning(
                     f"Custom constant symbol '{symbol}' is already configured "
-                    "as data; preserving the existing attributes."
+                    "as data or matrix data; preserving the existing attributes."
                 )
                 continue
 
