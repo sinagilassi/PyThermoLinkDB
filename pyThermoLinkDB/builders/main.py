@@ -309,6 +309,7 @@ def build_thermo_source_hub(
             # ! extract model source configuration
             requested_data = model_source_config.data if model_source_config else []
             requested_equations = model_source_config.equations if model_source_config else []
+            requested_matrix_data = model_source_config.matrix_data if model_source_config else []
             requested_constants = model_source_config.constants if model_source_config else []
 
             # build thermo model source
@@ -320,6 +321,7 @@ def build_thermo_source_hub(
                 model_source=model_source,
                 requested_data=requested_data,
                 requested_equations=requested_equations,
+                requested_matrix_data=requested_matrix_data,
                 requested_constants=requested_constants,
                 description=description
             )
