@@ -287,6 +287,48 @@ class ThermoSourceExtractor:
             components=components
         )
 
+    # ! get matrix data source
+    def get_matrix_data_src(
+            self,
+            source_type: str,
+            symbol: str,
+            components: List[Component] | None = None
+    ) -> Any:
+        if not self.has_mode(
+            source_type=source_type,
+            symbol=symbol,
+            mode="matrix_data",
+        ):
+            return None
+
+        return self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="src",
+            components=components
+        )
+
+    # ! get matrix data value
+    def get_matrix_data_value(
+            self,
+            source_type: str,
+            symbol: str,
+            components: List[Component] | None = None
+    ) -> Any:
+        if not self.has_mode(
+            source_type=source_type,
+            symbol=symbol,
+            mode="matrix_data",
+        ):
+            return None
+
+        return self.get_item(
+            source_type=source_type,
+            symbol=symbol,
+            item="value",
+            components=components
+        )
+
     # ! get source mode
     def get_mode(self, source_type: str, symbol: str) -> List[str] | None:
         mode = self.get_item(
