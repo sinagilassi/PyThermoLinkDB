@@ -2,6 +2,7 @@ import numpy as np
 from pythermodb_settings.models import Component, CustomProperty, CustomConstant
 
 from pyThermoLinkDB.builders import build_custom_model_source
+from pyThermoLinkDB.builders.thermo_source_hub import ThermoSourceHub
 from pyThermoLinkDB.models import CustomMatrixData
 
 
@@ -206,3 +207,41 @@ def test_custom_model_source_builds_matrix_data_separately_from_constants():
     assert source.thermo_src["CUSTOM_MATRIX"]["mode"] == ["matrix_data"]
     assert "CUSTOM_MATRIX" not in source.requested_constants
     assert source.validation_summary()["missing_matrix_data"] == []
+
+
+def test_thermo_source_hub_gets_custom_matrix_data_source_and_value():
+    components = [Component(name="methane", formula="CH4", state="g")]
+    matrix_data = CustomMatrixData(
+        name="interaction_matrix",
+        description="Custom interaction parameters.",
+        value=[[0.0, 1.0], [0.5, 0.0]],
+        unit=None,
+        symbol="CUSTOM_MATRIX",
+    )
+    custom_source = build_custom_model_source(
+        components=components,
+        component_key="Formula-State",
+        custom_source={"matrix_value": matrix_data},
+        requested_data=[],
+        requested_matrix_data=["CUSTOM_MATRIX"],
+        requested_constants=[],
+    )
+    assert custom_source is not None
+
+    hub = ThermoSourceHub(
+        components=components,
+        component_key="Formula-State",
+        thermo_model_source=None,
+        thermo_custom_source=custom_source,
+    )
+    hub._configure_thermo_source()
+
+    assert (
+        hub.get_matrix_data_src("custom_source", "CUSTOM_MATRIX")
+        is matrix_data
+    )
+    assert hub.get_matrix_data_value(
+        "custom_source",
+        "CUSTOM_MATRIX",
+    ) == [[0.0, 1.0], [0.5, 0.0]]
+    assert hub.get_matrix_data_src("custom_source", "MW") is None
