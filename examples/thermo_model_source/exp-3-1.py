@@ -90,6 +90,7 @@ component_key = 'Formula-State'
 
 # NOTE: thermo data and constants to be extracted from the custom source
 requested_data = ['MW', 'Cp_IG', 'Cp_LIQ', 'rho_LIQ']
+requested_matrix_data = ['CUSTOM_MATRIX', 'CH4|C2H6']
 requested_constants = [
     'dH_rxn',
     'Cp_LIQ_MIX_VOL',
@@ -105,6 +106,7 @@ custom_model_src: ThermoCustomSource | None = build_custom_model_source(
     component_key=component_key,
     custom_source=custom_source,
     requested_data=requested_data,
+    requested_matrix_data=requested_matrix_data,
     requested_constants=requested_constants,
     description="Example custom model source with custom constants",
     mode='log'  # options: 'silent', 'log', 'attach'
@@ -112,6 +114,16 @@ custom_model_src: ThermoCustomSource | None = build_custom_model_source(
 
 if custom_model_src is None:
     raise RuntimeError("Failed to build custom model source.")
+
+print("\n[bold green]Custom matrix data[/bold green]")
+for symbol in requested_matrix_data:
+    entry = custom_model_src.thermo_src[symbol]
+    matrix_src = entry["src"]
+
+    print(f"\n[bold cyan]{symbol}[/bold cyan]")
+    print("source =", matrix_src)
+    print("value =", entry["value"])
+    print("mode =", entry["mode"])
 
 print("\n[bold green]Custom model source[/bold green]")
 print(custom_model_src.thermo_src)
