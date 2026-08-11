@@ -161,6 +161,28 @@ class ThermoSourceRegistry:
                     include_missing=include_missing,
                 )
 
+        # ! extract matrix data source
+        matrix_data_source = config.matrix_data_source
+        if matrix_data_source is not None:
+            src = None
+            if self.thermo_src.has_mode(
+                source_type=matrix_data_source,
+                symbol=symbol,
+                mode="matrix_data",
+            ):
+                src = self.thermo_src.get_matrix_data_src(
+                    source_type=matrix_data_source,
+                    symbol=symbol,
+                    components=components,
+                )
+            if src is not None or "src" not in source_entry:
+                self._set_if_available(
+                    source_entry=source_entry,
+                    key="src",
+                    value=src,
+                    include_missing=include_missing,
+                )
+
         return source_entry
 
     def _set_if_available(
