@@ -18,6 +18,10 @@ class SourceConfig(BaseModel):
         default='model_source',
         description="Source type: 'model_source' or 'custom_source'",
     )
+    matrix_data_source: Optional[Literal["model_source", "custom_source"]] = Field(
+        default=None,
+        description="Source type: 'model_source' or 'custom_source'",
+    )
 
 
 # NOTE: thermo source hub config
