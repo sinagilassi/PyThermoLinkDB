@@ -1,16 +1,5 @@
 """Build a container holding model and custom thermodynamic sources."""
 
-from rich import print
-from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
-from pyThermoLinkDB.models import (
-    CustomSourceConfig,
-    ModelSourceConfig,
-)
-from pyThermoLinkDB.thermo import EquationSourceCore
-from pythermodb_settings.models import CustomProperty, CustomConstant
-from examples.thermo_model_source.components_1 import components
-from examples.thermo_model_source.custom_source_1 import custom_source
-from examples.thermo_model_source.model_source_1 import model_source
 from pathlib import Path
 import sys
 from typing import Dict, Any, List
@@ -19,19 +8,45 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from rich import print
+from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
+from pyThermoLinkDB.models import (
+    CustomSourceConfig,
+    ModelSourceConfig,
+)
+from pyThermoLinkDB.thermo import EquationSourceCore
+from pythermodb_settings.models import CustomProperty, CustomConstant
+from examples.thermo_model_source.components_1 import (
+    C2H4,
+    C2H6,
+    CO2,
+    C2H5OH,
+    CH3OH,
+)
+from examples.thermo_model_source.custom_source_1 import custom_source
+from examples.thermo_model_source.model_source_2 import model_source
+
+components = [C2H4, C2H6, CO2]
+mixture_1 = [CH3OH, C2H5OH]
+mixtures = [mixture_1]
+
 
 thermo_source_hub: ThermoSourceHub | None = build_thermo_source_hub(
     components=components,
     component_key="Formula-State",
+    mixtures=mixtures,
+    mixture_key="Name",
     model_source=model_source,
     custom_source=custom_source,
     model_source_config=ModelSourceConfig(
         data=["EnFo_IG", "Tc", "Pc"],
         equations=["Cp_IG", "VaPr"],
+        matrix_data=["a", "b", "c", "alpha"],
         constants=["R", "dH_rxn"],
     ),
     custom_source_config=CustomSourceConfig(
         data=["MW", "Cp_IG", "Cp_LIQ", "rho_LIQ"],
+        matrix_data=["CUSTOM_MATRIX", "CH4|C2H6"],
         constants=[
             "dH_rxn",
             "Cp_LIQ_MIX_VOL",
@@ -99,6 +114,14 @@ custom_cp_ig_mode: List[str] | None = thermo_source_hub.get_mode(
     source_type="custom_source",
     symbol="Cp_IG",
 )
+model_alpha_mode: List[str] | None = thermo_source_hub.get_mode(
+    source_type="model_source",
+    symbol="alpha",
+)
+custom_matrix_mode: List[str] | None = thermo_source_hub.get_mode(
+    source_type="custom_source",
+    symbol="CUSTOM_MATRIX",
+)
 custom_cp_ig_has_data: bool = thermo_source_hub.has_mode(
     source_type="custom_source",
     symbol="Cp_IG",
@@ -113,6 +136,10 @@ print("[bold]Model Tc mode[/bold]")
 print(model_tc_mode)
 print("[bold]Custom Cp_IG mode[/bold]")
 print(custom_cp_ig_mode)
+print("[bold]Model alpha mode[/bold]")
+print(model_alpha_mode)
+print("[bold]Custom CUSTOM_MATRIX mode[/bold]")
+print(custom_matrix_mode)
 print("[bold]Custom Cp_IG mode checks[/bold]")
 print({
     "has_data": custom_cp_ig_has_data,
@@ -168,6 +195,20 @@ model_cp_ig_eq_mode: List[str] | None = thermo_source_hub.get_mode(
 )
 print("[bold]Model Cp_IG component equation modes[/bold]")
 print(model_cp_ig_eq_mode)
+
+# NOTE: get matrix data from model and custom sources
+model_alpha: Dict[str, Any] | None = thermo_source_hub.get(
+    source_name="model_source",
+    symbol="alpha",
+)
+custom_matrix: Dict[str, Any] | None = thermo_source_hub.get(
+    source_name="custom_source",
+    symbol="CUSTOM_MATRIX",
+)
+print("[bold]Model alpha matrix data[/bold]")
+print(model_alpha)
+print("[bold]Custom matrix data[/bold]")
+print(custom_matrix)
 
 # NOTE: get constant values from model and custom sources
 model_r: Any = thermo_source_hub.get_const(
