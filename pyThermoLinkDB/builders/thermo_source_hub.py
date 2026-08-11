@@ -534,6 +534,45 @@ class ThermoSourceHub:
             components=components
         )
 
+    def get_matrix_data_src(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ) -> Any:
+        """
+        Return matrix-data source objects for a symbol.
+
+        Model matrix data returns a mixture-keyed mapping of matrix source
+        objects. Custom matrix data returns the configured ``CustomMatrixData``
+        object. ``None`` is returned when the symbol is unavailable or is not
+        configured with ``mode="matrix_data"``.
+        """
+        return self._ensure_thermo_source_extractor().get_matrix_data_src(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
+
+    def get_matrix_data_value(
+            self,
+            source_type: str,
+            symbol: str,
+            components: Optional[List[Component]] = None
+    ) -> Any:
+        """
+        Return the matrix-data value for a symbol.
+
+        Custom matrix data stores its raw matrix payload in ``value``. Model
+        matrix data generally keeps callable matrix source objects in ``src``
+        and may have ``value`` set to ``None``.
+        """
+        return self._ensure_thermo_source_extractor().get_matrix_data_value(
+            source_type=source_type,
+            symbol=symbol,
+            components=components
+        )
+
     def get_mode(
             self,
             source_type: str,
