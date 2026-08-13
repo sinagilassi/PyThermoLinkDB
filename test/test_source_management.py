@@ -174,6 +174,34 @@ def test_validator_reports_missing_mixture_matrix_data_without_component_errors(
     assert report.missing_matrix_data == []
 
 
+def test_validator_accepts_explicit_mixture_ids():
+    source = SimpleNamespace(
+        thermo_src={
+            "alpha": {
+                "src": {"mix-A": object()},
+                "comp": None,
+                "value": None,
+                "eq": None,
+                "mode": ["matrix_data"],
+            }
+        },
+        requested_data=[],
+        requested_equations=[],
+        requested_matrix_data=["alpha"],
+        requested_constants=[],
+        component_references={"component_ids": ["A", "B"]},
+    )
+
+    report = ThermoSourceValidator(
+        source=source,
+        mixture_ids=["mix-A", "mix-B"],
+    ).validate()
+
+    assert report is not None
+    assert report.is_valid is False
+    assert report.missing_mixtures == {"alpha": ["mix-B"]}
+
+
 def test_validator_accepts_custom_matrix_data_without_mixture_ids():
     matrix_source = object()
     source = SimpleNamespace(

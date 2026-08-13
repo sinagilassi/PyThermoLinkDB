@@ -120,17 +120,24 @@ class ThermoSourceValidator:
 
     The source object must expose ``thermo_src`` and may expose
     ``requested_data``, ``requested_equations``, ``requested_constants``, and
-    ``component_references``.
+    ``component_references`` or ``mixture_references``.
     """
 
     def __init__(
             self,
             source: Any,
             component_ids: Optional[List[str]] = None,
+            mixture_ids: Optional[List[str]] = None,
     ) -> None:
-        """Store source context and initialize an empty validation report."""
+        """Store source context and initialize an empty validation report.
+
+        ``component_ids`` and ``mixture_ids`` can be passed directly when the
+        caller wants validation to use explicit identifiers instead of reading
+        them from the source metadata.
+        """
         self.source = source
         self.component_ids = component_ids
+        self.mixture_ids = mixture_ids
         self.report = ValidationReport()
 
     # SECTION: Main validation workflow
@@ -447,7 +454,10 @@ class ThermoSourceValidator:
         return []
 
     def _mixture_ids(self) -> List[str]:
-        """Return mixture identifiers from source metadata as a list."""
+        """Return explicit or source-provided mixture identifiers."""
+        if self.mixture_ids is not None:
+            return self.mixture_ids
+
         mixture_references = getattr(self.source, "mixture_references", {})
         if isinstance(mixture_references, dict):
             mixture_ids = (
