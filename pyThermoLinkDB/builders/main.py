@@ -355,6 +355,8 @@ def build_thermo_source_hub(
             component_key=component_key,
             thermo_model_source=thermo_model_source,
             thermo_custom_source=thermo_custom_source,
+            mixtures=mixtures,
+            mixture_key=mixture_key,
             description=description,
         )
 
