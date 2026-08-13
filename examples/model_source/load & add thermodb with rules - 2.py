@@ -24,11 +24,13 @@ print(ptdb.__version__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"current dir: {current_dir}")
 
+# thermodb directory
+thermodb_dir = os.path.join(os.path.dirname(current_dir), 'thermodb')
+
 # NOTE: thermodb configurations
 # thermodb file
 _thermodb_file = os.path.join(
-    current_dir,
-    'thermodb',
+    thermodb_dir,
     'carbon dioxide.pkl'
 )
 
@@ -41,8 +43,7 @@ CO2_comp = Component(
 
 # thermodb file
 ethanol_thermodb_file = os.path.join(
-    current_dir,
-    'thermodb',
+    thermodb_dir,
     'ethanol.pkl'
 )
 

@@ -181,7 +181,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"current dir: {current_dir}")
 
 # thermodb directory
-thermodb_dir = os.path.join(current_dir, "thermodb")
+thermodb_dir = os.path.join(os.path.dirname(current_dir), "thermodb")
 print(f"thermodb dir: {thermodb_dir}")
 
 # ====================================

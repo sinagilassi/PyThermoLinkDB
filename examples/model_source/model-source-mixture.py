@@ -3,12 +3,14 @@ import os
 from typing import List
 from rich import print
 import pyThermoLinkDB as ptldb
-from pyThermoLinkDB import build_components_model_source, build_model_source
-from pyThermoLinkDB.models import ComponentModelSource, ModelSource
+from pyThermoLinkDB import build_model_source, build_mixture_model_source
+from pyThermoLinkDB.models import ModelSource, MixtureModelSource
 import pyThermoDB as ptdb
 from pythermodb_settings.models import Component
-from pyThermoDB import ComponentThermoDB
-from pyThermoDB import build_component_thermodb_from_reference
+from pyThermoDB import (
+    MixtureThermoDB,
+    build_mixture_thermodb_from_reference,
+)
 
 # check version
 print(ptldb.__version__)
@@ -72,11 +74,11 @@ REFERENCES:
         general-data:
           TABLE-ID: 2
           DESCRIPTION:
-            This table provides the general data of different chemical species participating in the CO2 hydrogenation reaction and includes molecular weight (MW) in g/mol, critical temperature (Tc) in K, critical pressure (Pc) in MPa, and critical molar volume (Vc) in m3/kmol. The table also includes the critical compressibility factor (Zc), acentric factor (AcFa), enthalpy of formation (EnFo_IG) in kJ/mol, and Gibbs energy of formation (GiEnFo_IG) in kJ/mol. The chemical state of the species is also provided in the table and hence the enthalpy of formation and Gibbs energy of formation are provided for the ideal gas and liquid state are designated as EnFo_IG, GiEnFo_IG, EnFo_LIQ, and GiEnFo_LIQ, respectively.
+            This table provides the general data of different chemical species participating in the CO2 hydrogenation reaction and includes molecular weight (MW) in g/mol, critical temperature (Tc) in K, critical pressure (Pc) in MPa, and critical molar volume (Vc) in m3/kmol. The table also includes the critical compressibility factor (Zc), acentric factor (AcFa), enthalpy of formation (EnFo) in kJ/mol, and Gibbs energy of formation (GiEnFo) in kJ/mol. The chemical state of the species is also provided in the table and hence the enthalpy of formation and Gibbs energy of formation are provided for the ideal gas and liquid state are designated as EnFo_IG, GiEnFo_IG, EnFo_LIQ, and GiEnFo_LIQ, respectively.
           DATA: []
           STRUCTURE:
             COLUMNS: [No.,Name,Formula,State,Molecular-Weight,Critical-Temperature,Critical-Pressure,Critical-Molar-Volume,Critical-Compressibility-Factor,Acentric-Factor,Enthalpy-of-Formation,Gibbs-Energy-of-Formation]
-            SYMBOL: [None,None,None,None,MW,Tc,Pc,Vc,Zc,AcFa,EnFo_IG,GiEnFo_IG]
+            SYMBOL: [None,None,None,None,MW,Tc,Pc,Vc,Zc,AcFa,EnFo,GiEnFo]
             UNIT: [None,None,None,None,g/mol,K,MPa,m3/kmol,None,None,kJ/mol,kJ/mol]
             CONVERSION: [None,None,None,None,1,1,1,1,1,1,1,1]
           VALUES:
@@ -159,161 +161,62 @@ REFERENCES:
           DESCRIPTION:
             This table provides the NRTL non-randomness parameters for the NRTL equation.
           MATRIX-SYMBOL:
-            - a
+            - a-constant: a
             - b
             - c
             - alpha
           STRUCTURE:
-            COLUMNS: [No.,Mixture,Name,Formula,a_i_1,a_i_2,b_i_1,b_i_2,c_i_1,c_i_2,alpha_i_1,alpha_i_2]
-            SYMBOL: [None,None,None,None,a_i_1,a_i_2,b_i_1,b_i_2,c_i_1,c_i_2,alpha_i_1,alpha_i_2]
-            UNIT: [None,None,None,None,1,1,1,1,1,1,1,1]
+            COLUMNS: [No.,Mixture,Name,Formula,State,a_i_1,a_i_2,b_i_1,b_i_2,c_i_1,c_i_2,alpha_i_1,alpha_i_2]
+            SYMBOL: [None,None,None,None,None,a_i_1,a_i_2,b_i_1,b_i_2,c_i_1,c_i_2,alpha_i_1,alpha_i_2]
+            UNIT: [None,None,None,None,None,1,1,1,1,1,1,1,1]
           VALUES:
-            - [1,methanol|ethanol,methanol,CH3OH,0,0.300492719,0,1.564200272,0,35.05450323,0,4.481683583]
-            - [2,methanol|ethanol,ethanol,C2H5OH,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
-            - [1,methane|ethanol,methanol,CH3OH,0,0.300492719,0,1.564200272,0,35.05450323,0,4.481683583]
-            - [2,methane|ethanol,ethanol,C2H5OH,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
+            - [1,methanol|ethanol,methanol,CH3OH,l,0,1,1,1.564200272,0,35.05450323,0,4.481683583]
+            - [2,methanol|ethanol,ethanol,C2H5OH,l,2,3,-20.63243601,0,0.059982839,0,4.481683583,0]
+            - [1,methanol|methane,methanol,CH3OH,l,1,0.300492719,0,1.564200272,0,35.05450323,0,4.481683583]
+            - [2,methanol|methane,methane,CH4,g,0.380229054,0,-20.63243601,0,0.059982839,0,4.481683583,0]
 """
-# SECTION: Directory paths
-# parent directory
-parent_dir = os.path.dirname(os.path.abspath(__file__))
-print(f"parent directory: {parent_dir}")
+
+# current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"current dir: {current_dir}")
+
 # thermodb directory
-thermodb_dir = os.path.join(parent_dir, 'thermodb')
-print(f"thermodb directory: {thermodb_dir}")
+thermodb_dir = os.path.join(os.path.dirname(current_dir), "thermodb")
+print(f"thermodb dir: {thermodb_dir}")
 
-# SECTION: ignore props
-IGNORE_PROPS: list[str] = ['MW', 'Cp_IG', 'VaPr']
+# ====================================
+# ☑️ SET COMPONENTS
+# ====================================
+# check component availability in the databook and table
+# ! component
+methanol = Component(name="methanol", formula="CH3OH", state="l")
+ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+methane = Component(name="methane", formula="CH4", state="g")
 
-# SECTION: check component availability
-component_name = 'carbon dioxide'
-component_formula = 'CO2'
-component_state = 'g'
+# ! mixture
+binary_mixture_components = [methanol, ethanol]
+ternary_mixture_components = [methanol, ethanol, methane]
+# >> methanol-ethanol
+# >> methanol-methane
+# >> ethanol-methane
+mixture_names: List[str] = ['methanol|ethanol', 'methanol|methane']
 
-CO2 = Component(
-    name=component_name,
-    formula=component_formula,
-    state=component_state
-)
-
+# ====================================
+# ☑️ BUILD MIXTURE THERMODB
+# ====================================
 # SECTION: build component thermodb
-# ! CO2
-thermodb_CO2: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name=component_name,
-    component_formula=component_formula,
-    component_state=component_state,
+# ! mixture thermodb
+mixture_thermodb_: MixtureThermoDB | None = build_mixture_thermodb_from_reference(
+    components=ternary_mixture_components,
     reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
+    mixture_names=mixture_names,
+    thermodb_save_path=thermodb_dir,
     thermodb_save=True,
-    thermodb_save_path=thermodb_dir
 )
-print(f"thermodb_component_: {thermodb_CO2}")
+print(f"mixture_thermodb_: {mixture_thermodb_}")
 # >> check
-if thermodb_CO2 is None:
-    raise ValueError("thermodb_CO2 is None")
-
-# ! ethanol
-C2H6O = Component(
-    name='ethanol',
-    formula='C2H6O',
-    state='l'
-)
-
-thermodb_ethanol: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='ethanol',
-    component_formula='C2H6O',
-    component_state='l',
-    reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
-    thermodb_save=True,
-    thermodb_save_path=thermodb_dir
-)
-print(f"thermodb_ethanol: {thermodb_ethanol}")
-# >> check
-if thermodb_ethanol is None:
-    raise ValueError("thermodb_ethanol is None")
-
-# ! methanol
-CH3OH = Component(
-    name='methanol',
-    formula='CH3OH',
-    state='g'
-)
-
-thermodb_methanol: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='methanol',
-    component_formula='CH3OH',
-    component_state='g',
-    reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
-    thermodb_save=True,
-    thermodb_save_path=thermodb_dir
-)
-print(f"thermodb_methanol: {thermodb_methanol}")
-# >> check
-if thermodb_methanol is None:
-    raise ValueError("thermodb_methanol is None")
-
-# ! methane
-C1H4 = Component(
-    name='methane',
-    formula='CH4',
-    state='g'
-)
-thermodb_methane: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='methane',
-    component_formula='CH4',
-    component_state='g',
-    reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
-    thermodb_save=True,
-    thermodb_save_path=thermodb_dir
-)
-print(f"thermodb_methane: {thermodb_methane}")
-# >> check
-if thermodb_methane is None:
-    raise ValueError("thermodb_methane is None")
-
-# ! CO
-CO = Component(
-    name='carbon monoxide',
-    formula='CO',
-    state='g'
-)
-thermodb_CO: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='carbon monoxide',
-    component_formula='CO',
-    component_state='g',
-    reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
-    thermodb_save=True,
-    thermodb_save_path=thermodb_dir
-)
-print(f"thermodb_CO: {thermodb_CO}")
-# >> check
-if thermodb_CO is None:
-    raise ValueError("thermodb_CO is None")
-
-# ! H2O
-H2O = Component(
-    name='water',
-    formula='H2O',
-    state='g'
-)
-thermodb_H2O: ComponentThermoDB | None = build_component_thermodb_from_reference(
-    component_name='water',
-    component_formula='H2O',
-    component_state='g',
-    reference_content=REFERENCE_CONTENT,
-    ignore_state_props=IGNORE_PROPS,
-    thermodb_save=True,
-    thermodb_save_path=thermodb_dir
-)
-
-print(f"thermodb_H2O: {thermodb_H2O}")
-
-# >> check
-if thermodb_H2O is None:
-    raise ValueError("thermodb_H2O is None")
+if mixture_thermodb_ is None:
+    raise ValueError("mixture_thermodb_ is None")
 
 # SECTION: build model source
 # NOTE: rules
@@ -350,23 +253,32 @@ ALL:
     acentric-factor: AcFa
     enthalpy-of-formation-ideal-gas: EnFo
     gibbs-energy-of-formation-ideal-gas: GiEnFo
+    a: a1
+    b: b1
   EQUATIONS:
     vapor-pressure: VaPr
     ideal-gas-heat-capacity: Cp_IG
 """
 
-# NOTE: component
-components: list[Component] = [CO2, C2H6O]
-
-# NOTE: build components model source
-components_model_source: List[ComponentModelSource] = build_components_model_source(
-    components_thermodb=[thermodb_CO2, thermodb_ethanol],
+# ====================================
+# ☑️ BUILD MIXTURE MODEL SOURCE
+# ====================================
+# NOTE: build mixture model source
+mixture_model_source: MixtureModelSource = build_mixture_model_source(
+    mixture_thermodb=mixture_thermodb_,
 )
-print(f"components_model_source: {components_model_source}")
+print(f"mixture_model_source: {mixture_model_source}")
+
+# NOTE: add rules to the model source
+mixture_model_source: MixtureModelSource = build_mixture_model_source(
+    mixture_thermodb=mixture_thermodb_,
+    rules=RULES_YAML_2,
+    overwrite_rules=False,
+)
+print(f"mixture_model_source: {mixture_model_source}")
 
 # SECTION: build model source
-model_source = build_model_source(
-    source=components_model_source,
+model_source: ModelSource = build_model_source(
+    source=[mixture_model_source],
 )
-print(f"model_source:")
-print(model_source)
+print(f"model_source: {model_source}")

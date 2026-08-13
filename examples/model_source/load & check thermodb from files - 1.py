@@ -11,12 +11,16 @@ print(ptdb.__version__)
 # =======================================
 # 🌍 LOAD THERMODB
 # =======================================
-# parent directory
+# ! parent directory
 parent_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"parent directory: {parent_dir}")
-# thermodb directory
-thermodb_dir = os.path.join(parent_dir, 'thermodb')
-print(f"thermodb directory: {thermodb_dir}")
+
+# ! current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"current dir: {current_dir}")
+
+# ! thermodb directory
+thermodb_dir = os.path.join(os.path.dirname(current_dir), 'thermodb')
 
 # SECTION CO2
 CO2_thermodb_file = os.path.join(
