@@ -14,7 +14,11 @@ from pythermodb_settings.models import (
     ComponentRule,
     ReferenceThermoDB,
     ComponentThermoDBSource,
-    MixtureThermoDBSource
+    MixtureThermoDBSource,
+    MixtureKey
+)
+from pythermodb_settings.utils import (
+    create_mixture_id
 )
 # local
 from .docs import ThermoDBHub
@@ -473,7 +477,9 @@ def build_mixture_model_source(
     ] = None,
     check_labels: bool = True,
     mixture_custom_ids: Optional[List[str]] = None,
-    mixture_key: Literal['Name', 'Formula'] = 'Name',
+    mixture_keys: List[MixtureKey] = [
+        'Name', 'Formula',
+    ],
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
@@ -491,8 +497,8 @@ def build_mixture_model_source(
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
     mixture_custom_ids: Optional[List[str]], optional
         List of custom ids for the mixture thermodb, by default None
-    mixture_key: Literal['Name', 'Formula'], optional
-        Key to use for mixture id, either 'Name' or 'Formula', by default '
+    mixture_keys: List[MixtureKey], optional
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -572,6 +578,7 @@ def build_mixture_model_source(
             ignore_props = []
 
         # SECTION: set ids
+        # ! default ids
         # >> name states
         name_states_original = [
             set_component_key(
@@ -591,6 +598,38 @@ def build_mixture_model_source(
                 component_key='Formula'
             ) for component in components
         ]
+
+        # ! custom ids
+        _mixture_custom_ids: List[str] = []
+        # >> check
+        if "Name" in mixture_keys:
+            # remove
+            mixture_keys.remove("Name")
+
+        # > check
+        if "Formula" in mixture_keys:
+            # remove
+            mixture_keys.remove("Formula")
+
+        # check
+        if len(mixture_keys) > 0:
+            # create custom ids based on mixture_keys
+            for mixture_key in mixture_keys:
+                # create custom id
+                custom_id = create_mixture_id(
+                    components=components,
+                    mixture_key=mixture_key,
+                    delimiter=delimiter
+                )
+                # append
+                _mixture_custom_ids.append(custom_id)
+
+            # embed to mixture_custom_ids
+            if mixture_custom_ids is None:
+                mixture_custom_ids = _mixture_custom_ids
+            else:
+                # append to mixture_custom_ids
+                mixture_custom_ids.extend(_mixture_custom_ids)
 
         # NOTE: sort formula states alphabetically
         # >> sort alphabetically
@@ -848,7 +887,9 @@ def build_mixtures_model_source(
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
     check_labels: bool = True,
-    mixture_key: Literal['Name', 'Formula'] = 'Name',
+    mixture_keys: List[MixtureKey] = [
+        'Name', 'Formula',
+    ],
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
@@ -864,8 +905,8 @@ def build_mixtures_model_source(
         Rules to map data/equations in the thermodb to the model source.
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
-    mixture_key: Literal['Name', 'Formula'], optional
-        Key to use for mixture id, either 'Name' or 'Formula', by default 'Name'
+    mixture_keys: List[MixtureKey], optional
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -889,7 +930,7 @@ def build_mixtures_model_source(
                 mixture_thermodb=mixture_thermodb,
                 rules=rules,
                 check_labels=check_labels,
-                mixture_key=mixture_key,
+                mixture_keys=mixture_keys,
                 delimiter=delimiter,
                 overwrite_rules=overwrite_rules,
                 verbose=verbose
@@ -1335,7 +1376,9 @@ def load_and_build_mixture_model_source(
             Dict[str, Dict[str, ComponentRule]] | str
         ] = None,
         check_labels: bool = True,
-        mixture_key: Literal['Name', 'Formula'] = 'Name',
+        mixture_keys: List[MixtureKey] = [
+            'Name', 'Formula',
+        ],
         delimiter: str = '|',
         overwrite_rules: bool = False,
         verbose: bool = False,
@@ -1351,8 +1394,8 @@ def load_and_build_mixture_model_source(
         Rules to map data/equations in the thermodb to the model source.
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
-    mixture_key: Literal['Name', 'Formula'], optional
-        Key to use for mixture id, either 'Name' or 'Formula', by default 'Name'
+    mixture_keys: List[MixtureKey], optional
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -1422,7 +1465,7 @@ def load_and_build_mixture_model_source(
             mixtures_thermodb=mixtures_thermodb,
             rules=rules,
             check_labels=check_labels,
-            mixture_key=mixture_key,
+            mixture_keys=mixture_keys,
             delimiter=delimiter,
             overwrite_rules=overwrite_rules,
             verbose=verbose
@@ -1446,7 +1489,9 @@ def load_and_build_model_source(
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
     check_labels: bool = True,
-    mixture_key: Literal['Name', 'Formula'] = 'Name',
+    mixture_keys: List[MixtureKey] = [
+        'Name', 'Formula',
+    ],
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
@@ -1463,8 +1508,8 @@ def load_and_build_model_source(
         Rules to map data/equations in the thermodb to the model source.
     check_labels: bool, optional
         Whether to check labels in the thermodb based on the provided rules, by default True
-    mixture_key: Literal['Name', 'Formula'], optional
-        Key to use for mixture id, either 'Name' or 'Formula', by default 'Name'
+    mixture_keys: List[MixtureKey], optional
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -1529,7 +1574,7 @@ def load_and_build_model_source(
                 thermodb_sources=mixture_thermodb_sources,
                 rules=rules,
                 check_labels=check_labels,
-                mixture_key=mixture_key,
+                mixture_keys=mixture_keys,
                 delimiter=delimiter,
                 overwrite_rules=overwrite_rules,
                 verbose=verbose
