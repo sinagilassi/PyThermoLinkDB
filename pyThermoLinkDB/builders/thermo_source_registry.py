@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from pythermodb_settings.models import Component
+from pythermodb_settings.models import Component, Mixture, MixtureKey
 
 from ..models import SourceConfig, ThermoSourceHubConfig
 
@@ -37,6 +37,8 @@ class ThermoSourceRegistry:
     def extract_sources(
             self,
             components: Optional[List[Component]] = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
             include_missing: bool = False,
     ) -> Dict[str, Dict[str, Any]]:
         """
@@ -46,6 +48,10 @@ class ThermoSourceRegistry:
         ----------
         components : Optional[List[Component]], optional
             Optional component order for component-wise source entries.
+        mixtures : Optional[List[Mixture]], optional
+            Optional mixture order for mixture-keyed matrix-data source entries.
+        mixture_key : Optional[MixtureKey], optional
+            Optional mixture identifier strategy for matrix-data source entries.
         include_missing : bool, optional
             When ``True``, include keys with ``None`` values for configured
             fields that are not available in the selected source group.
@@ -63,6 +69,8 @@ class ThermoSourceRegistry:
                 symbol=symbol,
                 source_config=source_config,
                 components=components,
+                mixtures=mixtures,
+                mixture_key=mixture_key,
                 include_missing=include_missing,
             )
 
@@ -74,6 +82,8 @@ class ThermoSourceRegistry:
             symbol: str,
             source_config: Optional[SourceConfig] = None,
             components: Optional[List[Component]] = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
             include_missing: bool = False,
     ) -> Dict[str, Any]:
         """
@@ -87,6 +97,10 @@ class ThermoSourceRegistry:
             Source selection for the symbol. Defaults to ``SourceConfig()``.
         components : Optional[List[Component]], optional
             Optional component order for component-wise source entries.
+        mixtures : Optional[List[Mixture]], optional
+            Optional mixture order for mixture-keyed matrix-data source entries.
+        mixture_key : Optional[MixtureKey], optional
+            Optional mixture identifier strategy for matrix-data source entries.
         include_missing : bool, optional
             When ``True``, include missing fields as ``None``.
 
@@ -174,6 +188,8 @@ class ThermoSourceRegistry:
                     source_type=matrix_data_source,
                     symbol=symbol,
                     components=components,
+                    mixtures=mixtures,
+                    mixture_key=mixture_key,
                 )
             if src is not None or "src" not in source_entry:
                 self._set_if_available(
