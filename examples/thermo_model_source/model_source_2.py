@@ -27,6 +27,7 @@ print(ptdblink.__version__)
 # SECTION: build model source
 # ====================================================
 # NOTE: all model source
+# ! contain all model source: constants, components, mixture
 sources: list = [constants_model_source] + \
     component_model_source + [mixture_model_source]
 
