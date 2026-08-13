@@ -140,3 +140,64 @@ def test_extractor_exposes_symbol_modes():
     assert extractor.get_mode("model_source", "Cp") == ["data", "equation"]
     assert extractor.has_mode("model_source", "Cp", "data") is True
     assert extractor.has_mode("model_source", "Cp", "constants") is False
+
+
+def test_validator_reports_missing_mixture_matrix_data_without_component_errors():
+    source = SimpleNamespace(
+        thermo_src={
+            "alpha": {
+                "src": {"mix-A": object()},
+                "comp": None,
+                "value": None,
+                "eq": None,
+                "mode": ["matrix_data"],
+            }
+        },
+        requested_data=[],
+        requested_equations=[],
+        requested_matrix_data=["alpha"],
+        requested_constants=[],
+        component_references={"component_ids": ["A", "B"]},
+        mixture_references={"mixture_ids": ["mix-A", "mix-B"]},
+    )
+
+    report = ThermoSourceValidator(source=source).validate()
+
+    assert report is not None
+    assert report.is_valid is False
+    assert report.all_components_available is True
+    assert report.all_mixtures_available is False
+    assert report.all_requested_available is False
+    assert report.missing_data == {}
+    assert report.missing_equations == {}
+    assert report.missing_mixtures == {"alpha": ["mix-B"]}
+    assert report.missing_matrix_data == []
+
+
+def test_validator_accepts_custom_matrix_data_without_mixture_ids():
+    matrix_source = object()
+    source = SimpleNamespace(
+        thermo_src={
+            "kij": {
+                "src": matrix_source,
+                "comp": None,
+                "value": [[0.0, 0.1], [0.1, 0.0]],
+                "eq": None,
+                "mode": ["matrix_data"],
+            }
+        },
+        requested_data=[],
+        requested_equations=[],
+        requested_matrix_data=["kij"],
+        requested_constants=[],
+        component_references={"component_ids": ["A", "B"]},
+    )
+
+    report = ThermoSourceValidator(source=source).validate()
+
+    assert report is not None
+    assert report.is_valid is True
+    assert report.all_components_available is True
+    assert report.all_mixtures_available is True
+    assert report.all_requested_available is True
+    assert report.missing_mixtures == {}

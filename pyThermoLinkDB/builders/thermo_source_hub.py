@@ -303,6 +303,22 @@ class ThermoSourceHub:
             and self.thermo_custom_source.has_all_components()
         )
 
+    # NOTE: validity and completeness methods return False if the source is not built
+    def has_all_model_mixtures(self) -> bool:
+        """Return whether model-source matrix data covers all mixtures."""
+        return (
+            self.thermo_model_source is not None
+            and self.thermo_model_source.has_all_mixtures()
+        )
+
+    # NOTE: validity and completeness methods return False if the source is not built
+    def has_all_custom_mixtures(self) -> bool:
+        """Return whether custom-source matrix data covers all mixtures."""
+        return (
+            self.thermo_custom_source is not None
+            and self.thermo_custom_source.has_all_mixtures()
+        )
+
     # SECTION: access to thermo source
     def available_symbols(self, source_type: str) -> List[str]:
         """

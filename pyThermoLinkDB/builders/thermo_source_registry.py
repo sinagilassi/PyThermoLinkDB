@@ -126,6 +126,8 @@ class ThermoSourceRegistry:
                     symbol=symbol,
                     components=components,
                 )
+
+            # >>> add the property source to the registry entry if it is available
             self._set_if_available(
                 source_entry=source_entry,
                 key="src",
@@ -147,6 +149,8 @@ class ThermoSourceRegistry:
                     symbol=symbol,
                     components=components,
                 )
+
+            # >>> add the equation source to the registry entry if it is available
             self._set_if_available(
                 source_entry=source_entry,
                 key="eq",
@@ -167,6 +171,8 @@ class ThermoSourceRegistry:
                     source_type=constants_source,
                     symbol=symbol,
                 )
+
+            # >>> add the constant source to the registry entry if it is available
             if src is not None or "src" not in source_entry:
                 self._set_if_available(
                     source_entry=source_entry,
@@ -191,6 +197,8 @@ class ThermoSourceRegistry:
                     mixtures=mixtures,
                     mixture_key=mixture_key,
                 )
+
+            # >> add the matrix data source to the registry entry if it is available
             if src is not None or "src" not in source_entry:
                 self._set_if_available(
                     source_entry=source_entry,

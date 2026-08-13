@@ -33,6 +33,7 @@ class ValidationReport:
     missing_requested: List[str] = field(default_factory=list)
     missing_data: Dict[str, List[str]] = field(default_factory=dict)
     missing_equations: Dict[str, List[str]] = field(default_factory=dict)
+    missing_mixtures: Dict[str, List[str]] = field(default_factory=dict)
     missing_matrix_data: List[str] = field(default_factory=list)
     missing_constants: List[str] = field(default_factory=list)
 
@@ -48,6 +49,7 @@ class ValidationReport:
             not self.missing_requested
             and not self.missing_data
             and not self.missing_equations
+            and not self.missing_mixtures
             and not self.missing_matrix_data
             and not self.missing_constants
         )
@@ -56,6 +58,11 @@ class ValidationReport:
     def all_components_available(self) -> bool:
         """Return ``True`` when component-wise data/equations cover all components."""
         return not self.missing_data and not self.missing_equations
+
+    @property
+    def all_mixtures_available(self) -> bool:
+        """Return ``True`` when mixture-keyed matrix data covers all mixtures."""
+        return not self.missing_mixtures and not self.missing_matrix_data
 
     @property
     def errors(self) -> List[ValidationIssue]:
@@ -92,11 +99,13 @@ class ValidationReport:
             "is_valid": self.is_valid,
             "all_requested_available": self.all_requested_available,
             "all_components_available": self.all_components_available,
+            "all_mixtures_available": self.all_mixtures_available,
             "error_count": len(self.errors),
             "warning_count": len(self.warnings),
             "missing_requested": self.missing_requested,
             "missing_data": self.missing_data,
             "missing_equations": self.missing_equations,
+            "missing_mixtures": self.missing_mixtures,
             "missing_matrix_data": self.missing_matrix_data,
             "missing_constants": self.missing_constants,
         }
@@ -273,6 +282,7 @@ class ThermoSourceValidator:
         """Check requested matrix data has source entries."""
         try:
             thermo_src = self._thermo_src() or {}
+            mixture_ids = self._mixture_ids()
 
             for symbol in self._requested("requested_matrix_data"):
                 entry = thermo_src.get(symbol)
@@ -287,6 +297,22 @@ class ThermoSourceValidator:
                         f"Matrix data source for '{symbol}' is missing.",
                         symbol=symbol,
                     )
+
+                    continue
+
+                src = entry.get("src")
+                if isinstance(src, dict) and mixture_ids:
+                    for mixture_id in mixture_ids:
+                        if mixture_id not in src:
+                            self._record_missing_mixture(
+                                "missing_mixture_matrix_data",
+                                (
+                                    f"Matrix data source for symbol '{symbol}' "
+                                    f"is missing mixture '{mixture_id}'."
+                                ),
+                                symbol,
+                                mixture_id,
+                            )
 
             return self.report
         except Exception as exc:
@@ -410,6 +436,21 @@ class ThermoSourceValidator:
 
         return []
 
+    def _mixture_ids(self) -> List[str]:
+        mixture_references = getattr(self.source, "mixture_references", {})
+        if isinstance(mixture_references, dict):
+            mixture_ids = (
+                mixture_references.get("mixture_ids")
+                or mixture_references.get("mixture_id")
+                or []
+            )
+            if isinstance(mixture_ids, str):
+                return [mixture_ids]
+            if isinstance(mixture_ids, list):
+                return mixture_ids
+
+        return []
+
     def _check_present(
             self,
             entry: Dict[str, Any],
@@ -449,6 +490,23 @@ class ThermoSourceValidator:
             message,
             symbol=symbol,
             component_id=component_id,
+        )
+
+    def _record_missing_mixture(
+            self,
+            code: str,
+            message: str,
+            symbol: str,
+            mixture_id: str,
+    ) -> None:
+        self.report.missing_mixtures.setdefault(symbol, [])
+        if mixture_id not in self.report.missing_mixtures[symbol]:
+            self.report.missing_mixtures[symbol].append(mixture_id)
+        self._add_error(
+            code,
+            message,
+            symbol=symbol,
+            component_id=mixture_id,
         )
 
     def _record_missing_constant(self, symbol: str) -> None:

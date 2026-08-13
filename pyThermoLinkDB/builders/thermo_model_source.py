@@ -880,6 +880,13 @@ class ThermoModelSource:
             and self.validation_report.all_requested_available
         )
 
+    def has_all_mixtures(self) -> bool:
+        """Return whether matrix data covers all configured mixtures."""
+        return (
+            self.validation_report is not None
+            and self.validation_report.all_mixtures_available
+        )
+
     def has_all_components(self) -> bool:
         """Return whether component-wise data/equations cover all components."""
         return (
