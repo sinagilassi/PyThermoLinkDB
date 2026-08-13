@@ -54,6 +54,8 @@ if mixture_thermodb_ is None:
 # NOTE: build mixture model source
 mixture_model_source: MixtureModelSource = build_mixture_model_source(
     mixture_thermodb=mixture_thermodb_,
+    mixture_keys=['Name-State', 'Formula-State'],
+    mixture_custom_ids=['custom-mixture-id-1', 'custom-mixture-id-2'],
 )
 print(f"mixture_model_source:")
 print(mixture_model_source)
