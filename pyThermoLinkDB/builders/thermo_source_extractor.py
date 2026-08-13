@@ -7,8 +7,18 @@ import logging
 from typing import Any, Dict, List, Optional, cast
 
 import numpy as np
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
-from pythermodb_settings.utils import generate_component_references
+from pythermodb_settings.models import (
+    Component,
+    ComponentKey,
+    CustomProperty,
+    CustomConstant,
+    Mixture,
+    MixtureKey,
+)
+from pythermodb_settings.utils import (
+    generate_component_references,
+    generate_mixture_references,
+)
 # locals
 from ..thermo import EquationSourceCore
 
@@ -25,11 +35,13 @@ class ThermoSourceExtractor:
     def __init__(
             self,
             thermo_source: Dict[str, Dict[str, Any]],
-            component_key: ComponentKey
+            component_key: ComponentKey,
+            mixture_key: MixtureKey = "Name",
     ) -> None:
         # NOTE: set attributes
         self.thermo_source = thermo_source
         self.component_key = component_key
+        self.mixture_key: MixtureKey = mixture_key
 
     # SECTION: reorder thermo source
     def reorder_x(
@@ -292,7 +304,9 @@ class ThermoSourceExtractor:
             self,
             source_type: str,
             symbol: str,
-            components: List[Component] | None = None
+            components: List[Component] | None = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
     ) -> Any:
         if not self.has_mode(
             source_type=source_type,
@@ -301,11 +315,21 @@ class ThermoSourceExtractor:
         ):
             return None
 
-        return self.get_item(
+        selected_mixture_key = cast(
+            MixtureKey,
+            self.mixture_key if mixture_key is None else mixture_key
+        )
+        matrix_src = self.get_item(
             source_type=source_type,
             symbol=symbol,
             item="src",
-            components=components
+            components=None
+        )
+        return self._reorder_mixture_mapping(
+            value=matrix_src,
+            components=components,
+            mixtures=mixtures,
+            mixture_key=selected_mixture_key,
         )
 
     # ! get matrix data value
@@ -313,7 +337,9 @@ class ThermoSourceExtractor:
             self,
             source_type: str,
             symbol: str,
-            components: List[Component] | None = None
+            components: List[Component] | None = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
     ) -> Any:
         if not self.has_mode(
             source_type=source_type,
@@ -322,11 +348,21 @@ class ThermoSourceExtractor:
         ):
             return None
 
-        return self.get_item(
+        selected_mixture_key = cast(
+            MixtureKey,
+            self.mixture_key if mixture_key is None else mixture_key
+        )
+        matrix_value = self.get_item(
             source_type=source_type,
             symbol=symbol,
             item="value",
-            components=components
+            components=None
+        )
+        return self._reorder_mixture_mapping(
+            value=matrix_value,
+            components=components,
+            mixtures=mixtures,
+            mixture_key=selected_mixture_key,
         )
 
     # ! get source mode
@@ -387,6 +423,37 @@ class ThermoSourceExtractor:
             return []
         return component_ids
 
+    # SECTION: mixture id helpers
+    def _mixture_ids(
+            self,
+            components: Optional[List[Component]] = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: MixtureKey = "Name",
+    ) -> List[str]:
+        # NOTE: matrix data entries are keyed by mixture IDs, not component IDs
+        selected_mixtures = mixtures if components is None else cast(
+            List[Mixture],
+            [components]
+        )
+
+        if not selected_mixtures:
+            return []
+
+        mixture_references = generate_mixture_references(
+            mixtures=selected_mixtures,
+            mixture_key=cast(MixtureKey, mixture_key)
+        )
+        mixture_ids = (
+            mixture_references.get("mixture_ids")
+            or mixture_references.get("mixture_id")
+            or []
+        )
+        if isinstance(mixture_ids, str):
+            return [mixture_ids]
+        if not isinstance(mixture_ids, list):
+            return []
+        return mixture_ids
+
     def _reorder_mapping(
             self,
             value: Dict[str, Any],
@@ -401,6 +468,33 @@ class ThermoSourceExtractor:
             component_id: value[component_id]
             for component_id in component_ids
             if component_id in value
+        }
+
+    def _reorder_mixture_mapping(
+            self,
+            value: Any,
+            components: Optional[List[Component]],
+            mixtures: Optional[List[Mixture]],
+            mixture_key: MixtureKey,
+    ) -> Any:
+        if not isinstance(value, dict):
+            return value
+
+        mixture_ids = self._mixture_ids(
+            components=components,
+            mixtures=mixtures,
+            mixture_key=mixture_key,
+        )
+        if not mixture_ids:
+            return value
+
+        if not any(mixture_id in value for mixture_id in mixture_ids):
+            return value
+
+        return {
+            mixture_id: value[mixture_id]
+            for mixture_id in mixture_ids
+            if mixture_id in value
         }
 
     def _reorder_values(
