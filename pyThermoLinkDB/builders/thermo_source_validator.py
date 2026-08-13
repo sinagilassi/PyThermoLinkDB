@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 THERMO_SRC_KEYS = ("src", "comp", "value", "eq", "mode")
 
 
+# SECTION: Validation result data structures
 @dataclass
 class ValidationIssue:
     """Single validation issue found in a built thermo source."""
@@ -37,6 +38,8 @@ class ValidationReport:
     missing_matrix_data: List[str] = field(default_factory=list)
     missing_constants: List[str] = field(default_factory=list)
 
+    # NOTE: These properties expose common report status checks without
+    # requiring callers to inspect the raw issue and missing-data collections.
     @property
     def is_valid(self) -> bool:
         """Return ``True`` when no error-level issues were found."""
@@ -125,10 +128,12 @@ class ThermoSourceValidator:
             source: Any,
             component_ids: Optional[List[str]] = None,
     ) -> None:
+        """Store source context and initialize an empty validation report."""
         self.source = source
         self.component_ids = component_ids
         self.report = ValidationReport()
 
+    # SECTION: Main validation workflow
     def validate(self) -> Optional[ValidationReport]:
         """Run source validation and return a report, or ``None`` on failure."""
         try:
@@ -158,6 +163,7 @@ class ThermoSourceValidator:
             logger.error(f"Thermo source validation failed: {exc}")
             return None
 
+    # SECTION: Public validation checks
     def validate_source_shape(self) -> Optional[ValidationReport]:
         """Check each symbol entry has the canonical fixed keys."""
         try:
@@ -412,19 +418,23 @@ class ThermoSourceValidator:
         """Return a compact summary for the last validation run."""
         return self.report.summary()
 
+    # SECTION: Source metadata helpers
     def _thermo_src(self) -> Optional[Dict[str, Dict[str, Any]]]:
+        """Return the source ``thermo_src`` mapping when it has dict shape."""
         thermo_src = getattr(self.source, "thermo_src", None)
         if isinstance(thermo_src, dict):
             return thermo_src
         return None
 
     def _requested(self, attr: str) -> List[str]:
+        """Return requested symbol names from a source attribute as a list."""
         requested = getattr(self.source, attr, [])
         if requested is None:
             return []
         return list(requested)
 
     def _component_ids(self) -> List[str]:
+        """Return explicit or source-provided component identifiers."""
         if self.component_ids is not None:
             return self.component_ids
 
@@ -437,6 +447,7 @@ class ThermoSourceValidator:
         return []
 
     def _mixture_ids(self) -> List[str]:
+        """Return mixture identifiers from source metadata as a list."""
         mixture_references = getattr(self.source, "mixture_references", {})
         if isinstance(mixture_references, dict):
             mixture_ids = (
@@ -451,6 +462,7 @@ class ThermoSourceValidator:
 
         return []
 
+    # SECTION: Missing-field and missing-symbol recorders
     def _check_present(
             self,
             entry: Dict[str, Any],
@@ -458,6 +470,7 @@ class ThermoSourceValidator:
             code: str,
             symbol: str,
     ) -> None:
+        """Add an error when a required entry field is empty or absent."""
         if self._is_empty(entry.get(key)):
             self._add_error(
                 code,
@@ -466,6 +479,7 @@ class ThermoSourceValidator:
             )
 
     def _record_missing_requested(self, symbol: str) -> None:
+        """Record a requested symbol that has no ``thermo_src`` entry."""
         if symbol not in self.report.missing_requested:
             self.report.missing_requested.append(symbol)
         self._add_error(
@@ -482,6 +496,7 @@ class ThermoSourceValidator:
             symbol: str,
             component_id: str,
     ) -> None:
+        """Record a missing component for data or equation availability."""
         missing.setdefault(symbol, [])
         if component_id not in missing[symbol]:
             missing[symbol].append(component_id)
@@ -499,6 +514,7 @@ class ThermoSourceValidator:
             symbol: str,
             mixture_id: str,
     ) -> None:
+        """Record a missing mixture-specific matrix-data source."""
         self.report.missing_mixtures.setdefault(symbol, [])
         if mixture_id not in self.report.missing_mixtures[symbol]:
             self.report.missing_mixtures[symbol].append(mixture_id)
@@ -510,13 +526,16 @@ class ThermoSourceValidator:
         )
 
     def _record_missing_constant(self, symbol: str) -> None:
+        """Record a requested constant whose source entry is unusable."""
         if symbol not in self.report.missing_constants:
             self.report.missing_constants.append(symbol)
 
     def _record_missing_matrix_data(self, symbol: str) -> None:
+        """Record requested matrix data whose source entry is unusable."""
         if symbol not in self.report.missing_matrix_data:
             self.report.missing_matrix_data.append(symbol)
 
+    # SECTION: Issue logging helpers
     def _add_error(
             self,
             code: str,
@@ -524,6 +543,7 @@ class ThermoSourceValidator:
             symbol: Optional[str] = None,
             component_id: Optional[str] = None,
     ) -> None:
+        """Log and append one error-level validation issue."""
         logger.error(message)
         self.report.add_issue(
             level="error",
@@ -540,6 +560,7 @@ class ThermoSourceValidator:
             symbol: Optional[str] = None,
             component_id: Optional[str] = None,
     ) -> None:
+        """Log and append one warning-level validation issue."""
         logger.warning(message)
         self.report.add_issue(
             level="warning",
@@ -549,7 +570,9 @@ class ThermoSourceValidator:
             component_id=component_id,
         )
 
+    # SECTION: Value-shape and numeric helpers
     def _is_empty(self, value: Any) -> bool:
+        """Return ``True`` when a supported value container has no content."""
         if value is None:
             return True
         if isinstance(value, np.ndarray):
@@ -559,6 +582,7 @@ class ThermoSourceValidator:
         return False
 
     def _value_length(self, value: Any) -> Optional[int]:
+        """Return the length of array-like values, or ``None`` if scalar/unknown."""
         if value is None:
             return None
         if isinstance(value, np.ndarray):
@@ -568,6 +592,7 @@ class ThermoSourceValidator:
         return None
 
     def _is_finite_number(self, value: Any) -> bool:
+        """Return ``True`` only for non-boolean finite numeric values."""
         if isinstance(value, bool):
             return False
         if not isinstance(value, (int, float, np.number)):
