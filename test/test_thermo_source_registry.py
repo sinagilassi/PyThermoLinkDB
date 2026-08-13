@@ -1,3 +1,7 @@
+from types import SimpleNamespace
+
+from pythermodb_settings.models import Component
+
 from pyThermoLinkDB.builders import ThermoSourceHub, ThermoSourceRegistry
 from pyThermoLinkDB.builders.thermo_source_extractor import ThermoSourceExtractor
 from pyThermoLinkDB.models import SourceConfig
@@ -30,6 +34,30 @@ class FakeThermoSourceHub:
 
     def get_const_src(self, source_type, symbol):
         return self.constant_sources[source_type][symbol]
+
+
+def make_mixture_hub():
+    methanol = Component(name="methanol", formula="CH3OH", state="l")
+    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    model = SimpleNamespace(thermo_src={
+        "alpha": {
+            "src": {
+                "ethanol|methanol": "name-source",
+                "C2H5OH|CH3OH": "formula-source",
+            },
+            "value": None,
+            "mode": ["matrix_data"],
+        },
+    })
+    hub = ThermoSourceHub(
+        components=[methanol, ethanol],
+        component_key="Formula-State",
+        thermo_model_source=model,
+        thermo_custom_source=None,
+        mixtures=[[methanol, ethanol]],
+        mixture_key="Formula",
+    )
+    return hub, methanol, ethanol
 
 
 def test_thermo_source_registry_extracts_configured_modes_only():
@@ -112,3 +140,44 @@ def test_thermo_source_hub_registers_configured_sources():
         "R": {"src": "r-src"},
     }
     assert hub.thermo_source_registry.registry == registered_source
+
+
+def test_thermo_source_registry_passes_mixture_lookup_options():
+    hub, methanol, ethanol = make_mixture_hub()
+
+    registered_source = hub.register_thermo_source(
+        thermo_source_hub_config={
+            "alpha": SourceConfig(
+                property_source=None,
+                equation_source=None,
+                constants_source=None,
+                matrix_data_source="model_source",
+            ),
+        },
+        mixtures=[[methanol, ethanol]],
+        mixture_key="Name",
+    )
+
+    assert registered_source == {
+        "alpha": {"src": {"ethanol|methanol": "name-source"}},
+    }
+
+
+def test_thermo_source_registry_uses_components_as_single_mixture():
+    hub, methanol, ethanol = make_mixture_hub()
+
+    registered_source = hub.register_thermo_source(
+        thermo_source_hub_config={
+            "alpha": SourceConfig(
+                property_source=None,
+                equation_source=None,
+                constants_source=None,
+                matrix_data_source="model_source",
+            ),
+        },
+        components=[methanol, ethanol],
+    )
+
+    assert registered_source == {
+        "alpha": {"src": {"C2H5OH|CH3OH": "formula-source"}},
+    }
