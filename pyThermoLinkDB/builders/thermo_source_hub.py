@@ -2,7 +2,14 @@
 
 from typing import List, Optional, Dict, Any, cast, Literal
 
-from pythermodb_settings.models import Component, ComponentKey, CustomProperty, CustomConstant
+from pythermodb_settings.models import (
+    Component,
+    ComponentKey,
+    CustomProperty,
+    CustomConstant,
+    Mixture,
+    MixtureKey,
+)
 
 from .thermo_custom_source import ThermoCustomSource
 from .thermo_model_source import ThermoModelSource
@@ -30,6 +37,10 @@ class ThermoSourceHub:
         Components used to build the model and custom source entries.
     component_key : ComponentKey
         Identifier strategy used for component-keyed source entries.
+    mixtures : Optional[List[Mixture]], optional
+        Mixture component lists used for mixture-keyed matrix-data entries.
+    mixture_key : MixtureKey, optional
+        Identifier strategy used for mixture-keyed matrix-data entries.
     thermo_model_source : Optional[ThermoModelSource]
         Built model source, or ``None`` when no model source was configured.
     thermo_custom_source : Optional[ThermoCustomSource]
@@ -43,6 +54,8 @@ class ThermoSourceHub:
         Canonical source mapping with ``model_source`` and ``custom_source``
         keys. Each source group maps symbols to entries containing ``src``,
         ``comp``, ``value``, ``eq``, and ``mode`` fields.
+    mixture_key : MixtureKey
+        Identifier strategy used when selecting mixture-keyed matrix data.
     """
 
     def __init__(
@@ -51,11 +64,15 @@ class ThermoSourceHub:
             component_key: ComponentKey,
             thermo_model_source: Optional[ThermoModelSource],
             thermo_custom_source: Optional[ThermoCustomSource],
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: MixtureKey = "Name",
             description: Optional[str] = None,
     ) -> None:
         # NOTE: set attributes
         self.components = components
         self.component_key = component_key
+        self.mixtures = [] if mixtures is None else mixtures
+        self.mixture_key = mixture_key
         self.thermo_model_source = thermo_model_source
         self.thermo_custom_source = thermo_custom_source
         self.description = description
@@ -141,7 +158,8 @@ class ThermoSourceHub:
         # NOTE: thermo source extractor
         self.thermo_source_extractor = ThermoSourceExtractor(
             thermo_source=self._thermo_source,
-            component_key=cast(ComponentKey, self.component_key)
+            component_key=cast(ComponentKey, self.component_key),
+            mixture_key=cast(MixtureKey, self.mixture_key),
         )
 
     def _ensure_thermo_source_extractor(self) -> ThermoSourceExtractor:
@@ -538,7 +556,9 @@ class ThermoSourceHub:
             self,
             source_type: str,
             symbol: str,
-            components: Optional[List[Component]] = None
+            components: Optional[List[Component]] = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
     ) -> Any:
         """
         Return matrix-data source objects for a symbol.
@@ -551,14 +571,18 @@ class ThermoSourceHub:
         return self._ensure_thermo_source_extractor().get_matrix_data_src(
             source_type=source_type,
             symbol=symbol,
-            components=components
+            components=components,
+            mixtures=self.mixtures if mixtures is None else mixtures,
+            mixture_key=mixture_key,
         )
 
     def get_matrix_data_value(
             self,
             source_type: str,
             symbol: str,
-            components: Optional[List[Component]] = None
+            components: Optional[List[Component]] = None,
+            mixtures: Optional[List[Mixture]] = None,
+            mixture_key: Optional[MixtureKey] = None,
     ) -> Any:
         """
         Return the matrix-data value for a symbol.
@@ -570,7 +594,9 @@ class ThermoSourceHub:
         return self._ensure_thermo_source_extractor().get_matrix_data_value(
             source_type=source_type,
             symbol=symbol,
-            components=components
+            components=components,
+            mixtures=self.mixtures if mixtures is None else mixtures,
+            mixture_key=mixture_key,
         )
 
     def get_mode(
