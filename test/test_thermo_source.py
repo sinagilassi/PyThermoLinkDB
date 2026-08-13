@@ -3,6 +3,7 @@ from typing import List, Literal, Optional
 from pythermodb_settings.models import Component
 
 from pyThermoLinkDB.builders import ThermoSourceHub, build_thermo_source_hub
+from pyThermoLinkDB.builders.thermo_source_extractor import ThermoSourceExtractor
 
 
 def make_container(model=None, custom=None, description="container"):
@@ -28,6 +29,52 @@ def test_thermo_source_holds_both_sources_by_identity():
     assert source.components is components
     assert source.component_key == "Formula-State"
     assert source.description == "container"
+
+
+def test_thermo_source_holds_mixture_configuration():
+    methanol = Component(name="methanol", formula="CH3OH", state="l")
+    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    mixtures = [[methanol, ethanol]]
+
+    source = ThermoSourceHub(
+        components=[methanol, ethanol],
+        component_key="Formula-State",
+        thermo_model_source=None,
+        thermo_custom_source=None,
+        mixtures=mixtures,
+        mixture_key="Formula",
+    )
+
+    assert source.mixtures is mixtures
+    assert source.mixture_key == "Formula"
+
+
+def test_thermo_source_extractor_takes_mixture_config_at_method_call():
+    methanol = Component(name="methanol", formula="CH3OH", state="l")
+    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    extractor = ThermoSourceExtractor(
+        thermo_source={
+            "model_source": {
+                "alpha": {
+                    "src": {
+                        "ethanol|methanol": "name-source",
+                        "C2H5OH|CH3OH": "formula-source",
+                    },
+                    "value": None,
+                    "mode": ["matrix_data"],
+                },
+            },
+            "custom_source": {},
+        },
+        component_key="Formula-State",
+        mixture_key="Formula",
+    )
+
+    assert extractor.get_matrix_data_src(
+        "model_source",
+        "alpha",
+        components=[methanol, ethanol],
+    ) == {"C2H5OH|CH3OH": "formula-source"}
 
 
 def test_thermo_source_allows_either_source_to_be_none():
@@ -112,6 +159,35 @@ def test_thermo_source_lists_available_symbol_modes_by_source_group():
     assert source.custom_source_symbol_modes == {"R": ["constants"]}
 
 
+def test_thermo_source_matrix_data_uses_mixture_key_for_component_list():
+    methanol = Component(name="methanol", formula="CH3OH", state="l")
+    ethanol = Component(name="ethanol", formula="C2H5OH", state="l")
+    model = SimpleNamespace(thermo_src={
+        "alpha": {
+            "src": {
+                "ethanol|methanol": "name-source",
+                "C2H5OH|CH3OH": "formula-source",
+            },
+            "value": None,
+            "mode": ["matrix_data"],
+        },
+    })
+    source = ThermoSourceHub(
+        components=[methanol, ethanol],
+        component_key="Formula-State",
+        thermo_model_source=model,
+        thermo_custom_source=None,
+        mixtures=[[methanol, ethanol]],
+        mixture_key="Formula",
+    )
+
+    assert source.get_matrix_data_src(
+        "model_source",
+        "alpha",
+        components=[methanol, ethanol],
+    ) == {"C2H5OH|CH3OH": "formula-source"}
+
+
 def test_thermo_source_has_no_management_api():
     source, _ = make_container()
     removed_names = (
@@ -166,9 +242,11 @@ def test_thermo_source_delegates_validation_helpers():
 
 
 def test_builder_rejects_missing_model_and_custom_sources():
-    result = build_thermo_source(
+    result = build_thermo_source_hub(
         components=[],
         component_key="Formula-State",
+        mixtures=[],
+        mixture_key="Name",
         model_source=None,
         custom_source=None,
         model_source_config=None,
