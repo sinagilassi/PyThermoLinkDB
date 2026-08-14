@@ -24,6 +24,7 @@ class ValidationIssue:
     message: str
     symbol: Optional[str] = None
     component_id: Optional[str] = None
+    mixture_id: Optional[str] = None
 
 
 @dataclass
@@ -84,6 +85,7 @@ class ValidationReport:
             message: str,
             symbol: Optional[str] = None,
             component_id: Optional[str] = None,
+            mixture_id: Optional[str] = None,
     ) -> None:
         """Add one issue to the report."""
         self.issues.append(
@@ -93,6 +95,7 @@ class ValidationReport:
                 message=message,
                 symbol=symbol,
                 component_id=component_id,
+                mixture_id=mixture_id,
             )
         )
 
@@ -532,7 +535,7 @@ class ThermoSourceValidator:
             code,
             message,
             symbol=symbol,
-            component_id=mixture_id,
+            mixture_id=mixture_id,
         )
 
     def _record_missing_constant(self, symbol: str) -> None:
@@ -552,6 +555,7 @@ class ThermoSourceValidator:
             message: str,
             symbol: Optional[str] = None,
             component_id: Optional[str] = None,
+            mixture_id: Optional[str] = None,
     ) -> None:
         """Log and append one error-level validation issue."""
         logger.error(message)
@@ -561,6 +565,7 @@ class ThermoSourceValidator:
             message=message,
             symbol=symbol,
             component_id=component_id,
+            mixture_id=mixture_id,
         )
 
     def _add_warning(
@@ -569,6 +574,7 @@ class ThermoSourceValidator:
             message: str,
             symbol: Optional[str] = None,
             component_id: Optional[str] = None,
+            mixture_id: Optional[str] = None,
     ) -> None:
         """Log and append one warning-level validation issue."""
         logger.warning(message)
@@ -578,6 +584,7 @@ class ThermoSourceValidator:
             message=message,
             symbol=symbol,
             component_id=component_id,
+            mixture_id=mixture_id,
         )
 
     # SECTION: Value-shape and numeric helpers
