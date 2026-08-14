@@ -27,7 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # ! model source & components
 logging.getLogger("pyThermoLinkDB.docs.thermolink").setLevel(logging.ERROR)
 with contextlib.redirect_stdout(io.StringIO()):
-    from examples.model_source_2 import CO2, C2H5OH, model_source, components
+    from examples.thermo_model_source.model_source_2 import CO2, C2H5OH, model_source, components
 
 
 # version
