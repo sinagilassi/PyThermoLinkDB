@@ -173,7 +173,6 @@ class ThermoSourceHub:
             thermo_source_hub_config: ThermoSourceHubConfig,
             components: Optional[List[Component]] = None,
             mixtures: Optional[List[Mixture]] = None,
-            mixture_key: Optional[MixtureKey] = None,
             include_missing: bool = False,
     ) -> Dict[str, Dict[str, Any]]:
         """
@@ -187,8 +186,6 @@ class ThermoSourceHub:
             Optional component order for component-wise source entries.
         mixtures : Optional[List[Mixture]], optional
             Optional mixture order for mixture-keyed matrix-data source entries.
-        mixture_key : Optional[MixtureKey], optional
-            Optional mixture identifier strategy for matrix-data source entries.
         include_missing : bool, optional
             When ``True``, include configured fields that are unavailable as
             ``None`` values.
@@ -205,7 +202,7 @@ class ThermoSourceHub:
         return self.thermo_source_registry.extract_sources(
             components=components,
             mixtures=self.mixtures if mixtures is None else mixtures,
-            mixture_key=mixture_key,
+            mixture_key=cast(MixtureKey, self.mixture_key),
             include_missing=include_missing,
         )
 
