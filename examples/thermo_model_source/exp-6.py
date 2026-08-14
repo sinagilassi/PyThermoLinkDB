@@ -117,7 +117,6 @@ thermo_source_registry = thermo_source_hub.register_thermo_source(
     thermo_source_hub_config=thermo_source_hub_config,
     components=components,
     mixtures=mixtures,
-    mixture_key="Name",
 )
 print(thermo_source_registry)
 
@@ -126,7 +125,6 @@ print(thermo_source_hub.register_thermo_source(
     thermo_source_hub_config=thermo_source_hub_config,
     components=components,
     mixtures=mixtures,
-    mixture_key="Name",
     include_missing=True,
 ))
 
