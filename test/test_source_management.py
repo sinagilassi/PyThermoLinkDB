@@ -172,6 +172,13 @@ def test_validator_reports_missing_mixture_matrix_data_without_component_errors(
     assert report.missing_equations == {}
     assert report.missing_mixtures == {"alpha": ["mix-B"]}
     assert report.missing_matrix_data == []
+    missing_issue = next(
+        issue
+        for issue in report.issues
+        if issue.code == "missing_mixture_matrix_data"
+    )
+    assert missing_issue.mixture_id == "mix-B"
+    assert missing_issue.component_id is None
 
 
 def test_validator_accepts_explicit_mixture_ids():
@@ -200,6 +207,13 @@ def test_validator_accepts_explicit_mixture_ids():
     assert report is not None
     assert report.is_valid is False
     assert report.missing_mixtures == {"alpha": ["mix-B"]}
+    missing_issue = next(
+        issue
+        for issue in report.issues
+        if issue.code == "missing_mixture_matrix_data"
+    )
+    assert missing_issue.mixture_id == "mix-B"
+    assert missing_issue.component_id is None
 
 
 def test_validator_accepts_custom_matrix_data_without_mixture_ids():
