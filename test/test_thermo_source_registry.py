@@ -142,7 +142,7 @@ def test_thermo_source_hub_registers_configured_sources():
     assert hub.thermo_source_registry.registry == registered_source
 
 
-def test_thermo_source_registry_passes_mixture_lookup_options():
+def test_thermo_source_registry_uses_hub_mixture_key_for_registration():
     hub, methanol, ethanol = make_mixture_hub()
 
     registered_source = hub.register_thermo_source(
@@ -155,11 +155,10 @@ def test_thermo_source_registry_passes_mixture_lookup_options():
             ),
         },
         mixtures=[[methanol, ethanol]],
-        mixture_key="Name",
     )
 
     assert registered_source == {
-        "alpha": {"src": {"ethanol|methanol": "name-source"}},
+        "alpha": {"src": {"C2H5OH|CH3OH": "formula-source"}},
     }
 
 
