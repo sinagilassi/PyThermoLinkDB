@@ -9,7 +9,7 @@ from pyThermoLinkDB.models import DataSource, EquationSource, ConstantsSource
 # ! source
 from pyThermoLinkDB.thermo import Source
 # ! model source
-from examples.model_source_2 import model_source, CO2
+from examples.model_source.model_source_2 import model_source, CO2
 
 # ! version
 print(ptdb.__version__)
@@ -107,6 +107,14 @@ print(comp_data_symbols)
 comp_data_specific = source.get_prop('CO2-g', 'EnFo_IG')
 print("Component data for")
 print(comp_data_specific)
+
+# multiple specific data
+comp_data_multiple_specific = source.get_props(
+    'CO2-g',
+    ['EnFo_IG', 'EnFus']
+)
+print("Component data for")
+print(comp_data_multiple_specific)
 
 # specific data symbols
 comp_data_specific_symbol = source.get_prop_symbol('CO2-g', 'EnFo_IG')
