@@ -620,6 +620,35 @@ class Source:
             prop_name=prop_name
         )
 
+    # NOTE: get properties
+    def get_props(
+            self,
+            component_id: str,
+            prop_names: List[str]
+    ) -> Dict[str, Optional[Dict[str, Any]]]:
+        '''
+        Get multiple specific component properties from the datasource.
+
+        Parameters
+        ----------
+        component_id : str
+            The id of the component.
+        prop_names : List[str]
+            The list of property names to extract.
+
+        Returns
+        -------
+        Dict[str, Optional[Dict[str, Any]]]
+            A dictionary mapping property names to their extracted values or None if not found.
+        '''
+        props = {}
+        for prop_name in prop_names:
+            props[prop_name] = self.data_extractor(
+                component_id=component_id,
+                prop_name=prop_name
+            )
+        return props
+
     # SECTION: matrix data extractor
     def matrix_data_extractor(
             self,
