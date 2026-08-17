@@ -452,8 +452,8 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
                     raise Exception('DATA should be a dictionary!')
 
                 # check data exist
-                if not data_.keys():
-                    raise Exception('DATA is empty!')
+                # if not data_.keys():
+                #     raise Exception('DATA is empty!')
 
                 # looping through data
                 for k, v in data_.items():
@@ -479,8 +479,8 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
                     raise Exception('EQUATIONS should be a dictionary!')
 
                 # check equations exist
-                if not equations_.keys():
-                    raise Exception('EQUATIONS is empty!')
+                # if not equations_.keys():
+                #     raise Exception('EQUATIONS is empty!')
 
                 # looping through equations
                 for k, v in equations_.items():
@@ -505,8 +505,8 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
                     raise Exception('CONSTANTS should be a dictionary!')
 
                 # check constants exist
-                if not constants_.keys():
-                    raise Exception('CONSTANTS is empty!')
+                # if not constants_.keys():
+                #     raise Exception('CONSTANTS is empty!')
 
                 # looping through constants
                 for k, v in constants_.items():
