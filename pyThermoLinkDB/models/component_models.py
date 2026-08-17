@@ -1,10 +1,38 @@
 # import libs
 from typing import Any, Dict, List, Callable
 from pydantic import BaseModel, Field, ConfigDict
-from pyThermoDB.core import TableEquation
+from pyThermoDB.core import TableEquation, TableData
 from pyThermoDB.models import EquationResult
 
-# NOTE: Component Equation Source
+# SECTION: Component Property Source
+
+
+class ComponentPropertySource(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    prop_names: List[str] = Field(
+        ...,
+        description="The property names."
+    )
+    props: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The property values."
+    )
+    available_props: List[str] = Field(
+        ...,
+        description="The available property in the data source"
+    )
+    missing_props: List[str] = Field(
+        ...,
+        description="The missing list of property not found in the data source"
+    )
+    all_loaded: bool = Field(
+        ...,
+        description="Check whether all properties have loaded"
+    )
+
+
+# SECTION: Component Equation Source
 
 
 class ComponentEquationSource(BaseModel):
