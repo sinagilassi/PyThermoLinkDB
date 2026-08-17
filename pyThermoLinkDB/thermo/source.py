@@ -13,7 +13,7 @@ from pythermodb_settings.utils import (
 from pyThermoLinkDB.models import ModelSource
 # local
 from ..config.constants import DATASOURCE, EQUATIONSOURCE, CONSTANTSSOURCE
-from ..models.component_models import ComponentEquationSource
+from ..models.component_models import ComponentEquationSource, ComponentPropertySource
 from ..utils.mixture_tools import canonicalize_mixture_name
 
 # logger
@@ -625,7 +625,7 @@ class Source:
             self,
             component_id: str,
             prop_names: List[str]
-    ) -> Dict[str, Optional[Dict[str, Any]]]:
+    ) -> ComponentPropertySource:
         '''
         Get multiple specific component properties from the datasource.
 
@@ -638,16 +638,49 @@ class Source:
 
         Returns
         -------
-        Dict[str, Optional[Dict[str, Any]]]
-            A dictionary mapping property names to their extracted values or None if not found.
+        ComponentPropertySource
+            The extracted properties as a ComponentPropertySource object.
         '''
         props = {}
+        prop_names_available = []
+        prop_names_missing = []
+
+        # iterate through prop names
         for prop_name in prop_names:
-            props[prop_name] = self.data_extractor(
+            prop_res_ = self.data_extractor(
                 component_id=component_id,
                 prop_name=prop_name
             )
-        return props
+
+            # >> check
+            if prop_res_ is None:
+                logger.warning(
+                    f"Property '{prop_name}' not found for component '{component_id}'.")
+
+                # add
+                prop_names_missing.append(prop_name)
+
+                # skip
+                continue
+
+            # add prop name
+            prop_names_available.append(prop_name)
+            # add prop src
+            props[prop_name] = prop_res_
+
+        # check loaded props
+        loading_status: bool = len(prop_names_missing) == 0
+
+        # set model config
+        res = ComponentPropertySource(
+            prop_names=prop_names,
+            props=props,
+            missing_props=prop_names_missing,
+            available_props=prop_names_available,
+            all_loaded=loading_status
+        )
+
+        return res
 
     # SECTION: matrix data extractor
     def matrix_data_extractor(
