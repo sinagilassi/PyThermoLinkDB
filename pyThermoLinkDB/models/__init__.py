@@ -1,4 +1,4 @@
-# export
+# NOTE: source models
 from .source import (
     ComponentModelSource,
     DataSource,
@@ -13,12 +13,19 @@ from .source import (
     CustomMatrixData
 )
 
-# thermo models
+# NOTE: thermo models
 from .thermo_models import (
     SourceConfig,
     ThermoSourceHubConfig,
 )
 
+# NOTE: component models
+from .component_models import (
+    ComponentPropertySource,
+    ComponentEquationSource,
+)
+
+# NOTE: mixture models
 from .mixture_models import (
     MixtureMatrixDataSource,
 )
@@ -38,5 +45,7 @@ __all__ = [
     "SourceConfig",
     "ThermoSourceHubConfig",
     "CustomMatrixData",
-    "MixtureMatrixDataSource"
+    "MixtureMatrixDataSource",
+    "ComponentPropertySource",
+    "ComponentEquationSource",
 ]
