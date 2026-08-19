@@ -13,6 +13,10 @@ from .thermo_custom_source import ThermoCustomSource
 from .thermo_source_hub import ThermoSourceHub
 from ..models import ModelSource, CustomSource
 from ..models.source import ModelSourceConfig, CustomSourceConfig
+from ..utils.hub_tools import (
+    ensure_custom_source_config,
+    ensure_model_source_config,
+)
 
 # NOTE: logger setup
 logger = logging.getLogger(__name__)
@@ -244,8 +248,8 @@ def build_thermo_source_hub(
         mixture_key: MixtureKey,
         model_source: Optional[ModelSource],
         custom_source: Optional[CustomSource],
-        model_source_config: Optional[ModelSourceConfig],
-        custom_source_config: Optional[CustomSourceConfig],
+        model_source_config: Optional[ModelSourceConfig | str],
+        custom_source_config: Optional[CustomSourceConfig | str],
         description: Optional[str] = None,
         **kwargs
 ) -> Optional[ThermoSourceHub]:
@@ -274,10 +278,10 @@ def build_thermo_source_hub(
         The source of the thermodynamic model data, or None if not applicable.
     custom_source : Optional[CustomSource]
         A dictionary containing custom thermodynamic data, equations, and constants, or None if not applicable.
-    model_source_config : Optional[ModelSourceConfig]
-        Configuration for the model source, including which data, equations, and constants to extract.
-    custom_source_config : Optional[CustomSourceConfig]
-        Configuration for the custom source, including which data and constants to extract.
+    model_source_config : Optional[ModelSourceConfig | str]
+        Configuration for the model source, or JSON/YAML string content.
+    custom_source_config : Optional[CustomSourceConfig | str]
+        Configuration for the custom source, or JSON/YAML string content.
     description : Optional[str]
         Optional description of the thermodynamic source.
     **kwargs : Dict[str, Any]
@@ -308,6 +312,8 @@ def build_thermo_source_hub(
         # NOTE: build thermo model source and custom model source
         thermo_model_source = None
         thermo_custom_source = None
+        model_source_config = ensure_model_source_config(model_source_config)
+        custom_source_config = ensure_custom_source_config(custom_source_config)
 
         # NOTE: build thermo model source if model_source is provided
         if model_source is not None:
