@@ -1,15 +1,11 @@
 """Build and register a thermo source hub from string configs."""
 
-from pathlib import Path
-import sys
-from typing import Any
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from examples.thermo_model_source.model_source_2 import model_source
-from examples.thermo_model_source.custom_source_1 import custom_source
+from rich import print
+from pyThermoLinkDB.utils import thermo_source_hub_config_from_str
+from pyThermoLinkDB.builders import (
+    ThermoSourceHub,
+    build_thermo_source_hub,
+)
 from examples.thermo_model_source.components_1 import (
     C2H4,
     C2H6,
@@ -17,12 +13,15 @@ from examples.thermo_model_source.components_1 import (
     C2H5OH,
     CH3OH,
 )
-from pyThermoLinkDB.builders import (
-    ThermoSourceHub,
-    build_thermo_source_hub,
-)
-from pyThermoLinkDB.utils import thermo_source_hub_config_from_str
-from rich import print
+from examples.thermo_model_source.custom_source_1 import custom_source
+from examples.thermo_model_source.model_source_2 import model_source
+from pathlib import Path
+import sys
+from typing import Any
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 components = [C2H4, C2H6, CO2]
@@ -66,18 +65,31 @@ constants:
   - THIRD_CONST
 """
 
+# ! option 1
+# thermo_source_hub_config = """
+# Tc: model_source
+# Pc: model_source
+# EnFo_IG: model_source
+# Cp_IG: custom_source
+# VaPr: model_source
+# alpha:
+#   matrix_data_source: model_source
+# CUSTOM_MATRIX:
+#   matrix_data_source: custom_source
+# R:
+#   constants_source: model_source
+# """
+
+# ! option 2
 thermo_source_hub_config = """
 Tc: model_source
 Pc: model_source
 EnFo_IG: model_source
 Cp_IG: custom_source
 VaPr: model_source
-alpha:
-  matrix_data_source: model_source
-CUSTOM_MATRIX:
-  matrix_data_source: custom_source
-R:
-  constants_source: model_source
+alpha: model_source
+CUSTOM_MATRIX: custom_source
+R: model_source
 """
 
 
