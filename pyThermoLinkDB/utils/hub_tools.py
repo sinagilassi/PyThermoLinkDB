@@ -125,12 +125,7 @@ def _source_config_from_value(source_config: Any) -> SourceConfig:
                 "'custom_source'."
             )
         source_type = source_config
-        return SourceConfig(
-            property_source=source_type,
-            equation_source=source_type,
-            constants_source=source_type,
-            matrix_data_source=source_type,
-        )
+        return SourceConfig(source=source_type)
     return SourceConfig(**source_config)
 
 
