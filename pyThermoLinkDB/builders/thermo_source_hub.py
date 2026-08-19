@@ -217,6 +217,7 @@ class ThermoSourceHub:
         )
 
     # SECTION: validation
+    # ! >>> all validation methods
     # NOTE: validation methods return None if the source is not built
     def validate_model_source(self) -> Optional[ValidationReport]:
         """Validate the built model source and return its report."""
@@ -262,6 +263,7 @@ class ThermoSourceHub:
         }
 
     # SECTION: source validity and completeness
+    # ! >>> all validity and completeness
     # NOTE: validity and completeness methods return False if the source is not built
     def is_model_source_valid(self) -> bool:
         """Return whether the model source is valid."""
@@ -327,6 +329,7 @@ class ThermoSourceHub:
         )
 
     # SECTION: access to thermo source
+    # ! >>> all access to thermo source
     def available_symbols(self, source_type: str) -> List[str]:
         """
         Return available symbol keys from a source group.
