@@ -4,8 +4,12 @@ from pythermodb_settings.models import Component
 
 from pyThermoLinkDB.builders import ThermoSourceHub, ThermoSourceRegistry
 from pyThermoLinkDB.builders.thermo_source_extractor import ThermoSourceExtractor
-from pyThermoLinkDB.models import SourceConfig
+from pyThermoLinkDB.models import CustomSourceConfig, ModelSourceConfig, SourceConfig
 from pyThermoLinkDB.utils.hub_tools import (
+    custom_source_config_from_json,
+    custom_source_config_from_yaml,
+    model_source_config_from_json,
+    model_source_config_from_yaml,
     thermo_source_hub_config_from_json,
     thermo_source_hub_config_from_yaml,
 )
@@ -224,6 +228,74 @@ def test_thermo_source_hub_config_from_yaml_accepts_source_type_shorthand():
             matrix_data_source="model_source",
         )
     }
+
+
+def test_model_source_config_from_json_builds_model_source_config():
+    config = model_source_config_from_json(
+        '{"data": ["Tc", "Pc"], "equations": ["Cp_IG"], '
+        '"matrix_data": ["alpha"], "constants": ["R"]}'
+    )
+
+    assert config == ModelSourceConfig(
+        data=["Tc", "Pc"],
+        equations=["Cp_IG"],
+        matrix_data=["alpha"],
+        constants=["R"],
+    )
+
+
+def test_model_source_config_from_yaml_builds_model_source_config():
+    config = model_source_config_from_yaml(
+        """
+data:
+  - Tc
+equations:
+  - Cp_IG
+matrix_data:
+  - alpha
+constants:
+  - R
+"""
+    )
+
+    assert config == ModelSourceConfig(
+        data=["Tc"],
+        equations=["Cp_IG"],
+        matrix_data=["alpha"],
+        constants=["R"],
+    )
+
+
+def test_custom_source_config_from_json_builds_custom_source_config():
+    config = custom_source_config_from_json(
+        '{"data": ["MW"], "matrix_data": ["CUSTOM_MATRIX"], '
+        '"constants": ["CUSTOM_CONST"]}'
+    )
+
+    assert config == CustomSourceConfig(
+        data=["MW"],
+        matrix_data=["CUSTOM_MATRIX"],
+        constants=["CUSTOM_CONST"],
+    )
+
+
+def test_custom_source_config_from_yaml_builds_custom_source_config():
+    config = custom_source_config_from_yaml(
+        """
+data:
+  - MW
+matrix_data:
+  - CUSTOM_MATRIX
+constants:
+  - CUSTOM_CONST
+"""
+    )
+
+    assert config == CustomSourceConfig(
+        data=["MW"],
+        matrix_data=["CUSTOM_MATRIX"],
+        constants=["CUSTOM_CONST"],
+    )
 
 
 def test_thermo_source_registry_uses_hub_mixture_key_for_registration():
