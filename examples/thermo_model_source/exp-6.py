@@ -1,21 +1,9 @@
 """Build a container holding model and custom thermodynamic sources."""
 
-from pathlib import Path
-import sys
-from typing import Any
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from examples.thermo_model_source.model_source_2 import model_source
-from examples.thermo_model_source.custom_source_1 import custom_source
-from examples.thermo_model_source.components_1 import (
-    C2H4,
-    C2H6,
-    CO2,
-    C2H5OH,
-    CH3OH,
+from rich import print
+from pyThermoLinkDB.builders import (
+    ThermoSourceHub,
+    build_thermo_source_hub,
 )
 from pyThermoLinkDB.models import (
     CustomSourceConfig,
@@ -23,11 +11,22 @@ from pyThermoLinkDB.models import (
     SourceConfig,
     ThermoSourceHubConfig,
 )
-from pyThermoLinkDB.builders import (
-    ThermoSourceHub,
-    build_thermo_source_hub,
+from examples.thermo_model_source.components_1 import (
+    C2H4,
+    C2H6,
+    CO2,
+    C2H5OH,
+    CH3OH,
 )
-from rich import print
+from examples.thermo_model_source.custom_source_1 import custom_source
+from examples.thermo_model_source.model_source_2 import model_source
+from pathlib import Path
+import sys
+from typing import Any
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 components = [C2H4, C2H6, CO2]
@@ -89,26 +88,32 @@ print(thermo_source_hub.model_source_symbol_modes)
 print(thermo_source_hub.custom_source_symbol_modes)
 
 # SECTION: thermo source hub configuration
+# NOTE: Option 1 shows explicit mode-specific selectors. Use this form when a
+# symbol exists in more than one mode and you want to force a specific mode.
+# thermo_source_hub_config: ThermoSourceHubConfig = {
+#     "Tc": SourceConfig(),
+#     "Pc": SourceConfig(),
+#     "EnFo_IG": SourceConfig(),
+#     "Cp_IG": SourceConfig(source="custom_source"),
+#     "VaPr": SourceConfig(source="model_source"),
+#     "alpha": SourceConfig(matrix_data_source="model_source"),
+#     "CUSTOM_MATRIX": SourceConfig(matrix_data_source="custom_source"),
+#     "R": SourceConfig(constants_source="model_source"),
+# }
+
+# NOTE: Option 2 uses one source selector and lets the registry infer mode.
+# This is the recommended form when each symbol has one clear source mode.
 thermo_source_hub_config: ThermoSourceHubConfig = {
     "Tc": SourceConfig(),
     "Pc": SourceConfig(),
     "EnFo_IG": SourceConfig(),
     "Cp_IG": SourceConfig(source="custom_source"),
     "VaPr": SourceConfig(source="model_source"),
-    "alpha": SourceConfig(
-        property_source=None,
-        equation_source=None,
-        constants_source=None,
-        matrix_data_source="model_source",
-    ),
-    "CUSTOM_MATRIX": SourceConfig(
-        property_source=None,
-        equation_source=None,
-        constants_source=None,
-        matrix_data_source="custom_source",
-    ),
-    "R": SourceConfig(constants_source="model_source"),
+    "alpha": SourceConfig(source="model_source"),
+    "CUSTOM_MATRIX": SourceConfig(source="custom_source"),
+    "R": SourceConfig(source="model_source"),
 }
+
 
 print("\n[bold cyan]Thermo source registry[/bold cyan]")
 thermo_source_registry = thermo_source_hub.register_thermo_source(
