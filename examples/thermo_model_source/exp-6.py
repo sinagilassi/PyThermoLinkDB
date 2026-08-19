@@ -93,10 +93,8 @@ thermo_source_hub_config: ThermoSourceHubConfig = {
     "Tc": SourceConfig(),
     "Pc": SourceConfig(),
     "EnFo_IG": SourceConfig(),
-    "Cp_IG": SourceConfig(
-        property_source="custom_source",
-        equation_source="model_source",
-    ),
+    "Cp_IG": SourceConfig(source="custom_source"),
+    "VaPr": SourceConfig(source="model_source"),
     "alpha": SourceConfig(
         property_source=None,
         equation_source=None,
@@ -133,11 +131,10 @@ print(thermo_source_hub.register_thermo_source(
 print("\n[bold cyan]Access after registry[/bold cyan]")
 
 # NOTE:
-# register_thermo_source() returns source records. For property/constant/matrix
-# selections, the selected source is stored in "src". For equation selections,
-# the selected equation source is stored in "eq".
+# register_thermo_source() returns one selected source record per symbol.
+# The selected source is always stored in "src"; "mode" is inferred.
 
-# NOTE: Tc uses SourceConfig() defaults, so property_source is "model_source".
+# NOTE: Tc uses SourceConfig() defaults, so source is "model_source".
 tc_src = thermo_source_registry["Tc"]["src"]
 tc_values = {
     component_id: prop.value
@@ -148,22 +145,23 @@ print(tc_src)
 print("[bold]Tc values from registry source objects[/bold]")
 print(tc_values)
 
-# NOTE: Cp_IG is configured to use custom_source for property data and
-# model_source for equation data.
+# NOTE: Cp_IG is configured to use custom_source, where it is data.
 cp_ig_src = thermo_source_registry["Cp_IG"]["src"]
-cp_ig_eq = thermo_source_registry["Cp_IG"]["eq"]
 cp_ig_values = {
     component_id: prop.value
     for component_id, prop in cp_ig_src.items()
 }
 print("[bold]Cp_IG property values from custom source[/bold]")
 print(cp_ig_values)
-print("[bold]Cp_IG equation sources from model source[/bold]")
-print(cp_ig_eq)
+
+# NOTE: VaPr is configured to use model_source, where it is an equation.
+vapr_src = thermo_source_registry["VaPr"]["src"]
+print("[bold]VaPr equation sources from model source[/bold]")
+print(vapr_src)
 
 # NOTE: If you only need direct numeric component values, use the hub getter
 # with the same source selected in thermo_source_hub_config.
-cp_ig_source_type = thermo_source_hub_config["Cp_IG"].property_source
+cp_ig_source_type = thermo_source_hub_config["Cp_IG"].source
 if cp_ig_source_type is not None:
     direct_cp_ig_values = thermo_source_hub.get_comp_values(
         source_type=cp_ig_source_type,
