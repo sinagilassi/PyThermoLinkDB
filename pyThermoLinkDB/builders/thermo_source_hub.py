@@ -397,6 +397,8 @@ class ThermoSourceHub:
         """Return custom-source symbols mapped to their modes."""
         return self._ensure_thermo_source_extractor().custom_symbol_modes()
 
+    # SECTION: access to thermo source entries
+    # ! >>> all access to thermo source entries
     def get(
             self,
             source_name: str,
