@@ -18,6 +18,7 @@ from .thermo_source_extractor import ThermoSourceExtractor
 from .thermo_source_registry import ThermoSourceRegistry
 from ..models import ThermoSourceHubConfig
 from ..thermo import EquationSourceCore
+from ..utils.hub_tools import ensure_thermo_source_hub_config
 
 
 class ThermoSourceHub:
@@ -168,9 +169,10 @@ class ThermoSourceHub:
             self._configure_thermo_source()
         return self.thermo_source_extractor
 
+    # SECTION: thermo source registry
     def register_thermo_source(
             self,
-            thermo_source_hub_config: ThermoSourceHubConfig,
+            thermo_source_hub_config: ThermoSourceHubConfig | str,
             components: Optional[List[Component]] = None,
             mixtures: Optional[List[Mixture]] = None,
             include_missing: bool = False,
@@ -180,8 +182,8 @@ class ThermoSourceHub:
 
         Parameters
         ----------
-        thermo_source_hub_config : ThermoSourceHubConfig
-            Symbol-level source selection config.
+        thermo_source_hub_config : ThermoSourceHubConfig | str
+            Symbol-level source selection config or string content of a JSON/YAML config file.
         components : Optional[List[Component]], optional
             Optional component order for component-wise source entries.
         mixtures : Optional[List[Mixture]], optional
@@ -195,10 +197,18 @@ class ThermoSourceHub:
         Dict[str, Dict[str, Any]]
             Registry keyed by configured symbol.
         """
+        # NOTE: ensure config is a ThermoSourceHubConfig
+        thermo_source_hub_config = ensure_thermo_source_hub_config(
+            thermo_source_hub_config
+        )
+
+        # NOTE: build thermo source registry
         self.thermo_source_registry = ThermoSourceRegistry(
             thermo_src=self,
             thermo_source_hub_config=thermo_source_hub_config,
         )
+
+        # NOTE: extract sources from the registry
         return self.thermo_source_registry.extract_sources(
             components=components,
             mixtures=self.mixtures if mixtures is None else mixtures,
