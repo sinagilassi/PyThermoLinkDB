@@ -5,6 +5,10 @@ from pythermodb_settings.models import Component
 from pyThermoLinkDB.builders import ThermoSourceHub, ThermoSourceRegistry
 from pyThermoLinkDB.builders.thermo_source_extractor import ThermoSourceExtractor
 from pyThermoLinkDB.models import SourceConfig
+from pyThermoLinkDB.utils.hub_tools import (
+    thermo_source_hub_config_from_json,
+    thermo_source_hub_config_from_yaml,
+)
 
 
 class FakeThermoSourceHub:
@@ -140,6 +144,86 @@ def test_thermo_source_hub_registers_configured_sources():
         "R": {"src": "r-src"},
     }
     assert hub.thermo_source_registry.registry == registered_source
+
+
+def test_thermo_source_hub_registers_configured_sources_from_string():
+    hub = ThermoSourceHub(
+        components=[],
+        component_key="Formula-State",
+        thermo_model_source=None,
+        thermo_custom_source=None,
+    )
+    hub._thermo_source = {
+        "model_source": {
+            "Tc": {
+                "src": {"c1": "tc-src"},
+                "eq": None,
+                "value": None,
+                "mode": ["data"],
+            },
+        },
+        "custom_source": {},
+    }
+    hub.thermo_source_extractor = ThermoSourceExtractor(
+        thermo_source=hub.thermo_source,
+        component_key="Formula-State",
+    )
+
+    registered_source = hub.register_thermo_source(
+        thermo_source_hub_config="""
+Tc:
+  property_source: model_source
+  equation_source:
+  constants_source:
+""",
+    )
+
+    assert registered_source == {"Tc": {"src": {"c1": "tc-src"}}}
+
+
+def test_thermo_source_hub_config_from_json_builds_source_config_models():
+    config = thermo_source_hub_config_from_json(
+        '{"Tc": {"property_source": "custom_source", "equation_source": null}}'
+    )
+
+    assert config == {
+        "Tc": SourceConfig(
+            property_source="custom_source",
+            equation_source=None,
+        )
+    }
+
+
+def test_thermo_source_hub_config_from_yaml_builds_source_config_models():
+    config = thermo_source_hub_config_from_yaml(
+        """
+Tc:
+  property_source: custom_source
+  equation_source:
+R:
+"""
+    )
+
+    assert config == {
+        "Tc": SourceConfig(
+            property_source="custom_source",
+            equation_source=None,
+        ),
+        "R": SourceConfig(),
+    }
+
+
+def test_thermo_source_hub_config_from_yaml_accepts_source_type_shorthand():
+    config = thermo_source_hub_config_from_yaml("Tc: model_source\n")
+
+    assert config == {
+        "Tc": SourceConfig(
+            property_source="model_source",
+            equation_source="model_source",
+            constants_source="model_source",
+            matrix_data_source="model_source",
+        )
+    }
 
 
 def test_thermo_source_registry_uses_hub_mixture_key_for_registration():
