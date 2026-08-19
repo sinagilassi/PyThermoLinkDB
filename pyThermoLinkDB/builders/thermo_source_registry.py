@@ -14,8 +14,8 @@ class ThermoSourceRegistry:
     Extract configured source records from a thermodynamic source hub.
 
     ``ThermoSourceRegistry`` resolves a ``ThermoSourceHubConfig`` against a
-    built source hub. Each configured symbol can select independent source
-    groups for property data, equations, and constants.
+    built source hub. Each configured symbol resolves to one selected source
+    object under ``src`` and records the inferred source ``mode``.
     """
 
     def __init__(
@@ -59,8 +59,9 @@ class ThermoSourceRegistry:
         Returns
         -------
         Dict[str, Dict[str, Any]]
-            Registry keyed by symbol. Each symbol may contain ``src`` and
-            ``eq`` entries. ``src`` is used for data and constant sources.
+            Registry keyed by symbol. Each symbol contains the selected
+            ``src`` entry, inferred ``mode``, and selected ``source_type`` when
+            available. Equation sources are also returned through ``src``.
         """
         registry: Dict[str, Dict[str, Any]] = {}
 
@@ -112,102 +113,157 @@ class ThermoSourceRegistry:
         config = source_config or SourceConfig()
         source_entry: Dict[str, Any] = {}
 
-        # ! extract property source
-        property_source = config.property_source
-        if property_source is not None:
-            src = None
-            if self.thermo_src.has_mode(
-                source_type=property_source,
-                symbol=symbol,
-                mode="data",
-            ):
-                src = self.thermo_src.get_comp_src(
-                    source_type=property_source,
-                    symbol=symbol,
-                    components=components,
-                )
+        selected = self._select_source(
+            symbol=symbol,
+            config=config,
+            components=components,
+            mixtures=mixtures,
+            mixture_key=mixture_key,
+        )
 
-            # >>> add the property source to the registry entry if it is available
+        if selected is not None:
+            source_type, mode, src = selected
             self._set_if_available(
                 source_entry=source_entry,
                 key="src",
                 value=src,
                 include_missing=include_missing,
             )
-
-        # ! extract equation source
-        equation_source = config.equation_source
-        if equation_source is not None:
-            eq = None
-            if self.thermo_src.has_mode(
-                source_type=equation_source,
-                symbol=symbol,
-                mode="equation",
-            ):
-                eq = self.thermo_src.get_comp_eq(
-                    source_type=equation_source,
-                    symbol=symbol,
-                    components=components,
-                )
-
-            # >>> add the equation source to the registry entry if it is available
             self._set_if_available(
                 source_entry=source_entry,
-                key="eq",
-                value=eq,
+                key="mode",
+                value=mode,
                 include_missing=include_missing,
             )
-
-        # ! extract constant source
-        constants_source = config.constants_source
-        if constants_source is not None:
-            src = None
-            if self.thermo_src.has_mode(
-                source_type=constants_source,
-                symbol=symbol,
-                mode="constants",
-            ):
-                src = self.thermo_src.get_const_src(
-                    source_type=constants_source,
-                    symbol=symbol,
-                )
-
-            # >>> add the constant source to the registry entry if it is available
-            if src is not None or "src" not in source_entry:
-                self._set_if_available(
-                    source_entry=source_entry,
-                    key="src",
-                    value=src,
-                    include_missing=include_missing,
-                )
-
-        # ! extract matrix data source
-        matrix_data_source = config.matrix_data_source
-        if matrix_data_source is not None:
-            src = None
-            if self.thermo_src.has_mode(
-                source_type=matrix_data_source,
-                symbol=symbol,
-                mode="matrix_data",
-            ):
-                src = self.thermo_src.get_matrix_data_src(
-                    source_type=matrix_data_source,
-                    symbol=symbol,
-                    components=components,
-                    mixtures=mixtures,
-                    mixture_key=mixture_key,
-                )
-
-            # >> add the matrix data source to the registry entry if it is available
-            if src is not None or "src" not in source_entry:
-                self._set_if_available(
-                    source_entry=source_entry,
-                    key="src",
-                    value=src,
-                    include_missing=include_missing,
-                )
+            self._set_if_available(
+                source_entry=source_entry,
+                key="source_type",
+                value=source_type,
+                include_missing=include_missing,
+            )
+        elif include_missing:
+            source_entry.update({
+                "src": None,
+                "mode": None,
+                "source_type": self._configured_source_type(config),
+            })
 
         return source_entry
+
+    def _select_source(
+            self,
+            symbol: str,
+            config: SourceConfig,
+            components: Optional[List[Component]],
+            mixtures: Optional[List[Mixture]],
+            mixture_key: Optional[MixtureKey],
+    ) -> Optional[tuple[str, str, Any]]:
+        """
+        Return the first configured source/mode that exists for ``symbol``.
+
+        Mode-specific fields are used first because they disambiguate symbols
+        that may exist in more than one mode. When only ``source`` is provided,
+        the mode is inferred from the built source entry.
+        """
+        explicit_candidates = (
+            ("data", config.property_source),
+            ("matrix_data", config.matrix_data_source),
+            ("equation", config.equation_source),
+            ("constants", config.constants_source),
+        )
+
+        for mode, source_type in explicit_candidates:
+            if source_type is None:
+                continue
+            selected = self._extract_mode_source(
+                source_type=source_type,
+                symbol=symbol,
+                mode=mode,
+                components=components,
+                mixtures=mixtures,
+                mixture_key=mixture_key,
+            )
+            if selected is not None:
+                return selected
+
+        if config.source is None:
+            return None
+
+        for mode in ("data", "matrix_data", "equation", "constants"):
+            selected = self._extract_mode_source(
+                source_type=config.source,
+                symbol=symbol,
+                mode=mode,
+                components=components,
+                mixtures=mixtures,
+                mixture_key=mixture_key,
+            )
+            if selected is not None:
+                return selected
+
+        return None
+
+    def _configured_source_type(self, config: SourceConfig) -> Optional[str]:
+        """Return the first source type requested by ``config``."""
+        for source_type in (
+            config.property_source,
+            config.matrix_data_source,
+            config.equation_source,
+            config.constants_source,
+            config.source,
+        ):
+            if source_type is not None:
+                return source_type
+        return None
+
+    def _extract_mode_source(
+            self,
+            source_type: str,
+            symbol: str,
+            mode: str,
+            components: Optional[List[Component]],
+            mixtures: Optional[List[Mixture]],
+            mixture_key: Optional[MixtureKey],
+    ) -> Optional[tuple[str, str, Any]]:
+        """Extract a source only when the source entry exposes ``mode``."""
+        if not self.thermo_src.has_mode(
+            source_type=source_type,
+            symbol=symbol,
+            mode=mode,
+        ):
+            return None
+
+        if mode == "data":
+            src = self.thermo_src.get_comp_src(
+                source_type=source_type,
+                symbol=symbol,
+                components=components,
+            )
+        elif mode == "matrix_data":
+            src = self.thermo_src.get_matrix_data_src(
+                source_type=source_type,
+                symbol=symbol,
+                components=components,
+                mixtures=mixtures,
+                mixture_key=mixture_key,
+            )
+        elif mode == "equation":
+            src = self.thermo_src.get_comp_eq(
+                source_type=source_type,
+                symbol=symbol,
+                components=components,
+            )
+        elif mode == "constants":
+            src = self.thermo_src.get_const_src(
+                source_type=source_type,
+                symbol=symbol,
+            )
+        else:
+            return None
+
+        if src is None:
+            return None
+        return source_type, mode, src
 
     def _set_if_available(
             self,
