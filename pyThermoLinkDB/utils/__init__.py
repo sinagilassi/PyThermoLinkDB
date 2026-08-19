@@ -30,6 +30,12 @@ from .hub_tools import (
 # protocols
 from .unit_tools import UnitAvailabilityFn, UnitConversionFn
 
+# NOTE: thermo source tools
+from .thermo_source_tools import (
+    map_eq,
+    map_prop
+)
+
 __all__ = [
     "set_component_key",
     "extract_labels_from_rules",
@@ -57,4 +63,6 @@ __all__ = [
     "thermo_source_hub_config_from_yaml",
     "UnitAvailabilityFn",
     "UnitConversionFn",
+    "map_eq",
+    "map_prop",
 ]
