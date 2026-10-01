@@ -95,7 +95,6 @@ if mixture_thermodb is None:
 
 mixture_model_source: MixtureModelSource = build_mixture_model_source(
     mixture_thermodb=mixture_thermodb,
-    mixture_key='Name',
 )
 
 model_source: ModelSource = build_model_source(
