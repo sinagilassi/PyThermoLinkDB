@@ -1,8 +1,12 @@
 # import libs
-from typing import List, Tuple, Literal
+import logging
+from typing import List, Tuple, Literal, Dict, Any
+
+# NOTE: logger setup
+logger = logging.getLogger(__name__)
 
 
-# SECTION: configure mixture name by ordered component names (alphabetical)
+# ! ::: configure mixture name by ordered component names (alphabetical)
 def canonicalize_mixture_name(
         mixture_name: str,
         delimiter: str = "|",
@@ -44,3 +48,58 @@ def canonicalize_mixture_name(
     components = sorted(components)
 
     return delimiter.join(components), components
+
+# ! ::: Sort Mixture Ids
+
+
+def sort_mixture_id(
+        mixture_id: str,
+        delimiter: str = '|',
+) -> str:
+    """
+    Sort the given list of mixture ID.
+
+    Parameters
+    ----------
+    mixture_id: str
+        The mixture ID to sort.
+    delimiter: str, optional
+        The delimiter used to split the mixture ID, by default '|'
+
+    Returns
+    -------
+    str
+        The sorted mixture ID.
+    """
+    elements = mixture_id.split(delimiter)
+    elements.sort()
+    return delimiter.join(elements)
+
+# ! ::: Check Mixture Id Exists
+
+
+def normalize_mixture_data(
+        data: Dict[str, Any],
+        delimiter: str = '|'
+) -> Dict[str, Any]:
+    """
+    Extract mixture IDs from the given data dictionary.
+
+    Parameters
+    ----------
+    data : Dict[str, Any]
+        The data dictionary to check for mixture IDs.
+    delimiter : str, optional
+        The delimiter used to identify mixture IDs, by default '|'
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing the normalized mixture IDs as keys and their corresponding values from the input data dictionary.
+    """
+    return {
+        sort_mixture_id(
+            mixture_id=key,
+            delimiter=delimiter
+        ): value for key, value in data.items() if delimiter in key
+    }
