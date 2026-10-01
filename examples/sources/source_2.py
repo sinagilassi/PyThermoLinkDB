@@ -117,6 +117,7 @@ if __name__ == "__main__":
 
     # NOTE: build_mixture_model_source sorts mixture ids alphabetically.
     mixture_id = 'butyl-methyl-ether|ethanol|methanol'
+    mixture_id_formula_state = 'C2H5OH-l|C5H12O-l|CH3OH-l'
     matrix_prop = 'alpha'
 
     # ====================================================
@@ -201,4 +202,14 @@ if __name__ == "__main__":
         components=components_sorted,
         symbol_format='alphabetic',
         component_key='Formula',
+    ))
+
+    # ! mixture key: Formula-State
+    print(f"[blue]Mixture key: Formula-State[/blue]")
+    print(source.matX(
+        prop_name=matrix_prop,
+        components=components,
+        symbol_format='alphabetic',
+        component_key='Name',
+        mixture_key='Formula-State'
     ))
