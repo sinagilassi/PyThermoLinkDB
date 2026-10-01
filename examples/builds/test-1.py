@@ -13,14 +13,13 @@ print(ptdblink.__author__)
 # =======================================
 # 🌍 LOAD THERMODB
 # =======================================
-# Parent directory
-parent_dir = os.path.join(os.getcwd())
-# thermodb dir
+# Parent directory (examples folder, regardless of the current working directory)
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# thermodb dir (examples/thermodb)
 thermodb_dir = os.path.join(parent_dir, 'thermodb')
 
 # SECTION CO2
-CO2_thermodb_file = os.path.join(
-    os.getcwd(), thermodb_dir, 'carbon dioxide-1.pkl')
+CO2_thermodb_file = os.path.join(thermodb_dir, 'carbon dioxide.pkl')
 # load
 CO2_thermodb = ptdb.load_thermodb(CO2_thermodb_file)
 print(type(CO2_thermodb))
@@ -30,7 +29,7 @@ print(CO2_thermodb.check())
 
 # SECTION 🧪 methanol
 # thermodb file name
-MeOH_thermodb_file = os.path.join(os.getcwd(), 'test', 'methanol-1.pkl')
+MeOH_thermodb_file = os.path.join(thermodb_dir, 'methanol.pkl')
 print(f"thermodb file: {MeOH_thermodb_file}")
 # load
 MeOH_thermodb = ptdb.load_thermodb(MeOH_thermodb_file)
@@ -43,8 +42,7 @@ print(MeOH_thermodb.check())
 
 # SECTION 🧪 toluene
 # thermodb file name
-toluene_thermodb_file = os.path.join(
-    os.getcwd(), 'test', 'toluene-1.pkl')
+toluene_thermodb_file = os.path.join(thermodb_dir, 'toluene-1.pkl')
 print(f"thermodb file: {toluene_thermodb_file}")
 # load
 toluene_thermodb = ptdb.load_thermodb(toluene_thermodb_file)
@@ -52,8 +50,7 @@ print(type(toluene_thermodb))
 
 # SECTION 🔬 nrtl
 # thermodb file name
-nrtl_thermodb_file = os.path.join(
-    os.getcwd(), 'test', 'thermodb_nrtl_1.pkl')
+nrtl_thermodb_file = os.path.join(thermodb_dir, 'thermodb_nrtl_1.pkl')
 print(f"thermodb file: {nrtl_thermodb_file}")
 # load
 nrtl_thermodb = ptdb.load_thermodb(nrtl_thermodb_file)
@@ -84,10 +81,8 @@ print(thub1.items())
 # =======================================
 # add thermodb rule
 # define thermodb rule
-thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config.yml')
-
-# no change
-# thermodb_config_file = os.path.join(os.getcwd(), 'test', 'thermodb_config_2.yml')
+thermodb_config_file = os.path.join(
+    parent_dir, 'builds', 'thermodb_config.yml')
 
 # all components
 res_ = thub1.config_thermodb_rule(thermodb_config_file)
