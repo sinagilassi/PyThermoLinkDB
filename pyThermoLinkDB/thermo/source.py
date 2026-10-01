@@ -14,7 +14,7 @@ from pyThermoLinkDB.models import ModelSource
 # local
 from ..config.constants import DATASOURCE, EQUATIONSOURCE, CONSTANTSSOURCE
 from ..models.component_models import ComponentEquationSource, ComponentPropertySource
-from ..utils.mixture_tools import canonicalize_mixture_name
+from ..utils.mixture_tools import canonicalize_mixture_name, normalize_mixture_data, sort_mixture_id
 
 # logger
 logger = logging.getLogger(__name__)
@@ -113,6 +113,8 @@ class Source:
         model_source: Optional[ModelSource] = None,
         component_key: ComponentKey = 'Name-State',
         mixture_key: MixtureKey = 'Name',
+        mixture_delimiter: str = '|',
+        normalize_mixture_data: bool = True,
         **kwargs
     ):
         '''
@@ -128,12 +130,18 @@ class Source:
             List of component keys to build the equation for, default is None which means it will use the component_key defined in the Source class.
         mixture_key : Literal['Name', 'Formula']
             The key to identify the mixture, default is 'Name'.
+        mixture_delimiter : str, optional
+            The delimiter used to split mixture IDs, by default '|'.
+        normalize_mixture_data : bool, optional
+            Whether to normalize mixture data using the mixture delimiter, by default True.
 
         '''
         # NOTE: set
         self.model_source: ModelSource | None = model_source
         self.component_key: ComponentKey = component_key
         self.mixture_key: MixtureKey = mixture_key
+        self.mixture_delimiter: str = mixture_delimiter
+        self.normalize_mixture_data: bool = normalize_mixture_data
 
         # to store additional kwargs for future use
         self.kwargs = kwargs
@@ -169,6 +177,9 @@ class Source:
             ) = self.set_source(
                 model_source=model_source_dict
             )
+
+        # NOTE: normalize mixture data after initialization
+        self._normalize_mixture_data()
 
     # NOTE: repr
     def __repr__(self):
@@ -333,7 +344,31 @@ class Source:
                 return
         self._component_keys = keys
 
-    # SECTION: Methods
+    # SECTION: Initialization Methods
+    # ! ::: Normalized Mixture Data
+    def _normalize_mixture_data(
+            self,
+    ):
+        # >> check if normalization is needed
+        if not self.normalize_mixture_data:
+            logger.info("Normalization of mixture data is disabled.")
+            return
+
+        # >> check
+        if self._datasource is None:
+            logger.warning(
+                "Datasource is None, cannot normalize mixture data.")
+            return
+
+        data_ = normalize_mixture_data(
+            data=self._datasource,
+            delimiter=self.mixture_delimiter
+        )
+
+        # update the datasource with the new normalized data
+        self._datasource = {**data_, **self._datasource}
+
+    # ! ::: Set Source
     def set_source(
             self,
             model_source: Dict[str, Any]
@@ -374,7 +409,8 @@ class Source:
             logger.error(f"Setting source failed: {e}")
             return None, None, None
 
-    # SECTION: Extractors and helpers
+    # SECTION: Methods
+    # ! ::: Extractors and helpers
     def eq_extractor(
         self,
         component_id: str,
@@ -707,11 +743,20 @@ class Source:
             if self.datasource is None:
                 return None
 
-            # MOTE: check mixture name exists in the datasource
+            # NOTE: check mixture name exists in the datasource
             if mixture_name not in self.datasource.keys():
-                logger.error(
-                    f"Mixture '{mixture_name}' not found in model datasource.")
-                return None
+                logger.warning(
+                    f"Mixture '{mixture_name}' not found in model datasource. Attempting to sort mixture id alphabetically for consistency."
+                )
+
+                # ! callback -> sort mixture names alphabetically for consistency
+                mixture_name = sort_mixture_id(mixture_name)
+                # NOTE: after sorting, check again if mixture name exists
+                if mixture_name not in self.datasource.keys():
+                    logger.error(
+                        f"Mixture '{mixture_name}' not found in model datasource after sorting."
+                    )
+                    return None
 
             mixture_datasource = self.datasource[mixture_name]
             if prop_name not in mixture_datasource.keys():
@@ -759,7 +804,7 @@ class Source:
         '''
         Extract one i,j matrix value from a TableMatrixData datasource entry.
         '''
-        matrix_data = self.matrix_data_extractor(
+        matrix_data: TableMatrixData | None = self.matrix_data_extractor(
             mixture_name=mixture_name,
             prop_name=prop_name
         )
@@ -787,7 +832,7 @@ class Source:
         '''
         Extract an i,j matrix property using TableMatrixData.get_matrix_property.
         '''
-        matrix_data = self.matrix_data_extractor(
+        matrix_data: TableMatrixData | None = self.matrix_data_extractor(
             mixture_name=mixture_name,
             prop_name=prop_name
         )
@@ -815,6 +860,8 @@ class Source:
         '''
         Build a numeric or labelled matrix using TableMatrixData.mat.
 
+        Mixture name must be provided by `Name` such as methanol|ethanol|butyl-methyl-ether.
+
         Parameters
         ----------
         mixture_name : str
@@ -839,7 +886,7 @@ class Source:
         )
 
         # extract matrix data
-        matrix_data = self.matrix_data_extractor(
+        matrix_data: TableMatrixData | None = self.matrix_data_extractor(
             mixture_name=mixture_name,
             prop_name=prop_name
         )
@@ -921,7 +968,8 @@ class Source:
             case=case
         )
 
-        matrix_data = self.matrix_data_extractor(
+        # NOTE: extract matrix data
+        matrix_data: TableMatrixData | None = self.matrix_data_extractor(
             mixture_name=mixture_name,
             prop_name=prop_name
         )
