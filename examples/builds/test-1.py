@@ -13,10 +13,14 @@ print(ptdblink.__author__)
 # =======================================
 # 🌍 LOAD THERMODB
 # =======================================
+# Parent directory
+parent_dir = os.path.join(os.getcwd())
+# thermodb dir
+thermodb_dir = os.path.join(parent_dir, 'thermodb')
 
 # SECTION CO2
 CO2_thermodb_file = os.path.join(
-    os.getcwd(), 'test', 'carbon dioxide-1.pkl')
+    os.getcwd(), thermodb_dir, 'carbon dioxide-1.pkl')
 # load
 CO2_thermodb = ptdb.load_thermodb(CO2_thermodb_file)
 print(type(CO2_thermodb))

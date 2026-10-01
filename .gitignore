@@ -178,3 +178,4 @@ notes
 
 # pickle files
 *.pkl
+*.pickle
