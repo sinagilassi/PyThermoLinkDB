@@ -472,6 +472,15 @@ def build_components_model_source(
 
 
 # SECTION: build mixture model source
+
+DEFAULT_MIXTURE_KEYS: List[MixtureKey] = [
+    "Name",
+    "Formula",
+    "Name-State",
+    "Formula-State",
+]
+
+
 def build_mixture_model_source(
     mixture_thermodb: MixtureThermoDB,
     rules: Optional[
@@ -479,15 +488,15 @@ def build_mixture_model_source(
     ] = None,
     check_labels: bool = True,
     mixture_custom_ids: Optional[List[str]] = None,
-    mixture_keys: List[MixtureKey] = [
-        'Name', 'Formula', 'Name-State', 'Formula-State'
-    ],
+    mixture_keys: List[MixtureKey] = DEFAULT_MIXTURE_KEYS,
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
 ) -> MixtureModelSource:
     '''
     Build mixture model source from mixture thermodb and rules (optional).
+
+    Mixture ids used in the mixture thermodb are constructed and `sorted alphabetically` based on the specified mixture_keys and delimiter. Custom mixture ids can be provided using the mixture_custom_ids parameter.
 
     Parameters
     ----------
@@ -500,7 +509,7 @@ def build_mixture_model_source(
     mixture_custom_ids: Optional[List[str]], optional
         List of custom ids for the mixture thermodb, by default None
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula', 'Name-State', 'Formula-State']
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default DEFAULT_MIXTURE_KEYS which includes 'Name', 'Formula', 'Name-State', and 'Formula-State'
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -972,9 +981,7 @@ def build_mixtures_model_source(
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
     check_labels: bool = True,
-    mixture_keys: List[MixtureKey] = [
-        'Name', 'Formula', 'Name-State', 'Formula-State'
-    ],
+    mixture_keys: List[MixtureKey] = DEFAULT_MIXTURE_KEYS,
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
@@ -991,7 +998,7 @@ def build_mixtures_model_source(
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula', 'Name-State', 'Formula-State']
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default DEFAULT_MIXTURE_KEYS which includes 'Name', 'Formula', 'Name-State', and 'Formula-State'
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
