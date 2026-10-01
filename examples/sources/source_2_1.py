@@ -72,7 +72,7 @@ butyl_methyl_ether = Component(
 
 components = [methanol, ethanol, butyl_methyl_ether]
 
-# alphabetically sort components by name for consistency
+# ! alphabetically sort components by name for consistency
 components_sorted = sorted(components, key=lambda c: c.name)
 
 # create a list of component names for reference
@@ -117,14 +117,22 @@ if __name__ == "__main__":
 
     # NOTE: build_mixture_model_source sorts mixture ids alphabetically.
     mixture_id = 'butyl-methyl-ether|ethanol|methanol'
+    mixture_id_random = 'methanol|butyl-methyl-ether|ethanol'
     mixture_id_formula_state = 'C2H5OH-l|C5H12O-l|CH3OH-l'
     matrix_prop = 'alpha'
 
     # ====================================================
     # SECTION: TABLE MATRIX DATA ACCESS
     # ====================================================
+    # ! mixture id sorted alphabetically
+    # matrix_data = source.get_matrix(
+    #     mixture_name=mixture_id,
+    #     prop_name=matrix_prop,
+    # )
+
+    # ! mixture id randomly ordered
     matrix_data = source.get_matrix(
-        mixture_name=mixture_id,
+        mixture_name=mixture_id_random,
         prop_name=matrix_prop,
     )
 
