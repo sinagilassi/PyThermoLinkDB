@@ -18,7 +18,9 @@ from pythermodb_settings.models import (
     MixtureKey
 )
 from pythermodb_settings.utils import (
-    create_mixture_id
+    create_component_ids_with_keys,
+    create_mixture_id,
+    create_mixture_ids_with_keys
 )
 # local
 from .docs import ThermoDBHub
@@ -478,7 +480,7 @@ def build_mixture_model_source(
     check_labels: bool = True,
     mixture_custom_ids: Optional[List[str]] = None,
     mixture_keys: List[MixtureKey] = [
-        'Name', 'Formula',
+        'Name', 'Formula', 'Name-State', 'Formula-State'
     ],
     delimiter: str = '|',
     overwrite_rules: bool = False,
@@ -498,7 +500,7 @@ def build_mixture_model_source(
     mixture_custom_ids: Optional[List[str]], optional
         List of custom ids for the mixture thermodb, by default None
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula', 'Name-State', 'Formula-State']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -578,26 +580,18 @@ def build_mixture_model_source(
             ignore_props = []
 
         # SECTION: set ids
-        # ! default ids
-        # >> name states
-        name_states_original = [
-            set_component_key(
-                component,
-                component_key='Name'
-            ) for component in components
-        ]
+        # >> create component ids with keys
+        component_ids_with_keys: Dict[str, List[str]] = create_component_ids_with_keys(
+            components=components,
+            component_keys=['Name', 'Formula', 'Name-State', 'Formula-State'],
+            sort_alphabetically=True
+        )
 
-        # NOTE: sort name states alphabetically
-        # >> sort alphabetically
-        name_states = sorted(name_states_original)
-
-        # >> formula states
-        formula_states_original = [
-            set_component_key(
-                component,
-                component_key='Formula'
-            ) for component in components
-        ]
+        # >> extract component ids
+        names = component_ids_with_keys.get('Name', [])
+        formulas = component_ids_with_keys.get('Formula', [])
+        name_states = component_ids_with_keys.get('Name-State', [])
+        formula_states = component_ids_with_keys.get('Formula-State', [])
 
         # ! custom ids
         _mixture_custom_ids: List[str] = []
@@ -610,6 +604,16 @@ def build_mixture_model_source(
         if "Formula" in mixture_keys:
             # remove
             mixture_keys.remove("Formula")
+
+        # > check
+        if "Name-State" in mixture_keys:
+            # remove
+            mixture_keys.remove("Name-State")
+
+        # > check
+        if "Formula-State" in mixture_keys:
+            # remove
+            mixture_keys.remove("Formula-State")
 
         # check
         if len(mixture_keys) > 0:
@@ -631,16 +635,14 @@ def build_mixture_model_source(
                 # append to mixture_custom_ids
                 mixture_custom_ids.extend(_mixture_custom_ids)
 
-        # NOTE: sort formula states alphabetically
-        # >> sort alphabetically
-        formula_states = sorted(formula_states_original)
-
         # ! mixture name
-        mixture_name_original = delimiter.join(name_states_original)
-        mixture_name = delimiter.join(name_states)
+        mixture_name = delimiter.join(names)
         # ! mixture formula
-        mixture_formula_original = delimiter.join(formula_states_original)
-        mixture_formula = delimiter.join(formula_states)
+        mixture_formula = delimiter.join(formulas)
+        # ! mixture name state
+        mixture_name_state = delimiter.join(name_states)
+        # ! mixture formula state
+        mixture_formula_state = delimiter.join(formula_states)
 
         # NOTE: component rules
         # create dict to hold component rules both name-state and formula-state
@@ -651,6 +653,10 @@ def build_mixture_model_source(
         component_rules_dict[mixture_name] = reference_rules
         # ! >> by formula
         component_rules_dict[mixture_formula] = reference_rules
+        # ! >> by name-state
+        component_rules_dict[mixture_name_state] = reference_rules
+        # ! >> by formula-state
+        component_rules_dict[mixture_formula_state] = reference_rules
 
         # SECTION: check rules
         if rules:
@@ -665,7 +671,9 @@ def build_mixture_model_source(
                 # reset component_rules_dict
                 component_rules_dict = {
                     mixture_name: {},
-                    mixture_formula: {}
+                    mixture_formula: {},
+                    mixture_name_state: {},
+                    mixture_formula_state: {}
                 }
 
                 # >> log
@@ -704,24 +712,45 @@ def build_mixture_model_source(
                 )
 
             # NOTE: check for mixture rules if exists
-            name_state_rules_ = look_up_mixture_rules(
+            # ! >> by name
+            name_rules_ = look_up_mixture_rules(
                 mixture_id=mixture_name,
+                rules=rules_normalized,
+            )
+
+            if name_rules_:
+                # >> set
+                component_rules_dict[mixture_name] = name_rules_
+
+            # ! >> by formula
+            formula_rules_ = look_up_mixture_rules(
+                mixture_id=mixture_formula,
+                rules=rules_normalized,
+            )
+
+            if formula_rules_:
+                # >> set
+                component_rules_dict[mixture_formula] = formula_rules_
+
+            # ! >> by name-state
+            name_state_rules_ = look_up_mixture_rules(
+                mixture_id=mixture_name_state,
                 rules=rules_normalized,
             )
 
             if name_state_rules_:
                 # >> set
-                component_rules_dict[mixture_name] = name_state_rules_
+                component_rules_dict[mixture_name_state] = name_state_rules_
 
             # ! >> by formula-state
             formula_state_rules_ = look_up_mixture_rules(
-                mixture_id=mixture_formula,
+                mixture_id=mixture_formula_state,
                 rules=rules_normalized,
             )
 
             if formula_state_rules_:
                 # >> set
-                component_rules_dict[mixture_formula] = formula_state_rules_
+                component_rules_dict[mixture_formula_state] = formula_state_rules_
 
             # NOTE: check if `component_rules_dict` is still empty, then use default rules if exists
             all_empty = True
@@ -731,7 +760,7 @@ def build_mixture_model_source(
                     break
 
             if all_empty:
-                # ! >> by default rules key
+                # ! >> by default rules key (mixture name)
                 default_rules_ = look_up_mixture_rules(
                     mixture_id=mixture_name,
                     rules=rules,
@@ -741,6 +770,8 @@ def build_mixture_model_source(
                 if default_rules_:
                     component_rules_dict[mixture_name] = default_rules_
                     component_rules_dict[mixture_formula] = default_rules_
+                    component_rules_dict[mixture_name_state] = default_rules_
+                    component_rules_dict[mixture_formula_state] = default_rules_
                 else:
                     # log
                     logger.warning(
@@ -748,16 +779,26 @@ def build_mixture_model_source(
                     )
 
             # SECTION: extract labels
-            name_state_rules_labels = extract_labels_from_rules(
+            name_rules_labels = extract_labels_from_rules(
                 component_rules_dict[mixture_name]
             ) if component_rules_dict[mixture_name] else []
 
-            formula_state_rules_labels = extract_labels_from_rules(
+            formula_rules_labels = extract_labels_from_rules(
                 component_rules_dict[mixture_formula]
             ) if component_rules_dict[mixture_formula] else []
+
+            name_state_rules_labels = extract_labels_from_rules(
+                component_rules_dict[mixture_name_state]
+            ) if component_rules_dict[mixture_name_state] else []
+
+            formula_state_rules_labels = extract_labels_from_rules(
+                component_rules_dict[mixture_formula_state]
+            ) if component_rules_dict[mixture_formula_state] else []
+
             # >> combine and unique
             mixture_rules_labels = list(
                 set(
+                    name_rules_labels + formula_rules_labels +
                     name_state_rules_labels + formula_state_rules_labels
                 )
             )
@@ -799,6 +840,12 @@ def build_mixture_model_source(
         ) or component_rules_dict.get(
             mixture_formula,
             None
+        ) or component_rules_dict.get(
+            mixture_name_state,
+            None
+        ) or component_rules_dict.get(
+            mixture_formula_state,
+            None
         )
 
         # ! >> check rule
@@ -808,8 +855,9 @@ def build_mixture_model_source(
         if rule_ and len(rule_) == 0:
             rule_ = None
 
-        # NOTE: name states as id
+        # NOTE: name as id
         # >> add
+        # ! >> by name
         add_thermodb_res_ = thermodb_hub.add_thermodb(
             name=mixture_name,
             data=thermodb,
@@ -825,8 +873,9 @@ def build_mixture_model_source(
                 logger.warning(
                     f"Failed to add thermodb for mixture components: {mixture_name}")
 
-        # NOTE: formula states as id
+        # NOTE: formula as id
         # >> add
+        # ! >> by formula
         add_thermodb_res_ = thermodb_hub.add_thermodb(
             name=mixture_formula,
             data=thermodb,
@@ -841,6 +890,42 @@ def build_mixture_model_source(
             else:
                 logger.warning(
                     f"Failed to add thermodb for mixture components: {mixture_formula}")
+
+        # NOTE: name-state as id
+        # >> add
+        # ! >> by name-state
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name=mixture_name_state,
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(
+                    f"Added thermodb for mixture components: {mixture_name_state}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for mixture components: {mixture_name_state}")
+
+        # NOTE: formula-state as id
+        # >> add
+        # ! >> by formula-state
+        add_thermodb_res_ = thermodb_hub.add_thermodb(
+            name=mixture_formula_state,
+            data=thermodb,
+            rules=rule_,
+        )
+
+        # >> log
+        if verbose:
+            if add_thermodb_res_:
+                logger.info(
+                    f"Added thermodb for mixture components: {mixture_formula_state}")
+            else:
+                logger.warning(
+                    f"Failed to add thermodb for mixture components: {mixture_formula_state}")
 
         # NOTE: mixture custom id as id
         if mixture_custom_ids:
@@ -888,7 +973,7 @@ def build_mixtures_model_source(
     ] = None,
     check_labels: bool = True,
     mixture_keys: List[MixtureKey] = [
-        'Name', 'Formula',
+        'Name', 'Formula', 'Name-State', 'Formula-State'
     ],
     delimiter: str = '|',
     overwrite_rules: bool = False,
@@ -906,7 +991,7 @@ def build_mixtures_model_source(
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
+        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula', 'Name-State', 'Formula-State']
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
