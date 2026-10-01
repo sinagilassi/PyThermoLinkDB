@@ -707,6 +707,7 @@ class Source:
             if self.datasource is None:
                 return None
 
+            # MOTE: check mixture name exists in the datasource
             if mixture_name not in self.datasource.keys():
                 logger.error(
                     f"Mixture '{mixture_name}' not found in model datasource.")
