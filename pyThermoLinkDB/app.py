@@ -73,7 +73,8 @@ def init() -> ThermoDBHub:
         raise Exception("Error: {}".format(e))
 
 
-# SECTION: build component model source
+# ! ::: Build Component Model Source
+
 def build_component_model_source(
     component_thermodb: ComponentThermoDB,
     rules: Optional[
@@ -414,7 +415,7 @@ def build_component_model_source(
         logger.error(f"Error in build_component_model_source: {e}")
         raise Exception(f"Error in build_component_model_source: {e}")
 
-# SECTION: build components model source
+# ! build components model source
 
 
 def build_components_model_source(
@@ -471,7 +472,7 @@ def build_components_model_source(
         raise Exception(f"Error in build_components_model_source: {e}")
 
 
-# SECTION: build mixture model source
+# ! ::: Build Mixture Model Source
 
 DEFAULT_MIXTURE_KEYS: List[MixtureKey] = [
     "Name",
@@ -1036,7 +1037,7 @@ def build_mixtures_model_source(
         logger.error(f"Error in build_mixtures_model_source: {e}")
         raise Exception(f"Error in build_mixtures_model_source: {e}")
 
-# SECTION: build constant model source
+# ! ::: Build Constant Model Source
 
 
 def build_constants_model_source(
@@ -1278,7 +1279,13 @@ def build_constants_model_source(
         logger.error(f"Error in build_constants_model_source: {e}")
         raise Exception(f"Error in build_constants_model_source: {e}")
 
-# SECTION: build model source for multiple components/mixtures
+# ! ::: Build Model Source for Interactions
+
+
+def build_interactions_model_source():
+    pass
+
+# ! ::: build model source for multiple components/mixtures
 
 
 def build_model_source(
