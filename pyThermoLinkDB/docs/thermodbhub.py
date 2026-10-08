@@ -121,6 +121,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
         except Exception as e:
             raise Exception('Getting components failed!, ', e)
 
+    # ! configure thermodb rule
     def config_thermodb_rule(
         self,
         rule: Union[str, Path, Dict[str, Dict[str, Dict[str, str]]]],
