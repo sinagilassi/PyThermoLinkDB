@@ -1279,10 +1279,10 @@ def build_constants_model_source(
         logger.error(f"Error in build_constants_model_source: {e}")
         raise Exception(f"Error in build_constants_model_source: {e}")
 
-# ! ::: Build Model Source for Interactions
+# ! ::: Build Model Source for Interaction
 
 
-def build_interactions_model_source():
+def build_interaction_model_source():
     pass
 
 # ! ::: build model source for multiple components/mixtures
