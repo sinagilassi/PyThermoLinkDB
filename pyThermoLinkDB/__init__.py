@@ -11,7 +11,8 @@ from .app import (
     load_and_build_model_source,
     load_and_build_component_model_source,
     load_and_build_mixture_model_source,
-    build_mixture_model_source
+    build_mixture_model_source,
+    build_interaction_model_source
 )
 
 # NOTE: thermo
@@ -49,6 +50,7 @@ __all__ = [
     "build_model_source",
     "load_and_build_model_source",
     "build_mixture_model_source",
+    "build_interaction_model_source",
     "load_and_build_component_model_source",
     "load_and_build_mixture_model_source",
     # thermo
