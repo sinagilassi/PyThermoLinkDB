@@ -1282,8 +1282,60 @@ def build_constants_model_source(
 # ! ::: Build Model Source for Interaction
 
 
-def build_interaction_model_source():
-    pass
+def build_interaction_model_source(
+    interaction_thermodb: MixtureThermoDB,
+    rules: Optional[
+        Dict[str, Dict[str, ComponentRule]] | str
+    ] = None,
+    check_labels: bool = True,
+    mixture_custom_ids: Optional[List[str]] = None,
+    mixture_keys: List[MixtureKey] = DEFAULT_MIXTURE_KEYS,
+    delimiter: str = '|',
+    overwrite_rules: bool = False,
+    verbose: bool = False,
+) -> MixtureModelSource:
+    '''Build a mixture-compatible source from scalar interaction data.
+
+    Parameters
+    ----------
+    interaction_thermodb: MixtureThermoDB
+        Interaction thermodynamic database containing scalar interaction data.
+    rules: Optional[Dict[str, Dict[str, ComponentRule]] | str], optional
+        Rules for building the mixture model source, by default None.
+    check_labels: bool, optional
+        Whether to check labels for consistency, by default True.
+    mixture_custom_ids: Optional[List[str]], optional
+        Custom identifiers for mixtures, by default None.
+    mixture_keys: List[MixtureKey], optional
+        List of keys to use for mixture id, by default DEFAULT_MIXTURE_KEYS.
+    delimiter: str, optional
+        Delimiter for mixture identifiers, by default '|'.
+    overwrite_rules: bool, optional
+        Whether to overwrite existing rules, by default False.
+    verbose: bool, optional
+        Whether to enable verbose logging, by default False.
+
+    Returns
+    -------
+    MixtureModelSource
+        MixtureModelSource object containing data source and equation source for the interaction data.
+    '''
+    try:
+        return build_mixture_model_source(
+            mixture_thermodb=interaction_thermodb,
+            rules=rules,
+            check_labels=check_labels,
+            mixture_custom_ids=mixture_custom_ids,
+            mixture_keys=list(mixture_keys),
+            delimiter=delimiter,
+            overwrite_rules=overwrite_rules,
+            verbose=verbose,
+        )
+    except Exception as e:
+        logger.error(f"Error in build_interaction_model_source: {e}")
+        raise Exception(
+            f"Error in build_interaction_model_source: {e}"
+        ) from e
 
 # ! ::: build model source for multiple components/mixtures
 
@@ -1475,9 +1527,7 @@ def load_and_build_mixture_model_source(
             Dict[str, Dict[str, ComponentRule]] | str
         ] = None,
         check_labels: bool = True,
-        mixture_keys: List[MixtureKey] = [
-            'Name', 'Formula',
-        ],
+        mixture_keys: List[MixtureKey] = DEFAULT_MIXTURE_KEYS,
         delimiter: str = '|',
         overwrite_rules: bool = False,
         verbose: bool = False,
@@ -1494,7 +1544,7 @@ def load_and_build_mixture_model_source(
     check_labels: bool, optional
         Whether to check labels in the mixture thermodb based on the provided rules, by default True
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
+        List of keys to use for mixture id, by default DEFAULT_MIXTURE_KEYS which typically includes 'Name', 'Formula', 'Name-State', and 'Formula-State'
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
@@ -1588,9 +1638,7 @@ def load_and_build_model_source(
         Dict[str, Dict[str, ComponentRule]] | str
     ] = None,
     check_labels: bool = True,
-    mixture_keys: List[MixtureKey] = [
-        'Name', 'Formula',
-    ],
+    mixture_keys: List[MixtureKey] = DEFAULT_MIXTURE_KEYS,
     delimiter: str = '|',
     overwrite_rules: bool = False,
     verbose: bool = False,
@@ -1608,7 +1656,7 @@ def load_and_build_model_source(
     check_labels: bool, optional
         Whether to check labels in the thermodb based on the provided rules, by default True
     mixture_keys: List[MixtureKey], optional
-        List of keys to use for mixture id, either 'Name' or 'Formula', by default ['Name', 'Formula']
+        List of keys to use for mixture id, by default DEFAULT_MIXTURE_KEYS which typically includes 'Name', 'Formula', 'Name-State', and 'Formula-State'
     delimiter: str, optional
         Delimiter to separate multiple components in the mixture thermodb, by default '|'
     overwrite_rules: bool, optional
