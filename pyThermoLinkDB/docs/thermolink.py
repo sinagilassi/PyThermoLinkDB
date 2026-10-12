@@ -2,6 +2,7 @@
 import logging
 from typing import Dict, Optional, Union, List, Any
 from pyThermoDB import (
+    TableInteractionData,
     TableMatrixData,
     TableData,
     TableEquation,
@@ -31,7 +32,8 @@ class ThermoLink:
 
     The class uses configuration-based rules to rename symbols and properties, allowing for
     flexible integration with different thermodb formats and naming conventions. It supports
-    various data types including TableData, TableMatrixData, and TableEquation objects from
+    various data types including TableData, TableMatrixData, TableInteractionData,
+    and TableEquation objects from
     the pyThermoDB library.
 
     Attributes
@@ -95,8 +97,8 @@ class ThermoLink:
 
         This method processes thermodynamic properties from specified components in the
         thermodb, applies symbol renaming rules, and returns a unified data structure.
-        It handles multiple data types (TableData and TableMatrixData) and applies
-        component-specific rules for symbol mapping.
+        It handles multiple data types (TableData, TableMatrixData, and
+        TableInteractionData) and applies component-specific rules for symbol mapping.
 
         Parameters
         ----------
@@ -131,7 +133,8 @@ class ThermoLink:
                 },
                 ...
             }
-            Where property_object is a TableData or TableMatrixData object from pyThermoDB.
+            Where property_object is a TableData, TableMatrixData, or
+            TableInteractionData object from pyThermoDB.
 
         Raises
         ------
@@ -208,6 +211,11 @@ class ThermoLink:
 
                                 # ? take all columns (header)
                                 header = []
+                            elif isinstance(src_, TableInteractionData):
+                                # Interaction symbols are independent scalar
+                                # properties backed by the same ordered table.
+                                symbols = src_.interaction_symbol
+                                header = []
                             else:
                                 # log
                                 logger.warning(
@@ -228,7 +236,7 @@ class ThermoLink:
                                     symbol = str(symbol).strip()
 
                                     # ? get property value
-                                    # check if TableData or TableMatrixData
+                                    # ! check if TableData, TableMatrixData, or TableInteractionData
                                     _val = src_.get_property(symbol) if \
                                         isinstance(src_, TableData) else src_
 
@@ -281,6 +289,8 @@ class ThermoLink:
                                         #     # skip
                                         #     continue
 
+                                        # ? get value from source based on symbol
+                                        # ! _val type is TableData, TableMatrixData, or TableInteractionData depending on the source
                                         _val = src_.get_property(symbol_) if \
                                             isinstance(src_, TableData) else src_
 
