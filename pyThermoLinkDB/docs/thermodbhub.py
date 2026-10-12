@@ -864,6 +864,7 @@ class ThermoDBHub(ThermoLink, ThermoUtils):
     def build_all(self):
         '''
         '''
+        pass
 
     # SECTION: build model source
     def build_model_source(self) -> ModelSource:
