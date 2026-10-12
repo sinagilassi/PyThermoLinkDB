@@ -23,7 +23,7 @@ from pythermodb_settings.utils import (
     create_mixture_ids_with_keys
 )
 # local
-from .docs import ThermoDBHub
+from .docs.thermodbhub import ThermoDBHub
 from .docs.thermoutils import ThermoUtils
 from .models import (
     ModelSource,
@@ -1344,17 +1344,21 @@ def build_model_source(
     source: List[ComponentModelSource] | List[MixtureModelSource] | List[ConstantsModelSource]
 ) -> ModelSource:
     '''
-    Build model source from list of component model source
+    Build one model source from component, mixture, and constants sources.
+
+    Data and equation entries are merged by component or mixture identifier.
+    When multiple sources define the same property, equation, or constant, the
+    value from the later source replaces the earlier value.
 
     Parameters
     ----------
     source: List[ComponentModelSource] | List[MixtureModelSource] | List[ConstantsModelSource]
-        List of ComponentModelSource/MixtureModelSource object containing data source, equation source, and constants source
+        Ordered list of model-source fragments to aggregate.
 
     Returns
     -------
     ModelSource
-        ModelSource object containing data source and equation source for multiple components
+        Aggregated data, equation, constants, and symbol metadata.
     '''
     try:
         # NOTE: create model source for multiple components
@@ -1364,24 +1368,27 @@ def build_model_source(
             constants_source={}
         )
 
-        # NOTE: iterate over components model source
-        for component_model_source in source:
+        # NOTE: iterate over component, mixture, and constants sources
+        for source_item in source:
             # >> check type
             if (
-                isinstance(component_model_source, ComponentModelSource) or
-                isinstance(component_model_source, MixtureModelSource)
+                isinstance(source_item, ComponentModelSource) or
+                isinstance(source_item, MixtureModelSource)
             ):
                 # ! for ComponentModelSource and MixtureModelSource
-                # add to model source
-                # >> data source
-                model_source.data_source.update(
-                    component_model_source.data_source
-                )
-                # >> equation source
-                model_source.equation_source.update(
-                    component_model_source.equation_source
-                )
-            elif isinstance(component_model_source, ConstantsModelSource):
+                # Merge individual properties/equations so sources sharing an
+                # identifier do not discard unrelated entries. ``dict.update``
+                # keeps the established later-source-wins ordering.
+                for source_id, properties in source_item.data_source.items():
+                    model_source.data_source.setdefault(
+                        source_id, {}
+                    ).update(properties)
+
+                for source_id, equations in source_item.equation_source.items():
+                    model_source.equation_source.setdefault(
+                        source_id, {}
+                    ).update(equations)
+            elif isinstance(source_item, ConstantsModelSource):
                 # ! for ConstantsModelSource
                 # >> check if constants source is not empty
                 if (
@@ -1391,7 +1398,7 @@ def build_model_source(
                     # add to model source
                     # >> constants source
                     model_source.constants_source.update(
-                        component_model_source.constants_source
+                        source_item.constants_source
                     )
             else:
                 logger.error(
@@ -1424,6 +1431,8 @@ def build_model_source(
     except Exception as e:
         logger.error(f"Error in build_model_source: {e}")
         raise Exception(f"Error in build_model_source: {e}")
+
+# ! Load and Build Mixture Model Source
 
 
 def load_and_build_component_model_source(
@@ -1519,6 +1528,8 @@ def load_and_build_component_model_source(
     except Exception as e:
         logger.error(f"Error in load_and_build_model_source: {e}")
         raise Exception(f"Error in load_and_build_model_source: {e}")
+
+# ! Load and Build Mixture Model Source
 
 
 def load_and_build_mixture_model_source(
