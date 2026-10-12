@@ -3,6 +3,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Dict, Optional, List, Any, TypeAlias
 from pyThermoDB import (
     TableEquation,
+    TableInteractionData,
     TableMatrixData,
     TableMatrixEquation,
     TableConstants
@@ -13,7 +14,12 @@ from pythermodb_settings.models import Component
 
 # NOTE: data source
 PropertyData: TypeAlias = Dict[str, str | float | int | bool | None]
-DataSource: TypeAlias = Dict[str, PropertyData | TableMatrixData]
+DataSource: TypeAlias = Dict[
+    str,
+    PropertyData |
+    TableMatrixData |
+    TableInteractionData,
+]
 # ?? defines as:
 #   'Tc': {
 #     'property_name': 'critical-temperature',
