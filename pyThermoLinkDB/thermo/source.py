@@ -1,7 +1,7 @@
 # import libs
 import logging
-from typing import List, Dict, Optional, Any, Tuple, Literal, cast
-from pyThermoDB.core import TableEquation, TableMatrixData
+from typing import List, Dict, Optional, Any, Tuple, Literal, Sequence, cast
+from pyThermoDB.core import TableEquation, TableMatrixData, TableInteractionData
 from pyThermoDB.models import EquationResult
 from pythermodb_settings.models import Component, ComponentKey, MixtureKey
 from pythermodb_settings.utils import (
@@ -68,6 +68,8 @@ class Source:
     - data_symbol(component_id, prop_name): return datasource symbol metadata for a component/property or None.
     - get_prop(component_id, prop_name): alias for data_extractor.
     - get_prop_symbol(component_id, prop_name): alias for data_symbol.
+    - interaction_data_extractor / get_interaction: return a registered TableInteractionData object.
+    - interaction_value / interaction_i / interaction_property: query scalar interaction data.
     - constants_extractor(constant_name): return a constants source entry or None.
     - constant_symbol(constant_name): return constants source symbol metadata or None.
     - component_data_extractor(component_id): return datasource for a component or None.
@@ -1004,6 +1006,206 @@ class Source:
                 symbol_format=symbol_format,
             )
 
+    # SECTION: interaction data extractor
+    def interaction_data_extractor(
+            self,
+            mixture_name: str,
+            prop_name: str
+    ) -> Optional[TableInteractionData]:
+        '''Extract a TableInteractionData datasource entry.'''
+        try:
+            if mixture_name not in self.datasource:
+                logger.warning(
+                    f"Mixture '{mixture_name}' not found in model datasource. "
+                    "Attempting to sort mixture id alphabetically for consistency."
+                )
+                mixture_name = sort_mixture_id(mixture_name)
+                if mixture_name not in self.datasource:
+                    logger.error(
+                        f"Mixture '{mixture_name}' not found in model datasource after sorting."
+                    )
+                    return None
+
+            mixture_datasource = self.datasource[mixture_name]
+            if prop_name not in mixture_datasource:
+                logger.error(
+                    f"Interaction property '{prop_name}' not found in model "
+                    f"datasource registered for {mixture_name}."
+                )
+                return None
+
+            data = mixture_datasource[prop_name]
+            if not isinstance(data, TableInteractionData):
+                logger.error(
+                    f"Property '{prop_name}' for mixture '{mixture_name}' is "
+                    "not TableInteractionData."
+                )
+                return None
+
+            return data
+        except Exception as e:
+            logger.error(f"Interaction data extraction failed: {e}")
+            return None
+
+    # SECTION: interaction data alias
+    def get_interaction(
+            self,
+            mixture_name: str,
+            prop_name: str
+    ) -> Optional[TableInteractionData]:
+        '''Alias for interaction_data_extractor.
+
+        Parameters
+        ----------
+        mixture_name : str
+            The name of the mixture to query.
+        prop_name : str
+            The name of the interaction property to retrieve.
+
+        Returns
+        -------
+        Optional[TableInteractionData]
+            The extracted TableInteractionData if available, otherwise None.
+        '''
+        return self.interaction_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+
+    # SECTION: interaction scalar value extractor
+    def interaction_value(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            property: str,
+            symmetric_groups: Optional[
+                Sequence[Sequence[int]]
+            ] = None,
+            default: Any = None
+    ) -> Optional[Any]:
+        '''
+        Extract one scalar value using a compact interaction query.
+
+        ``property`` identifies the exact value to retrieve, for example
+        ``"psi | potassium-ion | sodium-ion | chloride-ion"``.
+
+        Parameters
+        ----------
+        mixture_name : str
+            The name of the mixture to query.
+        prop_name : str
+            The name of the interaction property to retrieve.
+        property : str
+            The exact interaction property to extract.
+        symmetric_groups : Optional[Sequence[Sequence[int]]], optional
+            Symmetric groups for the interaction participants, by default None.
+        default : Any, optional
+            The default value to return if the interaction is not found, by default None.
+
+        Returns
+        -------
+        Optional[Any]
+            The extracted scalar value if available, otherwise the default value.
+        '''
+        interaction_result = self.interaction_i(
+            mixture_name=mixture_name,
+            prop_name=prop_name,
+            property=property,
+            symmetric_groups=symmetric_groups,
+            default=default
+        )
+        if interaction_result is None:
+            return None
+
+        return interaction_result.get('value', default)
+
+    # SECTION: interaction result extractor
+    def interaction_i(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            property: str,
+            symmetric_groups: Optional[
+                Sequence[Sequence[int]]
+            ] = None,
+            default: Any = None,
+            message: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        '''
+        Extract one DataResult-style mapping using a compact interaction query.
+
+        ``property`` identifies the interaction symbol and ordered participants,
+        for example ``"psi | potassium-ion | sodium-ion | chloride-ion"``.
+
+        Parameters
+        ----------
+        mixture_name : str
+            The name of the mixture to query.
+        prop_name : str
+            The name of the interaction property to retrieve.
+        property : str
+            The exact interaction property to extract.
+        symmetric_groups : Optional[Sequence[Sequence[int]]], optional
+            Symmetric groups for the interaction participants, by default None.
+        default : Any, optional
+            The default value to return if the interaction is not found, by default None.
+        message : Optional[str], optional
+            An optional message to include in case of errors, by default None.
+
+        Returns
+        -------
+        Optional[Dict[str, Any]]
+            The extracted DataResult-style mapping if available, otherwise None.
+        '''
+        interaction_data = self.interaction_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if interaction_data is None:
+            return None
+
+        return interaction_data.i(
+            property=property,
+            symmetric_groups=symmetric_groups,
+            default=default,
+            message=message
+        )
+
+    # SECTION: interaction property extractor
+    def interaction_property(
+            self,
+            mixture_name: str,
+            prop_name: str,
+            include_null: bool = False
+    ) -> Optional[Dict[Tuple[str, ...], Any]]:
+        '''Extract a registered property for all ordered interaction mixtures.
+
+        Parameters
+        ----------
+        mixture_name : str
+            The name of the mixture to query.
+        prop_name : str
+            The name of the interaction property to retrieve.
+        include_null : bool, optional
+            Whether to include null values in the result, by default False.
+
+        Returns
+        -------
+        Optional[Dict[Tuple[str, ...], Any]]
+            A dictionary mapping ordered interaction participants to the extracted property values, or None if not available.
+        '''
+        interaction_data = self.interaction_data_extractor(
+            mixture_name=mixture_name,
+            prop_name=prop_name
+        )
+        if interaction_data is None:
+            return None
+
+        return interaction_data.get_property(
+            property_name=prop_name,
+            include_null=include_null
+        )
+
     # SECTION: get property symbol alias
     def get_prop_symbol(
             self,
@@ -1325,7 +1527,10 @@ class Source:
                         # check in component database
                         for key, value in component_datasource.items():
                             if symbol == key:
-                                if isinstance(value, TableMatrixData):
+                                if isinstance(
+                                    value,
+                                    (TableMatrixData, TableInteractionData)
+                                ):
                                     res[symbol] = {
                                         'value': value,
                                         'symbol': symbol,
@@ -1353,7 +1558,10 @@ class Source:
                     # ! check in component database
                     for key, value in component_datasource.items():
                         if symbol == key:
-                            if isinstance(value, TableMatrixData):
+                            if isinstance(
+                                value,
+                                (TableMatrixData, TableInteractionData)
+                            ):
                                 res[symbol] = {
                                     'value': value,
                                     'symbol': symbol,
