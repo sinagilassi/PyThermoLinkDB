@@ -4,6 +4,8 @@ from typing import Dict, List, Optional, Literal, Any
 import pyThermoDB as ptdb
 from pyThermoDB import (
     CompBuilder,
+)
+from pyThermoDB.thermodb import (
     ComponentThermoDB,
     MixtureThermoDB,
     ConstantsThermoDB
