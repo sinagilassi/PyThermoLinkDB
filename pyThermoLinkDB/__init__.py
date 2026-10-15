@@ -26,16 +26,21 @@ from .thermo import (
     mkmdt,
     mkmdts,
     mkmdtss,
+    mkidt,
+    mkidts,
+    mkidtss,
     EquationSourceCore,
     EquationSourcesCore,
     DataSourceCore,
     MatrixDataSourceCore,
     MatrixDataSourcesCore,
+    InteractionDataSourceCore,
+    InteractionDataSourcesCore,
     ConstantsSourceCore,
     Context
 )
 
-from .models import MixtureMatrixDataSource
+from .models import InteractionDataSource, MixtureMatrixDataSource
 
 __all__ = [
     # config
@@ -63,12 +68,18 @@ __all__ = [
     "mkmdt",
     "mkmdts",
     "mkmdtss",
+    "mkidt",
+    "mkidts",
+    "mkidtss",
     "EquationSourceCore",
     "EquationSourcesCore",
     "DataSourceCore",
     "MatrixDataSourceCore",
     "MixtureMatrixDataSource",
     "MatrixDataSourcesCore",
+    "InteractionDataSource",
+    "InteractionDataSourceCore",
+    "InteractionDataSourcesCore",
     "ConstantsSourceCore",
     "Context"
 ]

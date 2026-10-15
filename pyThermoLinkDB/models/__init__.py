@@ -27,6 +27,7 @@ from .component_models import (
 
 # NOTE: mixture models
 from .mixture_models import (
+    InteractionDataSource,
     MixtureMatrixDataSource,
 )
 
@@ -46,6 +47,7 @@ __all__ = [
     "ThermoSourceHubConfig",
     "CustomMatrixData",
     "MixtureMatrixDataSource",
+    "InteractionDataSource",
     "ComponentPropertySource",
     "ComponentEquationSource",
 ]
