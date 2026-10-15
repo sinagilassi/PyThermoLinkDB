@@ -12,6 +12,8 @@ from .data_source import DataSourceCore
 from .constants_source import ConstantsSourceCore
 from .matrix_data_sources import MatrixDataSourcesCore
 from .matrix_data_source import MatrixDataSourceCore
+from .interaction_data_sources import InteractionDataSourcesCore
+from .interaction_data_source import InteractionDataSourceCore
 
 # NOTE: Logger
 logger = logging.getLogger(__name__)
@@ -693,4 +695,254 @@ def mkmdtss(
         return res
     except Exception as e:
         logger.error(f"Error creating matrix data sources: {e}")
+        return None
+
+
+# SECTION: Interaction data source makers
+
+# NOTE: Single interaction table for one mixture.
+def mkidt(
+    name: str,
+    components: Mixture,
+    model_source: ModelSource,
+    mixture_key: MixtureKey = 'Name',
+    delimiter: str = '|',
+    case: Optional[Literal['lower', 'upper']] = None,
+) -> Optional[InteractionDataSourceCore]:
+    """Make one registered interaction data source for one mixture.
+
+    Parameters
+    ----------
+    name : str
+        Registered datasource key used to locate the interaction table. This
+        key may be an alias created by source rules and does not need to match
+        a scalar symbol stored inside ``TableInteractionData``.
+    components : Mixture
+        Components used to create the canonical outer mixture registration
+        identifier.
+    model_source : ModelSource
+        Model source containing the registered interaction table.
+    mixture_key : MixtureKey, optional
+        Component identity mode used to create the outer mixture identifier,
+        by default ``'Name'``.
+    delimiter : str, optional
+        Delimiter used in the outer mixture identifier, by default ``'|'``.
+    case : Literal['lower', 'upper'] | None, optional
+        Optional case normalization for the outer mixture identifier, by
+        default ``None``.
+
+    Returns
+    -------
+    Optional[InteractionDataSourceCore]
+        Singular interaction source bound to ``name``, or ``None`` when input
+        validation or construction fails.
+
+    Notes
+    -----
+    Only the datasource registration identifier is canonicalized. Participant
+    order inside interaction records remains unchanged and order-sensitive.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not name or not isinstance(name, str):
+            logger.error("Interaction property name must be a non-empty string.")
+            return None
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+        if not isinstance(components, list) or not components:
+            logger.error("Components must be provided as a non-empty list.")
+            return None
+        if not all(isinstance(component, Component) for component in components):
+            logger.error("Invalid component found in components.")
+            return None
+
+        # SECTION: Prepare shared source adapter
+        source = Source(
+            model_source=model_source,
+            mixture_key=mixture_key,
+        )
+
+        # SECTION: Build singular interaction source
+        return InteractionDataSourceCore(
+            prop_name=name,
+            components=components,
+            source=source,
+            mixture_key=mixture_key,
+            delimiter=delimiter,
+            case=case,
+        )
+    except Exception as e:
+        logger.error(f"Error creating interaction data source: {e}")
+        return None
+
+
+# NOTE: Multiple interaction tables for one mixture.
+def mkidts(
+    components: Mixture,
+    model_source: ModelSource,
+    mixture_key: MixtureKey = 'Name',
+    extract_list: Optional[list[str]] = None,
+    delimiter: str = '|',
+    case: Optional[Literal['lower', 'upper']] = None,
+) -> Optional[InteractionDataSourcesCore]:
+    """Make registered interaction data sources for one mixture.
+
+    Parameters
+    ----------
+    components : Mixture
+        Components used to create the canonical outer mixture registration
+        identifier.
+    model_source : ModelSource
+        Model source containing interaction tables for the mixture.
+    mixture_key : MixtureKey, optional
+        Component identity mode used to create the outer mixture identifier,
+        by default ``'Name'``.
+    extract_list : list[str] | None, optional
+        Registered datasource keys to retain. When omitted, every registered
+        ``TableInteractionData`` entry for the mixture is retained.
+    delimiter : str, optional
+        Delimiter used in the outer mixture identifier, by default ``'|'``.
+    case : Literal['lower', 'upper'] | None, optional
+        Optional case normalization for the outer mixture identifier, by
+        default ``None``.
+
+    Returns
+    -------
+    Optional[InteractionDataSourcesCore]
+        Plural interaction source for the mixture, or ``None`` when input
+        validation or construction fails.
+
+    Notes
+    -----
+    Filtering applies to registered datasource keys. Scalar symbols inside a
+    shared interaction table remain available through the selected singular
+    source.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+        if not isinstance(components, list) or not components:
+            logger.error("Components must be provided as a non-empty list.")
+            return None
+        if not all(isinstance(component, Component) for component in components):
+            logger.error("Invalid component found in components.")
+            return None
+
+        # SECTION: Prepare shared source adapter
+        source = Source(
+            model_source=model_source,
+            mixture_key=mixture_key,
+        )
+
+        # SECTION: Build plural interaction source
+        return InteractionDataSourcesCore(
+            components=components,
+            source=source,
+            mixture_key=mixture_key,
+            extract_list=extract_list,
+            delimiter=delimiter,
+            case=case,
+        )
+    except Exception as e:
+        logger.error(f"Error creating interaction data sources: {e}")
+        return None
+
+
+# NOTE: Multiple interaction tables for multiple mixtures.
+def mkidtss(
+    mixture_components: list[Mixture],
+    model_source: ModelSource,
+    mixture_key: MixtureKey = 'Name',
+    extract_list: Optional[list[str]] = None,
+    check_build: bool = False,
+    delimiter: str = '|',
+    case: Optional[Literal['lower', 'upper']] = None,
+) -> Optional[dict[str, InteractionDataSourcesCore]]:
+    """Make interaction data source collections for multiple mixtures.
+
+    Parameters
+    ----------
+    mixture_components : list[Mixture]
+        Component lists defining each requested mixture.
+    model_source : ModelSource
+        Model source containing interaction tables for the mixtures.
+    mixture_key : MixtureKey, optional
+        Component identity mode used to create each outer mixture identifier,
+        by default ``'Name'``.
+    extract_list : list[str] | None, optional
+        Registered datasource keys to retain for every mixture. When omitted,
+        every registered interaction table is retained.
+    check_build : bool, optional
+        Log incomplete extraction summaries when requested keys are missing,
+        by default ``False``. Incomplete cores remain in the returned mapping.
+    delimiter : str, optional
+        Delimiter used in outer mixture identifiers, by default ``'|'``.
+    case : Literal['lower', 'upper'] | None, optional
+        Optional case normalization for outer mixture identifiers, by default
+        ``None``.
+
+    Returns
+    -------
+    Optional[dict[str, InteractionDataSourcesCore]]
+        Interaction source collections keyed by canonical outer mixture id,
+        or ``None`` when input validation or construction fails.
+
+    Notes
+    -----
+    Canonicalization affects mapping keys only. It never changes participant
+    order within the underlying interaction records.
+    """
+    try:
+        # SECTION: Validate inputs
+        if not isinstance(model_source, ModelSource):
+            logger.error("Invalid model_source provided.")
+            return None
+        if not isinstance(mixture_components, list) or not mixture_components:
+            logger.error("Mixture components must be provided.")
+            return None
+
+        # ! Every requested mixture must contain valid Component objects.
+        for components in mixture_components:
+            if not isinstance(components, list) or not components:
+                logger.error(
+                    "Each mixture must be a non-empty list of components."
+                )
+                return None
+            if not all(isinstance(component, Component) for component in components):
+                logger.error("Invalid component found in mixture_components.")
+                return None
+
+        # SECTION: Prepare one shared source adapter
+        source = Source(
+            model_source=model_source,
+            mixture_key=mixture_key,
+        )
+
+        # SECTION: Build sources by canonical mixture id
+        result: dict[str, InteractionDataSourcesCore] = {}
+        for components in mixture_components:
+            interaction_sources = InteractionDataSourcesCore(
+                components=components,
+                source=source,
+                mixture_key=mixture_key,
+                extract_list=extract_list,
+                delimiter=delimiter,
+                case=case,
+            )
+
+            # ? Report incomplete requested builds without dropping the core.
+            if check_build and not interaction_sources.build_status():
+                logger.error(
+                    "Failed to build interaction data sources for mixture "
+                    f"'{interaction_sources.mixture_name}'. "
+                    f"Build summary: {interaction_sources.summary()}"
+                )
+            result[interaction_sources.mixture_name] = interaction_sources
+
+        return result
+    except Exception as e:
+        logger.error(f"Error creating interaction data sources: {e}")
         return None
