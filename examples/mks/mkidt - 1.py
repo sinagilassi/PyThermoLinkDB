@@ -3,6 +3,7 @@
 # SECTION: Direct-script path setup
 import os
 import sys
+from rich import print
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', '..'))
