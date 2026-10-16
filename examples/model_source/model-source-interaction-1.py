@@ -1,6 +1,18 @@
 """Build a reusable model source for scalar interaction data."""
 
 from __future__ import annotations
+from pyThermoLinkDB.app import (
+    build_interaction_model_source,
+    build_model_source,
+)
+from pythermodb_settings.models import Component
+from pyThermoDB import (
+    MixtureThermoDB,
+    TableInteractionData,
+    build_interaction_thermodb_from_reference,
+)
+from typing import Dict, Any
+from pyThermoLinkDB.models import DataSource
 
 import sys
 from pathlib import Path
@@ -11,17 +23,6 @@ from rich import print
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-from pyThermoDB import (
-    MixtureThermoDB,
-    TableInteractionData,
-    build_interaction_thermodb_from_reference,
-)
-from pythermodb_settings.models import Component
-from pyThermoLinkDB.app import (
-    build_interaction_model_source,
-    build_model_source,
-)
 
 
 # SECTION: interaction reference used to build the saved ThermoDB source
@@ -90,20 +91,25 @@ print("Data-source mixtures:", list(model_source.data_source))
 
 # SECTION: prove that the model source preserves the queryable interaction table
 model_mixture = "chloride-ion|potassium-ion|sodium-ion"
-interaction_data = model_source.data_source[model_mixture]["psi"]
-if not isinstance(interaction_data, TableInteractionData):
+
+# interaction data
+interaction_data: Dict[str, Any] = model_source.data_source[model_mixture]
+
+# phi
+phi_src = interaction_data["psi"]
+if not isinstance(phi_src, TableInteractionData):
     raise TypeError("Expected TableInteractionData from the model source.")
 
 source_mixture = "potassium-ion|sodium-ion|chloride-ion"
 request_mixture = "sodium-ion|potassium-ion|chloride-ion"
 
-print("Stored mixtures:", interaction_data.mixtures)
-print("psi in source order:", interaction_data.get("psi", source_mixture))
+print("Stored mixtures:", phi_src.mixtures)
+print("psi in source order:", phi_src.get("psi", source_mixture))
 print("psi in request order (strict):",
-      interaction_data.get("psi", request_mixture))
+      phi_src.get("psi", request_mixture))
 print(
     "psi in request order (first two positions symmetric):",
-    interaction_data.get(
+    phi_src.get(
         "psi",
         request_mixture,
         symmetric_groups=[(0, 1)],
