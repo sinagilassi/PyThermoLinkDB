@@ -29,13 +29,17 @@ print(ptdblink.__version__)
 # ====================================================
 # SECTION: BUILD COMPONENT THERMODB
 # ====================================================
-# NOTE: parent directory
-parent_dir = os.path.dirname(os.path.abspath(__file__))
-print(parent_dir)
+# current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"current dir: {current_dir}")
 
-# NOTE: thermodb directory
+# parent directory
+parent_dir = os.path.dirname(current_dir)
+print(f"parent dir: {parent_dir}")
+
+# thermodb directory
 thermodb_dir = os.path.join(parent_dir, 'thermodb')
-print(thermodb_dir)
+print(f"thermodb dir: {thermodb_dir}")
 
 # NOTE: create component
 # ! propane

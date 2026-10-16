@@ -2,6 +2,7 @@
 from typing import Dict
 import os
 from rich import print
+from pathlib import Path
 import pyThermoLinkDB as ptdblink
 from pyThermoLinkDB import load_and_build_model_source
 from pyThermoLinkDB.models import ModelSource
@@ -26,11 +27,18 @@ print(ptdb.__version__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 print(f"current dir: {current_dir}")
 
+# parent directory
+parent_dir = os.path.dirname(current_dir)
+print(f"parent dir: {parent_dir}")
+
+# thermodb directory
+thermodb_dir = os.path.join(parent_dir, 'thermodb')
+print(f"thermodb dir: {thermodb_dir}")
+
 # NOTE: thermodb configurations
 # thermodb file
 _thermodb_file = os.path.join(
-    current_dir,
-    'thermodb',
+    thermodb_dir,
     'carbon dioxide.pkl'
 )
 
@@ -43,8 +51,7 @@ CO2_comp = Component(
 
 # thermodb file
 ethanol_thermodb_file = os.path.join(
-    current_dir,
-    'thermodb',
+    thermodb_dir,
     'ethanol.pkl'
 )
 
